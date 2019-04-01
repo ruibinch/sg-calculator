@@ -1,6 +1,37 @@
 import logic.cpf_constants as constants
+import math
 
-def calculate_future_cpf_balance(age, salary, yoy_increase, base_cpf, n_years):
+
+def calculate_cpf_contribution(age, salary, bonus):
+    """
+    Calculates the CPF contribution for the year.
+    Taking into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling.
+    Reference: https://www.cpf.gov.sg/Assets/employers/Documents/Table%201_Pte%20and%20Npen%20CPF%20contribution%20rates%20for%20Singapore%20Citizens%20and%203rd%20year%20SPR%20Jan%202016.pdf
+
+    Steps for calculation:
+    1. Compute total CPF contribution, rounded to the nearest dollar.
+    2. Compute the employees' share (drop the cents).
+    3. Employers' share = Total contribution - employees' share
+
+    Args:
+        - age (int): Age of employee
+        - salary (float): Annual salary of employee
+        - bonus (float): Bonus/commission received in the year
+
+    Returns:
+        - (float): Amount contributed by the employee
+        - (float): Amount contributed by the employer
+    """
+
+    cont_total = get_contribution_amount(age, salary, bonus, entity=constants.STR_COMBINED)
+    cont_employee = get_contribution_amount(age, salary, bonus, entity=constants.STR_EMPLOYEE)
+    cont_employer = cont_total - cont_employee
+
+    return cont_employee, cont_employer
+
+
+
+def calculate_cpf_projection(age, salary, yoy_increase, base_cpf, n_years):
     """
     Calculates the account balance in the CPF accounts after `n_years` based on the input parameters.
 
@@ -30,40 +61,94 @@ def calculate_future_cpf_balance(age, salary, yoy_increase, base_cpf, n_years):
 #                                       HELPER FUNCTIONS                                          #
 ###################################################################################################
 
-def get_age_bracket(age):
+def get_age_bracket(age, purpose):
     """
-    Gets the age bracket based on the input age.
+    Gets the age bracket for the specified purpose and age.
 
     Args:
         - age (int): Age of employee
+        - purpose (str): Either 'contribution' or 'allocation'
     
     Returns:
         - (str): Age bracket of employee
     """
+    if purpose == constants.STR_CONTRIBUTION:
+        keys = constants.rates_cont.keys()
+    elif purpose == constants.STR_ALLOCATION:
+        keys = constants.rates_alloc.keys()
 
-    for key in constants.rates.keys():
-        if age < int(key):
+    for key in keys:
+        if age <= int(key):
             return key
+    
+    return '150' # return max by default
 
 
-def get_contribution(age, salary):
+def round_half_up(n, decimals=0):
     """
-    Gets the employee's and employer's CPF contribution amounts.
-    Note that only the first $6k is subject to CPF.
+    Rounds the given monetary amount to the nearest dollar.
+    An amount of 50 cents will be regarded as an additional dollar:
+
+    Args:
+        - n (float): input amount
+
+    Returns:
+        - (int): rounded amount to the nearest dollar
+    """
+
+    multiplier = 10 ** decimals
+    return math.floor(n*multiplier + 0.5) / multiplier
+
+
+def get_contribution_amount(age, salary, bonus, entity):
+    """
+    Gets the CPF contribution amount for the specified entity corresponding to the 
+    correct age and income bracket.
+
+    OW Ceiling: $6k a month, or $72k a year.
+    AW Ceiling: $102k - OW amount subject to CPF.
 
     Args:
         - age (int): Age of employee
-        - salary (int): Salary of employee
+        - salary (float): Annual salary of employee
+        - bonus (float): Bonus/commission received in the year
+        - entity (str): Either 'combined' or 'employee'
     
     Returns:
-        - (float): Employee's contribution percentage
-        - (float): Employer's contribution percentage
+        - (int): CPF contribution amount for the year
     """
-    age_bracket = get_age_bracket(age)
-    employee_cont = constants.rates[age_bracket]['employee'] * min(salary, constants.THRESHOLD_CPF)
-    employer_cont = constants.rates[age_bracket]['employer'] * min(salary, constants.THRESHOLD_CPF)
 
-    return employee_cont, employer_cont
+    age_bracket = get_age_bracket(age, constants.STR_CONTRIBUTION)
+    rates = constants.rates_cont
+    amount_tw = salary + bonus # only needed if income is in income brackets 2 or 3
+
+    if salary <= constants.INCOME_BRACKET_1:
+        # salary is <=$50/month
+        cont = 0
+    elif salary <= constants.INCOME_BRACKET_2:
+        # salary is >$50 to <=$500/month
+        cont = rates[age_bracket][1][entity] * amount_tw
+    elif salary <= constants.INCOME_BRACKET_3:
+        # salary is >$500 to <=$749/month
+        cont_from_tw = rates[age_bracket][2][entity] * amount_tw
+        cont_misc = rates[age_bracket][2][constants.STR_MISC] * (amount_tw - 500)
+        cont = cont_from_tw + cont_misc
+    else:
+        # salary is >=$750/month
+        amount_ow_eligible_for_cpf = min(salary, constants.CEILING_OW)
+        cont_from_ow = constants.rates[age_bracket][3][entity] * amount_ow_eligible_for_cpf
+
+        ceiling_aw = constants.CEILING_AW - amount_ow_eligible_for_cpf
+        amount_aw_eligible_for_cpf = min(bonus, ceiling_aw)
+        cont_from_aw = constants.rates[age_bracket][3][entity] * amount_aw_eligible_for_cpf
+
+        cont_total = cont_from_ow + cont_from_aw
+        if entity == constants.STR_COMBINED:
+            cont = round_half_up(cont_total)
+        elif entity == constants.STR_EMPLOYEE:
+            cont = math.floor(cont_total)
+
+    return cont
 
 
 def get_allocation(age, salary):

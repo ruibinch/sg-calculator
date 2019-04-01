@@ -1,3 +1,16 @@
+# For CPF contribution calculations
+CEILING_OW = 6000 * 12
+CEILING_AW = 102000
+INCOME_BRACKET_1 = 50 * 12
+INCOME_BRACKET_2 = 500 * 12
+INCOME_BRACKET_3 = 749 * 12
+STR_COMBINED = 'combined'
+STR_EMPLOYEE = 'employee'
+STR_MISC = 'misc'
+STR_CONTRIBUTION = 'contribution'
+STR_ALLOCATION = 'allocation'
+
+
 # CPF interest rates
 # these are only base rates, include the other rates in the future
 INT_RATE_OA = 0.025
@@ -10,54 +23,67 @@ INT_EXTRA = 0.01
 THRESHOLD_EXTRAINT_OA = 20000
 THRESHOLD_EXTRAINT_TOTAL = 60000
 
-# Threshold for CPF contribution
-THRESHOLD_CPF = 6000
+
 
 # CPF contribution and allocation rates
-rates = {
+rates_cont = {
+    '55': [
+        {},
+        { 'combined': 0.17, 'employee': 0.0 },
+        { 'combined': 0.17, 'employee': 0.0, 'misc': 0.6 },
+        { 'combined': 0.37, 'employee': 0.2 }
+    ],
+    '60': [
+        {},
+        { 'combined': 0.13, 'employee': 0.0 },
+        { 'combined': 0.13, 'employee': 0.0, 'misc': 0.39 },
+        { 'combined': 0.26, 'employee': 0.13 }
+    ],
+    '65': [
+        {},
+        { 'combined': 0.09, 'employee': 0.0 },
+        { 'combined': 0.09, 'employee': 0.0, 'misc': 0.225 },
+        { 'combined': 0.165, 'employee': 0.075 }
+    ],
+    '150': [
+        {},
+        { 'combined': 0.075, 'employee': 0.0 },
+        { 'combined': 0.075, 'employee': 0.0, 'misc': 0.15 },
+        { 'combined': 0.125, 'employee': 0.05 }
+    ],
+}
+
+
+rates_alloc = {
     '35': {
-        'employee': 0.2,
-        'employer': 0.17,
         'OA': 0.23,
         'SA': 0.06,
         'MA': 0.08
     },
     '45': {
-        'employee': 0.2,
-        'employer': 0.17,
         'OA': 0.21,
         'SA': 0.07,
         'MA': 0.09
     },
     '50': {
-        'employee': 0.2,
-        'employer': 0.17,
         'OA': 0.19,
         'SA': 0.08,
         'MA': 0.1
     },
     '55': {
-        'employee': 0.2,
-        'employer': 0.17,
         'OA': 0.15,
         'SA': 0.115,
         'MA': 0.105
     }
     # '60': {
-    #     'employee': 0.13,
-    #     'employer': 0.13,
     #     'RA': 0.155,
     #     'MA': 0.105
     # },
     # '65': {
-    #     'employee': 0.075,
-    #     'employer': 0.09,
     #     'RA': 0.06,
     #     'MA': 0.105
     # },
     # '150': {
-    #     'employee': 0.05,
-    #     'employer': 0.075,
     #     'RA': 0.02,
     #     'MA': 0.105
     # }
