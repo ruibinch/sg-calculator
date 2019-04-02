@@ -2,6 +2,7 @@ from flask import Flask
 from flask_restful import Resource, Api, reqparse
 
 from logic.cpf import calculate_cpf_contribution
+from logic.cpf import calculate_cpf_allocation
 from logic.cpf import calculate_cpf_projection
 
 app = Flask(__name__)
@@ -9,7 +10,7 @@ api = Api(app)
 
 # for data validation
 parser = reqparse.RequestParser()
-parser.add_argument('age', type=int, help='Age')
+parser.add_argument('age', type=int, help='Age') # TODO: change to date of birth
 parser.add_argument('salary', type=float, help='Annual salary')
 parser.add_argument('bonus', type=float, help='Bonus/commission received in the year')
 parser.add_argument('yoy_increase', type=float, help='Projected YoY increase of salary')
@@ -26,7 +27,11 @@ class CpfContribution(Resource):
 
 class CpfAllocation(Resource):
     def post(self):
-
+        args = parser.parse_args()
+        oa_alloc, sa_alloc, ma_alloc = calculate_cpf_allocation(args['age'],
+                                                                args['salary'],
+                                                                args['bonus'])
+        return { 'oa_alloc': oa_alloc, 'sa_alloc': sa_alloc, 'ma_alloc': ma_alloc }
 
 class CpfProjection(Resource):
     def post(self):
