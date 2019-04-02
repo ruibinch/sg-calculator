@@ -135,12 +135,12 @@ def get_contribution_amount(age, salary, bonus, entity):
         cont = cont_from_tw + cont_misc
     else:
         # salary is >=$750/month
-        amount_ow_eligible_for_cpf = min(salary, constants.CEILING_OW)
-        cont_from_ow = constants.rates[age_bracket][3][entity] * amount_ow_eligible_for_cpf
+        amount_ow_eligible_for_cpf = min(salary, constants.CEILING_OW_ANNUAL)
+        cont_from_ow = rates[age_bracket][3][entity] * amount_ow_eligible_for_cpf
 
         ceiling_aw = constants.CEILING_AW - amount_ow_eligible_for_cpf
         amount_aw_eligible_for_cpf = min(bonus, ceiling_aw)
-        cont_from_aw = constants.rates[age_bracket][3][entity] * amount_aw_eligible_for_cpf
+        cont_from_aw = rates[age_bracket][3][entity] * amount_aw_eligible_for_cpf
 
         cont_total = cont_from_ow + cont_from_aw
         if entity == constants.STR_COMBINED:
@@ -166,10 +166,12 @@ def get_allocation(age, salary):
         - (float): Allocation amount into MA
     """
 
-    age_bracket = get_age_bracket(age)
-    allocation_oa = constants.rates[age_bracket]['OA'] * min(salary, constants.THRESHOLD_CPF)
-    allocation_sa = constants.rates[age_bracket]['SA'] * min(salary, constants.THRESHOLD_CPF)
-    allocation_ma = constants.rates[age_bracket]['MA'] * min(salary, constants.THRESHOLD_CPF)
+    age_bracket = get_age_bracket(age, constants.STR_ALLOCATION)
+    rates = constants.rates_alloc
+
+    allocation_oa = rates[age_bracket]['OA'] * min(salary, constants.CEILING_OW)
+    allocation_sa = rates[age_bracket]['SA'] * min(salary, constants.CEILING_OW)
+    allocation_ma = rates[age_bracket]['MA'] * min(salary, constants.CEILING_OW)
 
     return allocation_oa, allocation_sa, allocation_ma
 
