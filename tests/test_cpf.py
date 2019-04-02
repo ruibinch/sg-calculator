@@ -3,7 +3,7 @@ import logic.cpf as cpf
 
 class TestCalculateCpfContribution(object):
     """
-    Tests the `calculate_cpf_contribution()` method in cpf.py
+    Tests the `calculate_cpf_contribution()` method in cpf.py.
 
     Test scenarios: 
         1. Age <=55
@@ -67,6 +67,104 @@ class TestCalculateCpfContribution(object):
         cont_employee = (0.2 * 72000) + (0.2 * (102000 - 72000))
         cont_employer = cont_total - cont_employee
         self.perform_assertion(age, salary, bonus, cont_employee, cont_employer)
+
+
+class TestCalculateCpfAllocation(object):
+    """
+    Tests the `calculate_cpf_allocation()` method in cpf.py.
+    Assume that `get_contribution_amount()` method is correct.
+
+    Age is the only variable here.
+    Test scenarios: 
+        1. Age <=35
+        2. Age >35 to <=45
+        3. Age >45 to <=50
+        4. Age >50 to <=55
+        5. Age >55 to <=60
+        6. Age >60 to <=65
+        7. Age >65
+    """
+
+    global salary, bonus
+    salary, bonus = (4000, 10000)
+
+    def get_contribution_amount_by_age(self, age):
+        return cpf.get_contribution_amount(age, salary, bonus, entity=constants.STR_COMBINED) / 12
+
+    def perform_assertion(self, age, salary, bonus, alloc_exp):
+        """
+        Helper class to perform assertion checks.
+
+        Args:
+            - age (int): Age of employee
+            - salary (float): Monthly salary of employee
+            - bonus (float): Bonus/commission received in the year
+            - alloc_exp (array): Expected amount to be allocated into the CPF accounts [OA, SA, MA]
+        """
+        
+        oa_alloc_test, sa_alloc_test, ma_alloc_test = cpf.calculate_cpf_allocation(
+                                                        age, salary, bonus)
+        assert alloc_exp[0] == oa_alloc_test
+        assert alloc_exp[1] == sa_alloc_test
+        assert alloc_exp[2] == ma_alloc_test
+
+    def test_scenario_1(self):
+        age = 35
+        cont = self.get_contribution_amount_by_age(age)
+        sa_alloc = 0.1621 * cont
+        ma_alloc = 0.2162 * cont
+        oa_alloc = cont - sa_alloc - ma_alloc
+        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+    
+    def test_scenario_2(self):
+        age = 45
+        cont = self.get_contribution_amount_by_age(age)
+        sa_alloc = 0.1891 * cont
+        ma_alloc = 0.2432 * cont
+        oa_alloc = cont - sa_alloc - ma_alloc
+        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+
+    def test_scenario_3(self):
+        age = 50
+        cont = self.get_contribution_amount_by_age(age)
+        sa_alloc = 0.2162 * cont
+        ma_alloc = 0.2702 * cont
+        oa_alloc = cont - sa_alloc - ma_alloc
+        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+
+    def test_scenario_4(self):
+        age = 55
+        cont = self.get_contribution_amount_by_age(age)
+        sa_alloc = 0.3108 * cont
+        ma_alloc = 0.2837 * cont
+        oa_alloc = cont - sa_alloc - ma_alloc
+        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+    
+    def test_scenario_5(self):
+        age = 60
+        cont = self.get_contribution_amount_by_age(age)
+        sa_alloc = 0.1346 * cont
+        ma_alloc = 0.4038 * cont
+        oa_alloc = cont - sa_alloc - ma_alloc
+        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+
+    def test_scenario_6(self):
+        age = 65
+        cont = self.get_contribution_amount_by_age(age)
+        sa_alloc = 0.1515 * cont
+        ma_alloc = 0.6363 * cont
+        oa_alloc = cont - sa_alloc - ma_alloc
+        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+
+    def test_scenario_7(self):
+        age = 80
+        cont = self.get_contribution_amount_by_age(age)
+        sa_alloc = 0.08 * cont
+        ma_alloc = 0.84 * cont
+        oa_alloc = cont - sa_alloc - ma_alloc
+        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+
+
 
 class TestCpfCalculateAnnualChange(object):
     """

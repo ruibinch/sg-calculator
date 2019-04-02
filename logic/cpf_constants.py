@@ -9,8 +9,13 @@ STR_COMBINED = 'combined'
 STR_EMPLOYEE = 'employee'
 STR_MISC = 'misc'
 STR_CONTRIBUTION = 'contribution'
-STR_ALLOCATION = 'allocation'
 
+# For CPF allocation
+STR_ALLOCATION = 'allocation'
+STR_OA = 'OA'
+STR_SA = 'SA'
+STR_MA = 'MA'
+STR_RA = 'RA'
 
 # CPF interest rates
 # these are only base rates, include the other rates in the future
@@ -23,7 +28,6 @@ INT_EXTRA = 0.01
 # Thresholds for additional interest
 THRESHOLD_EXTRAINT_OA = 20000
 THRESHOLD_EXTRAINT_TOTAL = 60000
-
 
 
 # CPF contribution and allocation rates
@@ -54,38 +58,61 @@ rates_cont = {
     ],
 }
 
-
 rates_alloc = {
     '35': {
         'OA': 0.23,
         'SA': 0.06,
-        'MA': 0.08
+        'MA': 0.08,
+        'OA_ratio': 0.6217,
+        'SA_ratio': 0.1621,
+        'MA_ratio': 0.2162
     },
     '45': {
         'OA': 0.21,
         'SA': 0.07,
-        'MA': 0.09
+        'MA': 0.09,
+        'OA_ratio': 0.5677,
+        'SA_ratio': 0.1891,
+        'MA_ratio': 0.2432
     },
     '50': {
         'OA': 0.19,
         'SA': 0.08,
-        'MA': 0.1
+        'MA': 0.1,
+        'OA_ratio': 0.5136,
+        'SA_ratio': 0.2162,
+        'MA_ratio': 0.2702
     },
     '55': {
         'OA': 0.15,
         'SA': 0.115,
-        'MA': 0.105
+        'MA': 0.105,
+        'OA_ratio': 0.4055,
+        'SA_ratio': 0.3108,
+        'MA_ratio': 0.2837
+    },
+    '60': {
+        'OA': 0.12,
+        'SA': 0.035,
+        'MA': 0.105,
+        'OA_ratio': 0.4616,
+        'SA_ratio': 0.1346,
+        'MA_ratio': 0.4038
+    },
+    '65': {
+        'OA': 0.035,
+        'SA': 0.025,
+        'MA': 0.105,
+        'OA_ratio': 0.2122,
+        'SA_ratio': 0.1515,
+        'MA_ratio': 0.6363
+    },
+    '150': {
+        'OA': 0.01,
+        'SA': 0.01,
+        'MA': 0.105,
+        'OA_ratio': 0.08,
+        'SA_ratio': 0.08,
+        'MA_ratio': 0.84
     }
-    # '60': {
-    #     'RA': 0.155,
-    #     'MA': 0.105
-    # },
-    # '65': {
-    #     'RA': 0.06,
-    #     'MA': 0.105
-    # },
-    # '150': {
-    #     'RA': 0.02,
-    #     'MA': 0.105
-    # }
 }
