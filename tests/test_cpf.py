@@ -16,63 +16,63 @@ class TestCalculateCpfContribution(object):
             g. Salary above $750/month and above OW Ceiling, bonus above AW Ceiling
     """
 
-    def perform_assertion(self, age, salary, bonus, cont_employee, cont_employer):
-        cont_employee_test, cont_employer_test = cpf.calculate_cpf_contribution(age, salary, bonus)
+    def perform_assertion(self, salary, bonus, age, cont_employee, cont_employer):
+        cont_employee_test, cont_employer_test = cpf.calculate_cpf_contribution(salary, bonus, age=age)
         assert cont_employee == cont_employee_test
         assert cont_employer == cont_employer_test
 
     def test_scenario_1a(self):
-        age, salary, bonus = (30, 50 * 12, 0)
+        salary, bonus, age = (50 * 12, 0, 30)
         cont_employee = 0
         cont_employer = 0
-        self.perform_assertion(age, salary, bonus, cont_employee, cont_employer)
+        self.perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
     def test_scenario_1b(self):
-        age, salary, bonus = (30, 500 * 12, 0)
+        salary, bonus, age = (500 * 12, 0, 30)
         cont_employee = 0
         cont_employer = 0.17 * salary
-        self.perform_assertion(age, salary, bonus, cont_employee, cont_employer)
+        self.perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
     def test_scenario_1c(self):
-        age, salary, bonus = (30, 749 * 12, 0)
+        salary, bonus, age = (749 * 12, 0, 30)
         cont_total = (0.17 * salary) + (0.6 * (salary - 500))
         cont_employee = 0.6 * (salary - 500)
         cont_employer = cont_total - cont_employee
-        self.perform_assertion(age, salary, bonus, cont_employee, cont_employer)
+        self.perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
     def test_scenario_1d(self):
-        age, salary, bonus = (30, 4000 * 12, 20000)
+        salary, bonus, age = (4000 * 12, 20000, 30)
         cont_total = (0.37 * salary) + (0.37 * bonus)
         cont_employee = (0.2 * salary) + (0.2 * bonus)
         cont_employer = cont_total - cont_employee
-        self.perform_assertion(age, salary, bonus, cont_employee, cont_employer)
+        self.perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
     def test_scenario_1e(self):
-        age, salary, bonus = (30, 4000 * 12, 100000)
+        salary, bonus, age = (4000 * 12, 100000, 30)
         cont_total = (0.37 * salary) + (0.37 * (102000 - salary))
         cont_employee = (0.2 * salary) + (0.2 * (102000 - salary))
         cont_employer = cont_total - cont_employee
-        self.perform_assertion(age, salary, bonus, cont_employee, cont_employer)
+        self.perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
     def test_scenario_1f(self):
-        age, salary, bonus = (30, 8000 * 12, 20000)
+        salary, bonus, age = (8000 * 12, 20000, 30)
         cont_total = (0.37 * 72000) + (0.37 * bonus)
         cont_employee = (0.2 * 72000) + (0.2 * bonus)
         cont_employer = cont_total - cont_employee
-        self.perform_assertion(age, salary, bonus, cont_employee, cont_employer)
+        self.perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
     def test_scenario_1g(self):
-        age, salary, bonus = (30, 8000 * 12, 100000)
+        salary, bonus, age = (8000 * 12, 100000, 30)
         cont_total = (0.37 * 72000) + (0.37 * (102000 - 72000))
         cont_employee = (0.2 * 72000) + (0.2 * (102000 - 72000))
         cont_employer = cont_total - cont_employee
-        self.perform_assertion(age, salary, bonus, cont_employee, cont_employer)
+        self.perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
 
 class TestCalculateCpfAllocation(object):
     """
     Tests the `calculate_cpf_allocation()` method in cpf.py.
-    Assume that `get_contribution_amount()` method is correct.
+    Assume that `calculate_cpf_contribution()` method is correct.
 
     Age is the only variable here.
     Test scenarios: 
@@ -89,11 +89,13 @@ class TestCalculateCpfAllocation(object):
     salary, bonus = (4000, 10000)
 
     def get_contribution_amount_by_age(self, age):
-        return cpf.get_contribution_amount(age, salary, bonus, entity=constants.STR_COMBINED) / 12
+        cont_employee, cont_employer = cpf.calculate_cpf_contribution(salary, bonus, age=age)
+        return cont_employee + cont_employer
 
-    def perform_assertion(self, age, salary, bonus, alloc_exp):
+    def perform_assertion(self, salary, bonus, age, alloc_exp):
         """
         Helper class to perform assertion checks.
+        Round the values to 2 decimal places when checking for equality.
 
         Args:
             - age (int): Age of employee
@@ -103,10 +105,10 @@ class TestCalculateCpfAllocation(object):
         """
         
         oa_alloc_test, sa_alloc_test, ma_alloc_test = cpf.calculate_cpf_allocation(
-                                                        age, salary, bonus)
-        assert alloc_exp[0] == oa_alloc_test
-        assert alloc_exp[1] == sa_alloc_test
-        assert alloc_exp[2] == ma_alloc_test
+                                                        salary, bonus, age=age)
+        assert round(alloc_exp[0] / 12, 2) == round(oa_alloc_test, 2)
+        assert round(alloc_exp[1] / 12, 2) == round(sa_alloc_test, 2)
+        assert round(alloc_exp[2] / 12, 2) == round(ma_alloc_test, 2)
 
     def test_scenario_1(self):
         age = 35
@@ -114,7 +116,7 @@ class TestCalculateCpfAllocation(object):
         sa_alloc = 0.1621 * cont
         ma_alloc = 0.2162 * cont
         oa_alloc = cont - sa_alloc - ma_alloc
-        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+        self.perform_assertion(salary, bonus, age, [oa_alloc, sa_alloc, ma_alloc])
     
     def test_scenario_2(self):
         age = 45
@@ -122,7 +124,7 @@ class TestCalculateCpfAllocation(object):
         sa_alloc = 0.1891 * cont
         ma_alloc = 0.2432 * cont
         oa_alloc = cont - sa_alloc - ma_alloc
-        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+        self.perform_assertion(salary, bonus, age, [oa_alloc, sa_alloc, ma_alloc])
 
     def test_scenario_3(self):
         age = 50
@@ -130,7 +132,7 @@ class TestCalculateCpfAllocation(object):
         sa_alloc = 0.2162 * cont
         ma_alloc = 0.2702 * cont
         oa_alloc = cont - sa_alloc - ma_alloc
-        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+        self.perform_assertion(salary, bonus, age, [oa_alloc, sa_alloc, ma_alloc])
 
     def test_scenario_4(self):
         age = 55
@@ -138,7 +140,7 @@ class TestCalculateCpfAllocation(object):
         sa_alloc = 0.3108 * cont
         ma_alloc = 0.2837 * cont
         oa_alloc = cont - sa_alloc - ma_alloc
-        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+        self.perform_assertion(salary, bonus, age, [oa_alloc, sa_alloc, ma_alloc])
     
     def test_scenario_5(self):
         age = 60
@@ -146,7 +148,7 @@ class TestCalculateCpfAllocation(object):
         sa_alloc = 0.1346 * cont
         ma_alloc = 0.4038 * cont
         oa_alloc = cont - sa_alloc - ma_alloc
-        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+        self.perform_assertion(salary, bonus, age, [oa_alloc, sa_alloc, ma_alloc])
 
     def test_scenario_6(self):
         age = 65
@@ -154,7 +156,7 @@ class TestCalculateCpfAllocation(object):
         sa_alloc = 0.1515 * cont
         ma_alloc = 0.6363 * cont
         oa_alloc = cont - sa_alloc - ma_alloc
-        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+        self.perform_assertion(salary, bonus, age, [oa_alloc, sa_alloc, ma_alloc])
 
     def test_scenario_7(self):
         age = 80
@@ -162,7 +164,7 @@ class TestCalculateCpfAllocation(object):
         sa_alloc = 0.08 * cont
         ma_alloc = 0.84 * cont
         oa_alloc = cont - sa_alloc - ma_alloc
-        self.perform_assertion(age, salary, bonus, [oa_alloc, sa_alloc, ma_alloc])
+        self.perform_assertion(salary, bonus, age, [oa_alloc, sa_alloc, ma_alloc])
 
 
 

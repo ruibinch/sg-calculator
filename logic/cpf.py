@@ -2,7 +2,7 @@ import logic.cpf_constants as constants
 import math
 
 
-def calculate_cpf_contribution(age, salary, bonus):
+def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
     """
     Calculates the CPF contribution for the year.
     Taking into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling.
@@ -14,23 +14,24 @@ def calculate_cpf_contribution(age, salary, bonus):
     3. Employers' share = Total contribution - employees' share
 
     Args:
-        - age (int): Age of employee
         - salary (float): Annual salary of employee
         - bonus (float): Bonus/commission received in the year
+        - age (int): Age of employee
+        - dob (str): Date of birth of employee in YYYYMM format
 
     Returns:
         - (float): Amount contributed by the employee in the year
         - (float): Amount contributed by the employer in the year
     """
 
-    cont_total = get_contribution_amount(age, salary, bonus, entity=constants.STR_COMBINED)
-    cont_employee = get_contribution_amount(age, salary, bonus, entity=constants.STR_EMPLOYEE)
+    cont_total = get_contribution_amount(salary, bonus, age, dob, entity=constants.STR_COMBINED)
+    cont_employee = get_contribution_amount(salary, bonus, age, dob, entity=constants.STR_EMPLOYEE)
     cont_employer = cont_total - cont_employee
 
     return cont_employee, cont_employer
 
 
-def calculate_cpf_allocation(age, salary, bonus):
+def calculate_cpf_allocation(salary, bonus, age=None, dob=None):
     """
     Calculates the CPF allocation for the month.
     Reference: https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf
@@ -41,9 +42,10 @@ def calculate_cpf_allocation(age, salary, bonus):
     2. OA allocation = Total contribution - SA allocation - MA allocation
     
     Args:
-        - age (int): Age of employee
         - salary (float): Annual salary of employee
         - bonus (float): Bonus/commission received in the year
+        - age (int): Age of employee
+        - dob (str): Date of birth of employee in YYYYMM format
 
     Returns:
         - (float): Allocation amount into OA
@@ -51,14 +53,15 @@ def calculate_cpf_allocation(age, salary, bonus):
         - (float): Allocation amount into MA
     """
 
-    cont_monthly = get_contribution_amount(age, salary, bonus, entity=constants.STR_COMBINED) / 12
-    sa_alloc = get_allocation_amount(age, cont_monthly, account=constants.STR_SA)
-    ma_alloc = get_allocation_amount(age, cont_monthly, account=constants.STR_MA)
+    cont_monthly = get_contribution_amount(salary, bonus, age, dob, entity=constants.STR_COMBINED) / 12
+    sa_alloc = get_allocation_amount(age, dob, cont_monthly, account=constants.STR_SA)
+    ma_alloc = get_allocation_amount(age, dob, cont_monthly, account=constants.STR_MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
 
     return oa_alloc, sa_alloc, ma_alloc
 
 
+# TODO: relook at this
 def calculate_cpf_projection(age, salary, yoy_increase, base_cpf, n_years):
     """
     Calculates the account balance in the CPF accounts after `n_years` based on the input parameters.
@@ -88,6 +91,31 @@ def calculate_cpf_projection(age, salary, yoy_increase, base_cpf, n_years):
 ###################################################################################################
 #                                       HELPER FUNCTIONS                                          #
 ###################################################################################################
+
+def get_age(dob):
+    """
+    Returns the user's age given the user's date of birth.
+    Age is determined using this logic:
+        "Your employee is considered to be 35, 45, 50, 55, 60 or 65 years old in the month
+        of his 35th, 45th, 50th, 55th, 60th or 65th birthday. The employee will be above 
+        35, 45, 50, 55, 60 or 65 years from the month after the month of his 
+        35th, 45th, 50th, 55th, 60th or 65th birthday."
+    Reference: https://www.cpf.gov.sg/Employers/EmployerGuides/employer-guides/paying-cpf-contributions/cpf-contribution-and-allocation-rates
+
+    Args:
+        - dob (str): Date of birth of employee in YYYYMM format
+    
+    Returns:
+        - age (int): Age of employee
+    """
+
+    birth_year, birth_month = (int(dob[0:4]), int(dob[4:6]))
+    today_year, today_month = (datetime.date.today().year, datetime.date.today().month)
+    year_diff, month_diff = (today_year - birth_year, today_month - birth_month)
+    age = year_diff if month_diff <= 0 else year_diff + 1
+    # print('CPF:117:', year_diff, month_diff, age)
+    return age
+
 
 def get_age_bracket(age, purpose):
     """
@@ -128,7 +156,7 @@ def round_half_up(n, decimals=0):
     return math.floor(n*multiplier + 0.5) / multiplier
 
 
-def get_contribution_amount(age, salary, bonus, entity):
+def get_contribution_amount(salary, bonus, age, dob, entity):
     """
     Gets the annual CPF contribution amount for the specified entity corresponding to the 
     correct age and income bracket.
@@ -137,14 +165,18 @@ def get_contribution_amount(age, salary, bonus, entity):
     AW Ceiling: $102k - OW amount subject to CPF.
 
     Args:
-        - age (int): Age of employee
         - salary (float): Annual salary of employee
         - bonus (float): Bonus/commission received in the year
+        - age (int): Age of employee
+        - dob (str): Date of birth of employee in YYYYMM format
         - entity (str): Either 'combined' or 'employee'
     
     Returns:
         - (int): CPF contribution amount for the year
     """
+
+    if age is None:
+        age = get_age(dob)
 
     age_bracket = get_age_bracket(age, constants.STR_CONTRIBUTION)
     rates = constants.rates_cont
@@ -179,12 +211,13 @@ def get_contribution_amount(age, salary, bonus, entity):
     return cont
 
 
-def get_allocation_amount(age, cont, account):
+def get_allocation_amount(age, dob, cont, account):
     """
     Gets the amount allocated into the specified CPF account in a month.
 
     Args:
         - age (int): Age of employee
+        - dob (str): Date of birth of employee in YYYYMM format
         - cont (int): Total CPF contribution for the month
         - account (str): Either 'SA' or MA'
 
@@ -192,8 +225,12 @@ def get_allocation_amount(age, cont, account):
         - (float): Amount allocated into the specified `account`
     """
 
+    if age is None:
+        age = get_age(dob)
+
     age_bracket = get_age_bracket(age, constants.STR_ALLOCATION)
     return constants.rates_alloc[age_bracket][account + '_ratio'] * cont
+
 
 
 def get_allocation(age, salary):
