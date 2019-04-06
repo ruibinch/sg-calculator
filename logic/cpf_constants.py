@@ -1,10 +1,9 @@
 # For CPF contribution calculations
-CEILING_OW_ANNUAL = 6000 * 12
 CEILING_OW = 6000
 CEILING_AW = 102000
-INCOME_BRACKET_1 = 50 * 12
-INCOME_BRACKET_2 = 500 * 12
-INCOME_BRACKET_3 = 749 * 12
+INCOME_BRACKET_1 = 50
+INCOME_BRACKET_2 = 500
+INCOME_BRACKET_3 = 749
 STR_COMBINED = 'combined'
 STR_EMPLOYEE = 'employee'
 STR_MISC = 'misc'
@@ -30,7 +29,7 @@ THRESHOLD_EXTRAINT_OA = 20000
 THRESHOLD_EXTRAINT_TOTAL = 60000
 
 
-# CPF contribution and allocation rates
+# CPF contribution rates
 rates_cont = {
     '55': [
         {},
@@ -58,6 +57,7 @@ rates_cont = {
     ],
 }
 
+# CPF allocation rates
 rates_alloc = {
     '35': {
         'OA': 0.23,

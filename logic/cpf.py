@@ -3,9 +3,11 @@ import math
 
 
 def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
+    # TODO: further enhancement to specify bonus month so that contribution amount for the
+    #  individual months can be specified
     """
     Calculates the CPF contribution for the year.
-    Taking into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling.
+    Taking into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling. \\
     Reference: https://www.cpf.gov.sg/Assets/employers/Documents/Table%201_Pte%20and%20Npen%20CPF%20contribution%20rates%20for%20Singapore%20Citizens%20and%203rd%20year%20SPR%20Jan%202016.pdf
 
     Steps for calculation:
@@ -14,26 +16,31 @@ def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
     3. Employers' share = Total contribution - employees' share
 
     Args:
-        - salary (float): Annual salary of employee
-        - bonus (float): Bonus/commission received in the year
-        - age (int): Age of employee
-        - dob (str): Date of birth of employee in YYYYMM format
+    - `salary` (float): Annual salary of employee
+    - `bonus` (float): Bonus/commission received in the year; assume to be credited in December
+    - `age` (int): Age of employee
+    - `dob` (str): Date of birth of employee in YYYYMM format
 
     Returns:
-        - (float): Amount contributed by the employee in the year
-        - (float): Amount contributed by the employer in the year
+    - (float): Amount contributed by the employee in the year
+    - (float): Amount contributed by the employer in the year
     """
 
-    cont_total = get_contribution_amount(salary, bonus, age, dob, entity=constants.STR_COMBINED)
-    cont_employee = get_contribution_amount(salary, bonus, age, dob, entity=constants.STR_EMPLOYEE)
-    cont_employer = cont_total - cont_employee
+    cont_total, cont_employee = (0, 0)
 
-    return cont_employee, cont_employer
+    for i in range(1, 13):
+        # bonus is only calculated in the month of December
+        bonus_annual = bonus if i == 12 else 0
+
+        cont_total += get_monthly_contribution_amount(salary / 12, bonus_annual, age, dob, entity=constants.STR_COMBINED)
+        cont_employee += get_monthly_contribution_amount(salary / 12, bonus_annual, age, dob, entity=constants.STR_EMPLOYEE)
+
+    return cont_employee, cont_total - cont_employee
 
 
 def calculate_cpf_allocation(salary, bonus, age=None, dob=None):
     """
-    Calculates the CPF allocation for the month.
+    Calculates the CPF allocation for the month. \\
     Reference: https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf
 
     Steps for calculation:
@@ -42,18 +49,18 @@ def calculate_cpf_allocation(salary, bonus, age=None, dob=None):
     2. OA allocation = Total contribution - SA allocation - MA allocation
     
     Args:
-        - salary (float): Annual salary of employee
-        - bonus (float): Bonus/commission received in the year
-        - age (int): Age of employee
-        - dob (str): Date of birth of employee in YYYYMM format
+    - `salary` (float): Monthly salary of employee
+    - `bonus` (float): Bonus/commission received in the year; only applicable in the month when bonus is disbursed
+    - `age` (int): Age of employee
+    - `dob` (str): Date of birth of employee in YYYYMM format
 
     Returns:
-        - (float): Allocation amount into OA
-        - (float): Allocation amount into SA
-        - (float): Allocation amount into MA
+    - (float): Allocation amount into OA
+    - (float): Allocation amount into SA
+    - (float): Allocation amount into MA
     """
 
-    cont_monthly = get_contribution_amount(salary, bonus, age, dob, entity=constants.STR_COMBINED) / 12
+    cont_monthly = get_monthly_contribution_amount(salary, bonus, age, dob, entity=constants.STR_COMBINED)
     sa_alloc = get_allocation_amount(age, dob, cont_monthly, account=constants.STR_SA)
     ma_alloc = get_allocation_amount(age, dob, cont_monthly, account=constants.STR_MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
@@ -94,19 +101,19 @@ def calculate_cpf_projection(age, salary, yoy_increase, base_cpf, n_years):
 
 def get_age(dob):
     """
-    Returns the user's age given the user's date of birth.
+    Returns the user's age given the user's date of birth. \\
     Age is determined using this logic:
         "Your employee is considered to be 35, 45, 50, 55, 60 or 65 years old in the month
         of his 35th, 45th, 50th, 55th, 60th or 65th birthday. The employee will be above 
         35, 45, 50, 55, 60 or 65 years from the month after the month of his 
-        35th, 45th, 50th, 55th, 60th or 65th birthday."
+        35th, 45th, 50th, 55th, 60th or 65th birthday." \\
     Reference: https://www.cpf.gov.sg/Employers/EmployerGuides/employer-guides/paying-cpf-contributions/cpf-contribution-and-allocation-rates
 
     Args:
-        - dob (str): Date of birth of employee in YYYYMM format
+    - `dob` (str): Date of birth of employee in YYYYMM format
     
     Returns:
-        - age (int): Age of employee
+    - `age` (int): Age of employee
     """
 
     birth_year, birth_month = (int(dob[0:4]), int(dob[4:6]))
@@ -122,11 +129,11 @@ def get_age_bracket(age, purpose):
     Gets the age bracket for the specified purpose and age.
 
     Args:
-        - age (int): Age of employee
-        - purpose (str): Either 'contribution' or 'allocation'
+    - `age` (int): Age of employee
+    - `purpose` (str): Either 'contribution' or 'allocation'
     
     Returns:
-        - (str): Age bracket of employee
+    - (str): Age bracket of employee
     """
     if purpose == constants.STR_CONTRIBUTION:
         keys = constants.rates_cont.keys()
@@ -146,33 +153,33 @@ def round_half_up(n, decimals=0):
     An amount of 50 cents will be regarded as an additional dollar:
 
     Args:
-        - n (float): input amount
+    - `n` (float): input amount
 
     Returns:
-        - (int): rounded amount to the nearest dollar
+    - (int): rounded amount to the nearest dollar
     """
 
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
 
 
-def get_contribution_amount(salary, bonus, age, dob, entity):
+def get_monthly_contribution_amount(salary, bonus, age, dob, entity):
     """
-    Gets the annual CPF contribution amount for the specified entity corresponding to the 
+    Gets the monthly CPF contribution amount for the specified entity corresponding to the 
     correct age and income bracket.
 
-    OW Ceiling: $6k a month, or $72k a year.
-    AW Ceiling: $102k - OW amount subject to CPF.
+    OW Ceiling: $6k a month. \\
+    AW Ceiling: $102k - OW amount subject to CPF in the year.
 
     Args:
-        - salary (float): Annual salary of employee
-        - bonus (float): Bonus/commission received in the year
-        - age (int): Age of employee
-        - dob (str): Date of birth of employee in YYYYMM format
-        - entity (str): Either 'combined' or 'employee'
+    - `salary` (float): Monthly salary of employee
+    - `bonus` (float): Bonus/commission received in the year; assume to be credited in December
+    - `age` (int): Age of employee
+    - `dob` (str): Date of birth of employee in YYYYMM format
+    - `entity` (str): Either 'combined' or 'employee'
     
     Returns:
-        - (int): CPF contribution amount for the year
+    - (int): CPF contribution amount for the month
     """
 
     if age is None:
@@ -195,12 +202,15 @@ def get_contribution_amount(salary, bonus, age, dob, entity):
         cont = cont_from_tw + cont_misc
     else:
         # salary is >=$750/month
-        amount_ow_eligible_for_cpf = min(salary, constants.CEILING_OW_ANNUAL)
+        amount_ow_eligible_for_cpf = min(salary, constants.CEILING_OW)
         cont_from_ow = rates[age_bracket][3][entity] * amount_ow_eligible_for_cpf
 
-        ceiling_aw = constants.CEILING_AW - amount_ow_eligible_for_cpf
-        amount_aw_eligible_for_cpf = min(bonus, ceiling_aw)
-        cont_from_aw = rates[age_bracket][3][entity] * amount_aw_eligible_for_cpf
+        cont_from_aw = 0
+        if bonus > 0:
+            # need to consider AW
+            ceiling_aw = constants.CEILING_AW - (amount_ow_eligible_for_cpf * 12)
+            amount_aw_eligible_for_cpf = min(bonus, ceiling_aw)
+            cont_from_aw = rates[age_bracket][3][entity] * amount_aw_eligible_for_cpf
 
         cont_total = cont_from_ow + cont_from_aw
         if entity == constants.STR_COMBINED:
@@ -216,13 +226,13 @@ def get_allocation_amount(age, dob, cont, account):
     Gets the amount allocated into the specified CPF account in a month.
 
     Args:
-        - age (int): Age of employee
-        - dob (str): Date of birth of employee in YYYYMM format
-        - cont (int): Total CPF contribution for the month
-        - account (str): Either 'SA' or MA'
+    - `age` (int): Age of employee
+    - `dob` (str): Date of birth of employee in YYYYMM format
+    - `cont` (int): Total CPF contribution for the month
+    - `account` (str): Either 'SA' or MA'
 
     Returns:
-        - (float): Amount allocated into the specified `account`
+    - (float): Amount allocated into the specified `account`
     """
 
     if age is None:
@@ -230,32 +240,6 @@ def get_allocation_amount(age, dob, cont, account):
 
     age_bracket = get_age_bracket(age, constants.STR_ALLOCATION)
     return constants.rates_alloc[age_bracket][account + '_ratio'] * cont
-
-
-
-def get_allocation(age, salary):
-    """
-    Gets the amount allocated into the individual CPF accounts.
-    Note that only the first $6k is subject to CPF.
-
-    Args:
-        - age (int): Age of employee
-        - salary (int): Salary of employee
-    
-    Returns:
-        - (float): Allocation amount into OA
-        - (float): Allocation amount into SA
-        - (float): Allocation amount into MA
-    """
-
-    age_bracket = get_age_bracket(age, constants.STR_ALLOCATION)
-    rates = constants.rates_alloc
-
-    allocation_oa = rates[age_bracket]['OA'] * min(salary, constants.CEILING_OW)
-    allocation_sa = rates[age_bracket]['SA'] * min(salary, constants.CEILING_OW)
-    allocation_ma = rates[age_bracket]['MA'] * min(salary, constants.CEILING_OW)
-
-    return allocation_oa, allocation_sa, allocation_ma
 
 
 def calculate_monthly_interest_oa(oa_accumulated):
