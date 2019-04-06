@@ -1,5 +1,6 @@
 import logic.cpf_constants as constants
 import math
+import datetime as dt
 
 
 def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
@@ -38,7 +39,7 @@ def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
     return cont_employee, cont_total - cont_employee
 
 
-def calculate_cpf_allocation(salary, bonus, age=None, dob=None):
+def calculate_cpf_allocation(salary_month, bonus, age=None, dob=None):
     """
     Calculates the CPF allocation for the month. \\
     Reference: https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf
@@ -60,7 +61,7 @@ def calculate_cpf_allocation(salary, bonus, age=None, dob=None):
     - (float): Allocation amount into MA
     """
 
-    cont_monthly = get_monthly_contribution_amount(salary, bonus, age, dob, entity=constants.STR_COMBINED)
+    cont_monthly = get_monthly_contribution_amount(salary_month, bonus, age, dob, entity=constants.STR_COMBINED)
     sa_alloc = get_allocation_amount(age, dob, cont_monthly, account=constants.STR_SA)
     ma_alloc = get_allocation_amount(age, dob, cont_monthly, account=constants.STR_MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
@@ -69,28 +70,38 @@ def calculate_cpf_allocation(salary, bonus, age=None, dob=None):
 
 
 # TODO: relook at this
-def calculate_cpf_projection(age, salary, yoy_increase, base_cpf, n_years):
+def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bonus,
+                            base_cpf, n_years, age=None, dob=None):
     """
-    Calculates the account balance in the CPF accounts after `n_years` based on the input parameters.
+    Calculates the account balance in the CPF accounts after `n_years` based on the input parameters. \\
+    Reference for interest calculation: https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf
 
     Args:
-        - age (int): Age of employee
-        - salary (int): Salary of employee
-        - yoy_increase (float): Projected year-on-year percentage increase in salary
-        - base_cpf (list): Contains the current CPF account balance
-        - n_years (int): Number of years into the future to predict
+    - `salary` (float): Annual salary of employee
+    - `bonus` (float): Bonus/commission received in the year
+    - `yoy_increase_salary` (float): Projected year-on-year percentage increase in salary
+    - `yoy_increase_bonus` (float): Projected year-on-year percentage increase in bonus
+    - `base_cpf` (list of floats): Contains the current balance in the CPF accounts 
+    - `n_years` (int): Number of years into the future to predict
+    - `age` (int): Age of employee
+    - `dob` (str): Date of birth of employee in YYYYMM format
 
     Returns:
-        - (float): OA balance after `n_years`
-        - (float): SA balance after `n_years`
-        - (float): MA balance after `n_years`
+    - (float): OA balance after `n_years`
+    - (float): SA balance after `n_years`
+    - (float): MA balance after `n_years`
     """
 
     oa, sa, ma = base_cpf['oa'], base_cpf['sa'], base_cpf['ma']
 
     for i in range(n_years):
-        salary_proj = salary * pow(1 + yoy_increase, i)
-        oa, sa, ma = calculate_annual_change(age+i, salary_proj, oa, sa, ma)
+        # default day to 1 as it is not used
+        date_start = dt.date(datetime.date.today().year + i, datetime.date.today().month, 1)
+
+        salary_proj = salary * pow(1 + yoy_increase_salary, i)
+        bonus_proj = bonus * pow(1 + yoy_increase_bonus, i)
+        oa, sa, ma = calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma, 
+                                             date_start=date_start, dob=dob)
 
     return oa, sa, ma
 
@@ -99,9 +110,11 @@ def calculate_cpf_projection(age, salary, yoy_increase, base_cpf, n_years):
 #                                       HELPER FUNCTIONS                                          #
 ###################################################################################################
 
-def get_age(dob):
+def get_age(dob, date_curr=None):
     """
     Returns the user's age given the user's date of birth. \\
+    If a date is explicitly specified, calculate the user's age from the specified date. 
+    Else, use today's date. \\
     Age is determined using this logic:
         "Your employee is considered to be 35, 45, 50, 55, 60 or 65 years old in the month
         of his 35th, 45th, 50th, 55th, 60th or 65th birthday. The employee will be above 
@@ -117,10 +130,14 @@ def get_age(dob):
     """
 
     birth_year, birth_month = (int(dob[0:4]), int(dob[4:6]))
-    today_year, today_month = (datetime.date.today().year, datetime.date.today().month)
-    year_diff, month_diff = (today_year - birth_year, today_month - birth_month)
+    if date_curr is not None:
+        curr_year, curr_month = (date_curr.year, date_curr.month)
+    else:
+        curr_year, curr_month = (dt.date.today().year, dt.date.today().month)
+
+    year_diff, month_diff = (curr_year - birth_year, curr_month - birth_month)
     age = year_diff if month_diff <= 0 else year_diff + 1
-    # print('CPF:117:', year_diff, month_diff, age)
+    # print('CPF:get_age():', year_diff, month_diff, age)
     return age
 
 
@@ -239,7 +256,7 @@ def get_allocation_amount(age, dob, cont, account):
         age = get_age(dob)
 
     age_bracket = get_age_bracket(age, constants.STR_ALLOCATION)
-    return constants.rates_alloc[age_bracket][account + '_ratio'] * cont
+    return round(constants.rates_alloc[age_bracket][account + '_ratio'] * cont, 2)
 
 
 def calculate_monthly_interest_oa(oa_accumulated):
@@ -305,37 +322,60 @@ def calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma):
     return ma_interest
 
 
-def calculate_annual_change(age, salary, oa_curr, sa_curr, ma_curr):
+def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr, 
+                            date_start=None, age=None, dob=None):
     """
-    Calculates the interest earned for the current year.
-    Adds the interest, along with the contributions in the year, to the CPF account balances.
+    Calculates the interest earned for the current year. \\
+    Adds the interest, along with the contributions in the year, to the CPF account balances. \\
+    Returns the projected amount in the CPF accounts at the end of the year.
+
+    `date_start` and `dob` are used for actual scenarios. \\
+    `age` is used for unit testing.
 
     Args:
-        - age (int): Age of employee
-        - salary (int): Salary of employee
-        - oa_curr (float): Current amount in OA
-        - sa_curr (float): Current amount in SA
-        - ma_curr (float): Current amount in MA
+    - `salary` (float): Annual salary of employee
+    - `bonus` (float): Bonus/commission received in the year
+    - `oa_curr` (float): Current amount in OA
+    - `sa_curr` (float): Current amount in SA
+    - `ma_curr` (float): Current amount in MA
+    - `date_start` (date): Start date of the year
+    - `age` (int): Age of employee
+    - `dob` (str): Date of birth of employee in YYYYMM format
 
     Returns:
-        - (float): New amount in OA, after contributions and interest for this year
-        - (float): New amount in SA, after contributions and interest for this year
-        - (float): New amount in MA, after contributions and interest for this year
+    - (float): New amount in OA, after contributions and interest for this year
+    - (float): New amount in SA, after contributions and interest for this year
+    - (float): New amount in MA, after contributions and interest for this year
     """
 
     oa_accumulated, sa_accumulated, ma_accumulated = oa_curr, sa_curr, ma_curr
     oa_interest_total, sa_interest_total, ma_interest_total = (0, 0, 0)
-
+    
     # iterate through the 12 months in the year
     for i in range(12):
-        allocation_oa, allocation_sa, allocation_ma = get_allocation(age, salary)
+        if age is None:
+            # add 1 month to the date for each iteration
+            year_start, month_start = (date_start.year, date_start.month + i)
+            if month_start > 12:
+                year_start += 1
+                month_start -= 12
+
+            # wrap the date in a datetime object
+            date_start = dt.date(year_start, month_start, 1)
+            age = get_age(dob, date_start)
+            bonus_annual = bonus if month_start == 12 else 0
+        else:
+            # else-condition only applies for unit testing
+            bonus_annual = bonus if i == 11 else 0
+
+        oa_alloc, sa_alloc, ma_alloc = calculate_cpf_allocation(salary / 12, bonus_annual, age=age)
 
         # add the CPF allocation for this month
-        oa_accumulated += allocation_oa
-        sa_accumulated += allocation_sa
-        ma_accumulated += allocation_ma
+        oa_accumulated += oa_alloc
+        sa_accumulated += sa_alloc
+        ma_accumulated += ma_alloc
 
-        # interest is calculated at the end of each month
+        # interest is calculated at the end of each month but only credited at the end of the year
         # calculate the interest gained in this month
 
         # first priority is OA

@@ -6,14 +6,14 @@ class TestCalculateCpfContribution(object):
     Tests the `calculate_cpf_contribution()` method in cpf.py.
 
     Test scenarios: 
-        1. Age <=55
-            a. Salary <=$50/month
-            b. Salary >$50 to <=$500/month
-            c. Salary >$500 to <$750/month
-            d. Salary above $750/month and below OW Ceiling, bonus below AW Ceiling
-            e. Salary above $750/month and below OW Ceiling, bonus above AW Ceiling
-            f. Salary above $750/month and above OW Ceiling, bonus below AW Ceiling
-            g. Salary above $750/month and above OW Ceiling, bonus above AW Ceiling
+    1. Age <=55
+        a. Salary <=$50/month
+        b. Salary >$50 to <=$500/month
+        c. Salary >$500 to <$750/month
+        d. Salary above $750/month and below OW Ceiling, bonus below AW Ceiling
+        e. Salary above $750/month and below OW Ceiling, bonus above AW Ceiling
+        f. Salary above $750/month and above OW Ceiling, bonus below AW Ceiling
+        g. Salary above $750/month and above OW Ceiling, bonus above AW Ceiling
     """
 
     def perform_assertion(self, salary, bonus, age, cont_employee, cont_employer):
@@ -77,13 +77,13 @@ class TestCalculateCpfAllocation(object):
     Age is the only variable here. \\
     Each test scenario contains 2 assertions - one with bonus and one without bonus. \\
     Test scenarios: 
-        1. Age <=35
-        2. Age >35 to <=45
-        3. Age >45 to <=50
-        4. Age >50 to <=55
-        5. Age >55 to <=60
-        6. Age >60 to <=65
-        7. Age >65
+    1. Age <=35
+    2. Age >35 to <=45
+    3. Age >45 to <=50
+    4. Age >50 to <=55
+    5. Age >55 to <=60
+    6. Age >60 to <=65
+    7. Age >65
     """
 
     global salary, bonus
@@ -95,8 +95,8 @@ class TestCalculateCpfAllocation(object):
         return cont
 
     def get_alloc_amount(self, cont, sa_ratio, ma_ratio):
-        sa_alloc = sa_ratio * cont
-        ma_alloc = ma_ratio * cont
+        sa_alloc = round(sa_ratio * cont, 2)
+        ma_alloc = round(ma_ratio * cont, 2)
         oa_alloc = cont - sa_alloc - ma_alloc
         return oa_alloc, sa_alloc, ma_alloc
 
@@ -189,205 +189,240 @@ class TestCalculateCpfAllocation(object):
         self.perform_assertion(salary, 0, age, [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus])
 
 
-# class TestCpfCalculateAnnualChange(object):
-#     """
-#     Tests the `calculate_annual_change()` method in cpf.py.
+class TestCpfCalculateAnnualChange(object):
+    """
+    Tests the `calculate_annual_change()` method in cpf.py.
 
-#     Test scenarios:
-#         1. OA < $20k, OA+SA+MA < $60k
-#         2. OA > $20k, $20k+SA+MA < $60k
-#         3. OA < $20k, OA+SA < $60k, OA+SA+MA > $60k
-#         4. OA > $20k, $20k+SA > $60k, $20k+SA+MA > $60k
-#         5. OA > $20k, $20k+SA < $60k, $20k+SA+MA > $60k
-#         6. OA < $20k but OA > $20k after a few months, OA+SA+MA < $60k
-#         7. OA < $20k but OA > $20k after a few months, OA+SA < $60k but OA+SA > $60k after a few months
-#     """
+    Test scenarios:
+    1. OA < $20k, OA+SA+MA < $60k
+    2. OA > $20k, $20k+SA+MA < $60k
+    3. OA < $20k, OA+SA < $60k, OA+SA+MA > $60k
+    4. OA < $20k, OA+SA > $60k after a few months
+    5. OA > $20k, $20k+SA > $60k, $20k+SA+MA > $60k
+    6. OA > $20k, $20k+SA < $60k, $20k+SA+MA > $60k
+    7. OA > $20k after a few months, OA+SA+MA < $60k
+    8. OA > $20k after a few months, OA+SA+MA > $60k after a few months
+    """
 
-#     # Class variables
-#     #   age: immaterial here - for convenience, standardise to age 25
-#     #   income: standardise to $4,000
-#     #   bonus: standardise to $10,000
-#     global age, salary, bonus, cont_oa, cont_sa, cont_ma
-#     age, salary, bonus = (25, 4000, 10000)
-#     cont_oa, cont_sa, cont_ma = (920, 240, 320) # 23%, 6%, 8% of $4000
+    # Class variables
+    #   age: immaterial here - for convenience, standardise to age 25
+    #   salary: standardise to $4,000
+    #   bonus: standardise to $10,000
+    global age, salary, bonus, cont_oa, cont_sa, cont_ma, cont_oa_bonus, cont_sa_bonus, cont_ma_bonus
+    age, salary, bonus = (25, 4000, 10000)
+    # 0.6217, 0.1621. 0.2162 of contribution (approx. 23%, 6%, 8% of $4000/$14000)
+    cont_oa, cont_sa, cont_ma = (920.11, 239.91, 319.98)
+    cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (3220.40, 839.68, 1119.92)
 
-#     # helper function
-#     def add_monthly_contribution(self, oa, sa, ma):
-#         oa += cont_oa
-#         sa += cont_sa
-#         ma += cont_ma
-#         return oa, sa, ma
+    # helper function
+    def add_monthly_contribution(self, oa, sa, ma, month):
+        if month == 12: # month is December
+            oa += cont_oa_bonus
+            sa += cont_sa_bonus
+            ma += cont_ma_bonus
+        else:
+            oa += cont_oa
+            sa += cont_sa
+            ma += cont_ma
+
+        return oa, sa, ma
     
-#     def perform_assertion(self, salary, bonus, age, balance_orig, balance_exp):
-#         """
-#         Helper class to perform assertion checks.
+    def perform_assertion(self, balance_orig, balance_exp):
+        """
+        Helper class to perform assertion checks.
 
-#         Args:
-#             - age (int): Age of employee
-#             - salary (float): Monthly salary of employee
-#             - balance_orig (array): Original balance in CPF accounts [OA, SA, MA]
-#             - balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
-#         """
+        Args:
+        - balance_orig (array): Original balance in CPF accounts [OA, SA, MA]
+        - balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
+        """
 
-#         oa_test, sa_test, ma_test = cpf.calculate_annual_change(
-#                                         salary, bonus, age, balance_orig[0], balance_orig[1], balance_orig[2])
+        oa_test, sa_test, ma_test = cpf.calculate_annual_change(salary * 12, bonus,
+                                        balance_orig[0], balance_orig[1], balance_orig[2], age=age)
 
-#         assert balance_exp[0] == oa_test
-#         assert balance_exp[1] == sa_test
-#         assert balance_exp[2] == ma_test
+        assert balance_exp[0] == oa_test
+        assert balance_exp[1] == sa_test
+        assert balance_exp[2] == ma_test
 
 
-#     def test_scenario_1(self):
-#         print('Test scenario 1: OA < $20k, OA+SA+MA < $60k')
-#         oa, sa, ma = (6000, 2000, 3000)
-#         int_oa, int_sa, int_ma = (0, 0, 0)
+    def test_scenario_1(self):
+        print('Test scenario 1: OA < $20k, OA+SA+MA < $60k')
+        oa, sa, ma = (6000, 2000, 3000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
 
-#         # OA: 3.5%
-#         # SA: 5%
-#         # MA: 5%
-#         for i in range(1, 13):
-#             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma)
-#             # add interest in this month
-#             int_oa += oa * (0.035 / 12)
-#             int_sa += sa * (0.05 / 12)
-#             int_ma += ma * (0.05 / 12)
+        # OA: 3.5%
+        # SA: 5%
+        # MA: 5%
+        for i in range(1, 13):
+            oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
+            # add interest in this month
+            int_oa += oa * (0.035 / 12)
+            int_sa += sa * (0.05 / 12)
+            int_ma += ma * (0.05 / 12)
         
-#         self.perform_assertion(age, salary, [6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma])
+        self.perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma])
 
-#     def test_scenario_2(self):
-#         print('Test scenario 2: OA > $20k, $20k+SA+MA < $60k')
-#         oa, sa, ma = (35000, 2000, 3000)
-#         int_oa, int_sa, int_ma = (0, 0, 0)
+    def test_scenario_2(self):
+        print('Test scenario 2: OA > $20k, $20k+SA+MA < $60k')
+        oa, sa, ma = (35000, 2000, 3000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
 
-#         # OA (up to $20k): 3.5%, OA (after $20k): 2.5%
-#         # SA: 5%
-#         # MA: 5%
-#         for i in range(1, 13):
-#             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma)
-#             # add interest in this month
-#             int_oa += 20000 * (0.035 / 12)
-#             int_oa += (oa - 20000) * (0.025 / 12)
-#             int_sa += sa * (0.05 / 12)
-#             int_ma += ma * (0.05 / 12)
+        # OA (up to $20k): 3.5%, OA (after $20k): 2.5%
+        # SA: 5%
+        # MA: 5%
+        for i in range(1, 13):
+            oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
+            # add interest in this month
+            int_oa += 20000 * (0.035 / 12)
+            int_oa += (oa - 20000) * (0.025 / 12)
+            int_sa += sa * (0.05 / 12)
+            int_ma += ma * (0.05 / 12)
         
-#         self.perform_assertion(age, salary, [35000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma])
+        self.perform_assertion([35000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma])
 
-#     def test_scenario_3(self):
-#         print('Test scenario 3: OA < $20k, OA+SA < $60k, OA+SA+MA > $60k')
-#         oa, sa, ma = (6000, 40000, 30000)
-#         int_oa, int_sa, int_ma = (0, 0, 0)
+    def test_scenario_3(self):
+        print('Test scenario 3: OA < $20k, OA+SA < $60k, OA+SA+MA > $60k')
+        oa, sa, ma = (6000, 30000, 30000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
 
-#         # OA: 3.5%
-#         # SA: 5%
-#         # MA (for greatest MA value where $20k+SA+MA <= $60k): 5%, MA (remaining): 4%
-#         for i in range(1, 13):
-#             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma)
-#             # add interest in this month
-#             int_oa += oa * (0.035 / 12)
-#             int_sa += sa * (0.05 / 12)
-#             amount_ma_eligible_for_extra_int = 60000 - oa - sa
-#             int_ma += amount_ma_eligible_for_extra_int * (0.05 / 12)
-#             int_ma += (ma - amount_ma_eligible_for_extra_int) * (0.04 / 12)
+        # OA: 3.5%
+        # SA: 5%
+        # MA (for greatest MA value where $20k+SA+MA <= $60k): 5%, MA (remaining): 4%
+        for i in range(1, 13):
+            oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
+            # add interest in this month
+            int_oa += oa * (0.035 / 12)
+            int_sa += sa * (0.05 / 12)
+            print('Test - i: {}, SA amount: {}'.format(i, sa))
+            print('Test - i: {}, SA interest this month: {}'.format(i, sa * (0.05 / 12)))
+            amount_ma_eligible_for_extra_int = 60000 - oa - sa
+            int_ma += amount_ma_eligible_for_extra_int * (0.05 / 12)
+            int_ma += (ma - amount_ma_eligible_for_extra_int) * (0.04 / 12)
   
-#         self.perform_assertion(age, salary, [6000, 40000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
+        self.perform_assertion([6000, 30000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
 
-#     def test_scenario_4(self):
-#         print('Test scenario 4: OA > $20k, $20k+SA > $60k, $20k+SA+MA > $60k')
-#         oa, sa, ma = (25000, 45000, 30000)
-#         int_oa, int_sa, int_ma = (0, 0, 0)
+    def test_scenario_4(self):
+        print('Test scenario 4: OA < $20k, OA+SA > $60k after a few months')
+        oa, sa, ma = (6000, 40000, 30000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
 
-#         # OA (up to $20k): 3.5%, OA (after $20k): 2.5%
-#         # SA (for greatest SA value where $20k+SA <= $60k): 5%, SA (remaining): 4%
-#         # MA: 4%
-#         for i in range(1, 13):
-#             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma)
-#             # add interest in this month
-#             int_oa += 20000 * (0.035 / 12)
-#             int_oa += (oa - 20000) * (0.025 / 12)
-#             amount_sa_eligible_for_extra_int = 60000 - 20000
-#             int_sa += amount_sa_eligible_for_extra_int * (0.05 / 12)
-#             int_sa += (sa - amount_sa_eligible_for_extra_int) * (0.04 / 12)
-#             int_ma += ma * (0.04 / 12)
+        # OA: 3.5%
+        # SA (for greatest SA value where OA+SA <= $60k): 5%, SA (remaining): 4%
+        # MA (for greatest MA value where OA+SA+MA <= $60k): 5%, MA (remaining): 4%
+        for i in range(1, 13):
+            oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
+            # add interest in this month
+            int_oa += oa * (0.035 / 12)
+            amount_sa_eligible_for_extra_int = 60000 - oa
 
-#         self.perform_assertion(age, salary, [25000, 45000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
+            if sa > amount_sa_eligible_for_extra_int:
+                int_sa += amount_sa_eligible_for_extra_int * (0.05 / 12)
+                int_sa += (sa - amount_sa_eligible_for_extra_int) * (0.04 / 12)
+            else:
+                int_sa += sa * (0.05 / 12)
 
-#     def test_scenario_5(self):
-#         print('Test scenario 5: OA > $20k, $20k+SA < $60k, $20k+SA+MA > $60k')
-#         oa, sa, ma = (25000, 30000, 30000)
-#         int_oa, int_sa, int_ma = (0, 0, 0)
+            amount_ma_eligible_for_extra_int = max(0, amount_sa_eligible_for_extra_int - sa)
+            int_ma += amount_ma_eligible_for_extra_int * (0.05 / 12)
+            int_ma += (ma - amount_ma_eligible_for_extra_int) * (0.04 / 12)
 
-#         # OA (up to $20k): 3.5%, OA (after $20k): 2.5%
-#         # SA: 5%
-#         # MA (for greatest MA value where $20k+SA+MA <= $60k): 5%, MA (remaining): 4%
-#         for i in range(1, 13):
-#             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma)
-#             # add interest in this month
-#             int_oa += 20000 * (0.035 / 12)
-#             int_oa += (oa - 20000) * (0.025 / 12)
-#             int_sa += sa * (0.05 / 12)
-#             amount_ma_eligible_for_extra_int = 60000 -  20000 - sa
-#             int_ma += amount_ma_eligible_for_extra_int * (0.05 / 12)
-#             int_ma += (ma - amount_ma_eligible_for_extra_int) * (0.04 / 12)
+        self.perform_assertion([6000, 40000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
+
+
+    def test_scenario_5(self):
+        print('Test scenario 5: OA > $20k, $20k+SA > $60k, $20k+SA+MA > $60k')
+        oa, sa, ma = (25000, 45000, 30000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        # OA (up to $20k): 3.5%, OA (after $20k): 2.5%
+        # SA (for greatest SA value where $20k+SA <= $60k): 5%, SA (remaining): 4%
+        # MA: 4%
+        for i in range(1, 13):
+            oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
+            # add interest in this month
+            int_oa += 20000 * (0.035 / 12)
+            int_oa += (oa - 20000) * (0.025 / 12)
+            amount_sa_eligible_for_extra_int = 60000 - 20000
+            int_sa += amount_sa_eligible_for_extra_int * (0.05 / 12)
+            int_sa += (sa - amount_sa_eligible_for_extra_int) * (0.04 / 12)
+            int_ma += ma * (0.04 / 12)
+
+        self.perform_assertion([25000, 45000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
+
+    def test_scenario_6(self):
+        print('Test scenario 6: OA > $20k, $20k+SA < $60k, $20k+SA+MA > $60k')
+        oa, sa, ma = (25000, 30000, 30000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        # OA (up to $20k): 3.5%, OA (after $20k): 2.5%
+        # SA: 5%
+        # MA (for greatest MA value where $20k+SA+MA <= $60k): 5%, MA (remaining): 4%
+        for i in range(1, 13):
+            oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
+            # add interest in this month
+            int_oa += 20000 * (0.035 / 12)
+            int_oa += (oa - 20000) * (0.025 / 12)
+            int_sa += sa * (0.05 / 12)
+            amount_ma_eligible_for_extra_int = 60000 -  20000 - sa
+            int_ma += amount_ma_eligible_for_extra_int * (0.05 / 12)
+            int_ma += (ma - amount_ma_eligible_for_extra_int) * (0.04 / 12)
         
-#         self.perform_assertion(age, salary, [25000, 30000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
+        self.perform_assertion([25000, 30000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
 
-#     def test_scenario_6(self):
-#         print('Test scenario 6: OA < $20k but OA > $20k after a few years, OA+SA+MA < $60k')
-#         oa, sa, ma = (15000, 5000, 5000)
-#         int_oa, int_sa, int_ma = (0, 0, 0)
+    def test_scenario_7(self):
+        print('Test scenario 7: OA > $20k after a few years, OA+SA+MA < $60k')
+        oa, sa, ma = (15000, 5000, 5000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
 
-#         # OA (up to $20k): 3.5%, OA (after $20k): 2.5%
-#         # SA: 5%
-#         # MA: 5%
-#         for i in range(1, 13):
-#             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma)
-#             # add interest in this month
-#             if oa <= 20000:
-#                 int_oa += oa * (0.035 / 12)
-#             else:
-#                 int_oa += 20000 * (0.035 / 12)
-#                 int_oa += (oa - 20000) * (0.025 / 12)
+        # OA (up to $20k): 3.5%, OA (after $20k): 2.5%
+        # SA: 5%
+        # MA: 5%
+        for i in range(1, 13):
+            oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
+            # add interest in this month
+            if oa <= 20000:
+                int_oa += oa * (0.035 / 12)
+            else:
+                int_oa += 20000 * (0.035 / 12)
+                int_oa += (oa - 20000) * (0.025 / 12)
 
-#             int_sa += sa * (0.05 / 12)
-#             int_ma += ma * (0.05 / 12)
+            int_sa += sa * (0.05 / 12)
+            int_ma += ma * (0.05 / 12)
         
-#         self.perform_assertion(age, salary, [15000, 5000, 5000], [oa + int_oa, sa + int_sa, ma + int_ma])      
+        self.perform_assertion([15000, 5000, 5000], [oa + int_oa, sa + int_sa, ma + int_ma])      
 
-#     def test_scenario_7(self):
-#         print('Test scenario 7: OA < $20k but OA > $20k after a few years, \
-#                 OA+SA+MA < $60k but OA+SA+MA > $60k after a few years')
-#         oa, sa, ma = (18000, 39000, 5000)
-#         int_oa, int_sa, int_ma = (0, 0, 0)
+    def test_scenario_8(self):
+        print('Test scenario 8: OA > $20k after a few years, OA+SA+MA > $60k after a few years')
+        oa, sa, ma = (18000, 39000, 5000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
 
-#         # OA (up to $20k): 3.5%, OA (after $20k): 2.5%
-#         # SA (for greatest SA value where $20k+SA <= $60k): 5%, SA (remaining): 4%
-#         # MA (for greatest MA value where $20k+SA+MA <= $60k): 5%, MA (remaining): 4%
-#         for i in range(1, 13):
-#             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma)
-#             # add interest in this month
-#             if oa <= 20000:
-#                 int_oa += oa * (0.035 / 12)
-#             else:
-#                 int_oa += 20000 * (0.035 / 12)
-#                 int_oa += (oa - 20000) * (0.025 / 12)
+        # OA (up to $20k): 3.5%, OA (after $20k): 2.5%
+        # SA (for greatest SA value where $20k+SA <= $60k): 5%, SA (remaining): 4%
+        # MA (for greatest MA value where $20k+SA+MA <= $60k): 5%, MA (remaining): 4%
+        for i in range(1, 13):
+            oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
+            # add interest in this month
+            if oa <= 20000:
+                int_oa += oa * (0.035 / 12)
+            else:
+                int_oa += 20000 * (0.035 / 12)
+                int_oa += (oa - 20000) * (0.025 / 12)
 
-#             amount_sa_eligible_for_extra_int = 60000 - min(oa, 20000)
-#             if sa <= amount_sa_eligible_for_extra_int:
-#                 # some value of MA can get an additional 1% as well
-#                 int_sa += sa * (0.05 / 12)
-#                 amount_ma_eligible_for_extra_int = amount_sa_eligible_for_extra_int - sa
-#                 if ma <= amount_ma_eligible_for_extra_int:
-#                     int_ma += ma * (0.05 / 12)
-#                 else:
-#                     int_ma += amount_ma_eligible_for_extra_int * (0.05 / 12)
-#                     int_ma += (ma - amount_ma_eligible_for_extra_int) * (0.04 / 12)
-#             else:
-#                 # not all SA can get an additional 1%
-#                 int_sa += amount_sa_eligible_for_extra_int * (0.05 / 12)
-#                 int_sa += (sa - amount_sa_eligible_for_extra_int) * (0.04 / 12)
-#                 int_ma += ma * (0.04 / 12)
+            amount_sa_eligible_for_extra_int = 60000 - min(oa, 20000)
+            if sa <= amount_sa_eligible_for_extra_int:
+                # some value of MA can get an additional 1% as well
+                int_sa += sa * (0.05 / 12)
+                amount_ma_eligible_for_extra_int = amount_sa_eligible_for_extra_int - sa
+                if ma <= amount_ma_eligible_for_extra_int:
+                    int_ma += ma * (0.05 / 12)
+                else:
+                    int_ma += amount_ma_eligible_for_extra_int * (0.05 / 12)
+                    int_ma += (ma - amount_ma_eligible_for_extra_int) * (0.04 / 12)
+            else:
+                # not all SA can get an additional 1%
+                int_sa += amount_sa_eligible_for_extra_int * (0.05 / 12)
+                int_sa += (sa - amount_sa_eligible_for_extra_int) * (0.04 / 12)
+                int_ma += ma * (0.04 / 12)
    
-#         self.perform_assertion(age, salary, [18000, 39000, 5000], [oa + int_oa, sa + int_sa, ma + int_ma])      
+        self.perform_assertion([18000, 39000, 5000], [oa + int_oa, sa + int_sa, ma + int_ma])      
 
 
 # class TestCalculateCpfProjection(object):
