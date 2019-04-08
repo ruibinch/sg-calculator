@@ -4,8 +4,7 @@ import datetime as dt
 
 
 def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
-    # TODO: further enhancement to specify bonus month so that contribution amount for the
-    #  individual months can be specified
+    # TODO: further enhancement to specify bonus month
     """
     Calculates the CPF contribution for the year.
     Taking into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling. \\
@@ -66,10 +65,9 @@ def calculate_cpf_allocation(salary_month, bonus, age=None, dob=None):
     ma_alloc = get_allocation_amount(age, dob, cont_monthly, account=constants.STR_MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
 
-    return oa_alloc, sa_alloc, ma_alloc
+    return round(oa_alloc, 2), sa_alloc, ma_alloc
 
 
-# TODO: relook at this
 def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bonus,
                             base_cpf, n_years, age=None, dob=None):
     """
@@ -180,6 +178,20 @@ def round_half_up(n, decimals=0):
     return math.floor(n*multiplier + 0.5) / multiplier
 
 
+def truncate(n, decimals=2):
+    """
+    Truncates the given monetary amount to the specified number of decimal places.
+
+    Args:
+    - `n` (float): input amount
+
+    Returns:
+    - (float): truncated amount to `decimals` decimal places
+    """
+    before_dec, after_dec = str(n).split('.')
+    return float('.'.join((before_dec, after_dec[0:2])))
+
+
 def get_monthly_contribution_amount(salary, bonus, age, dob, entity):
     """
     Gets the monthly CPF contribution amount for the specified entity corresponding to the 
@@ -241,6 +253,7 @@ def get_monthly_contribution_amount(salary, bonus, age, dob, entity):
 def get_allocation_amount(age, dob, cont, account):
     """
     Gets the amount allocated into the specified CPF account in a month.
+    Returned amount is truncated to 2 decimal places.
 
     Args:
     - `age` (int): Age of employee
@@ -256,7 +269,7 @@ def get_allocation_amount(age, dob, cont, account):
         age = get_age(dob)
 
     age_bracket = get_age_bracket(age, constants.STR_ALLOCATION)
-    return round(constants.rates_alloc[age_bracket][account + '_ratio'] * cont, 2)
+    return truncate(constants.rates_alloc[age_bracket][account + '_ratio'] * cont)
 
 
 def calculate_monthly_interest_oa(oa_accumulated):

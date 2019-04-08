@@ -94,9 +94,13 @@ class TestCalculateCpfAllocation(object):
         cont = cpf.get_monthly_contribution_amount(salary, bonus_annual, age=age, dob=None, entity=constants.STR_COMBINED)
         return cont
 
+    def truncate(self, n, decimals=2):
+        before_dec, after_dec = str(n).split('.')
+        return float('.'.join((before_dec, after_dec[0:2])))
+
     def get_alloc_amount(self, cont, sa_ratio, ma_ratio):
-        sa_alloc = round(sa_ratio * cont, 2)
-        ma_alloc = round(ma_ratio * cont, 2)
+        sa_alloc = self.truncate(sa_ratio * cont)
+        ma_alloc = self.truncate(ma_ratio * cont)
         oa_alloc = cont - sa_alloc - ma_alloc
         return oa_alloc, sa_alloc, ma_alloc
 
