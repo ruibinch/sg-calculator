@@ -12,19 +12,19 @@ Backend RESTful API running on Python Flask.
 sudo apt install python-pip
 # For python 3
 sudo apt install python3-pip
-pip install virtualenv
-python -m virtualenv venv
+pip3 install virtualenv
+python3 -m virtualenv -p python3 venv
 source venv/bin/activate
 ```
 
 3. Install the dependencies
-```
-$ pip install -r requirements.txt
+```bash
+pip install -r requirements.txt
 ```
 
 4. Run the development server
-```
-$ python app.py
+```bash
+python app.py
 ```
 
 The app will run on [http://localhost:5000](http://localhost:5000).
@@ -35,6 +35,6 @@ Testing framework used is `pytest`. <br>
 Tests are located in */tests* folder.
 
 To run the unit tests,
-```
-$ pytest
+```bash
+pytest
 ```
