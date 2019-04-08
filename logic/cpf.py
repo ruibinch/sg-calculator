@@ -277,34 +277,42 @@ def calculate_monthly_interest_oa(oa_accumulated):
     Calculates the interest to be added to the OA in a month period.
 
     Args:
-        - oa_accumulated (float): Current amount in OA
+    - oa_accumulated (float): Current amount in OA
 
     Returns:
-        - (float): OA interest amount
+    - (float): OA interest amount
     """
 
-    oa_interest = 0
-    if oa_accumulated > constants.THRESHOLD_EXTRAINT_OA:
-        oa_interest += constants.THRESHOLD_EXTRAINT_OA * ((constants.INT_RATE_OA + constants.INT_EXTRA) / 12)
-        oa_interest += (oa_accumulated - constants.THRESHOLD_EXTRAINT_OA) * (constants.INT_RATE_OA / 12)
-    else:
-        oa_interest += oa_accumulated * ((constants.INT_RATE_OA + constants.INT_EXTRA) / 12)
+    oa_interest = oa_accumulated * (constants.INT_RATE_OA / 12)
+
+    # if oa_accumulated > constants.THRESHOLD_EXTRAINT_OA:
+    #     oa_interest += constants.THRESHOLD_EXTRAINT_OA * ((constants.INT_RATE_OA + constants.INT_EXTRA) / 12)
+    #     oa_interest += (oa_accumulated - constants.THRESHOLD_EXTRAINT_OA) * (constants.INT_RATE_OA / 12)
+    # else:
+    #     oa_interest += oa_accumulated * ((constants.INT_RATE_OA + constants.INT_EXTRA) / 12)
     
     return oa_interest
 
 
-def calculate_monthly_interest_sa(sa_accumulated, rem_amount_for_extra_int_sa_ma):
+def calculate_monthly_interest_sa(oa_accumulated, sa_accumulated, rem_amount_for_extra_int_sa_ma):
     """
     Calculates the interest to be added to the SA in a month period.
+    Extra 1% interest earned on OA, if any, is credited to the SA.
 
     Args:
-        - sa_accumulated (float): Current amount in SA
+    - oa_accumulated (float): Current amount in OA
+    - sa_accumulated (float): Current amount in SA
 
     Returns:
-        - (float): SA interest amount
+    - (float): SA interest amount
     """
 
     sa_interest = 0
+
+    # first, add the extra 1% interest earned on OA 
+    sa_interest += min(oa_accumulated, constants.THRESHOLD_EXTRAINT_OA) * (constants.INT_EXTRA / 12)
+
+    # then, add the interest earned on SA
     if sa_accumulated > rem_amount_for_extra_int_sa_ma:
         sa_interest += rem_amount_for_extra_int_sa_ma * ((constants.INT_RATE_SA + constants.INT_EXTRA) / 12)
         sa_interest += (sa_accumulated - rem_amount_for_extra_int_sa_ma) * (constants.INT_RATE_SA / 12)
@@ -319,10 +327,10 @@ def calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma):
     Calculates the interest to be added to the MA in a month period.
 
     Args:
-        - ma_accumulated (float): Current amount in MA
+    - ma_accumulated (float): Current amount in MA
 
     Returns:
-        - (float): MA interest amount
+    - (float): MA interest amount
     """
 
     ma_interest = 0
@@ -366,6 +374,7 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
     
     # iterate through the 12 months in the year
     for i in range(12):
+        # to check if this month contains a bonus
         if age is None:
             # add 1 month to the date for each iteration
             year_start, month_start = (date_start.year, date_start.month + i)
@@ -381,23 +390,35 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
             # else-condition only applies for unit testing
             bonus_annual = bonus if i == 11 else 0
 
-        oa_alloc, sa_alloc, ma_alloc = calculate_cpf_allocation(salary / 12, bonus_annual, age=age)
-
         # add the CPF allocation for this month
+        # this is actually the contribution for the previous month's salary
+        oa_alloc, sa_alloc, ma_alloc = calculate_cpf_allocation(salary / 12, bonus_annual, age=age)
         oa_accumulated += oa_alloc
         sa_accumulated += sa_alloc
         ma_accumulated += ma_alloc
 
-        # interest is calculated at the end of each month but only credited at the end of the year
-        # calculate the interest gained in this month
+        ###########################################################################################
+        #                                   INTEREST CALCULATION                                  #
+        # Interest is calculated at the end of each month based on the lowest balance amount in   #
+        # the month.                                                                              # 
+        # But, it is only credited at the end of the year.                                        # 
+        #                                                                                         #
+        # Extra 1% interest is earned on first $60k of combined balance, with up to $20k coming   #
+        # from OA.                                                                                #
+        # Extra 1% interest earned on OA is credited to SA, not OA.                               #
+        # Order priority: 1. OA, 2. SA, 3. MA                                                     #
+        ###########################################################################################
 
         # first priority is OA
         oa_interest_total += calculate_monthly_interest_oa(oa_accumulated)
-        
+
         # remaining amount available for extra interest to be received in SA/MA has a minimum of $40k
-        rem_amount_for_extra_int_sa_ma = constants.THRESHOLD_EXTRAINT_TOTAL - min(oa_accumulated, constants.THRESHOLD_EXTRAINT_OA)
+        rem_amount_for_extra_int_sa_ma = constants.THRESHOLD_EXTRAINT_TOTAL - \
+                                            min(oa_accumulated, constants.THRESHOLD_EXTRAINT_OA)
         # second priority is SA
-        sa_interest = calculate_monthly_interest_sa(sa_accumulated, rem_amount_for_extra_int_sa_ma)
+        sa_interest = calculate_monthly_interest_sa(oa_accumulated,
+                                                    sa_accumulated, 
+                                                    rem_amount_for_extra_int_sa_ma)
         sa_interest_total += sa_interest
 
         # remaining amount available for extra interest to be received in MA depends on the amount in SA 
@@ -405,6 +426,7 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         # last priority is MA
         ma_interest = calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma)
         ma_interest_total += ma_interest
+
 
     # interest added at the end of the year
     oa_new = oa_accumulated + oa_interest_total
