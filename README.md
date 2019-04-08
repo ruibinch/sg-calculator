@@ -7,6 +7,10 @@ Backend RESTful API running on Python Flask.
 1. Clone the repository
 
 2. Create and activate a Python virtual environment (either via `conda` or `virtualenv`)
+```bash
+virtualenv venv
+. venv/bin/activate
+```
 
 3. Install the dependencies
 ```
