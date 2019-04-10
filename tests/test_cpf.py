@@ -1,5 +1,6 @@
-import logic.cpf_constants as constants
-import logic.cpf as cpf
+from logic import cpf
+from logic import cpf_constants as constants
+
 
 class TestCalculateCpfContribution(object):
     """
@@ -260,7 +261,7 @@ class TestCpfCalculateAnnualChange(object):
             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
             # add interest in this month
             int_oa += oa * (0.025 / 12)
-            int_sa += oa * (0.01 / 12)
+            int_sa += min(oa, 20000) * (0.01 / 12)
             int_sa += sa * (0.05 / 12)
             int_ma += ma * (0.05 / 12)
         
@@ -278,7 +279,7 @@ class TestCpfCalculateAnnualChange(object):
             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
             # add interest in this month
             int_oa += oa * (0.025 / 12)
-            int_sa += 20000 * (0.01 / 12)
+            int_sa += min(oa, 20000) * (0.01 / 12)
             int_sa += sa * (0.05 / 12)
             int_ma += ma * (0.05 / 12)
         
@@ -296,7 +297,7 @@ class TestCpfCalculateAnnualChange(object):
             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
             # add interest in this month
             int_oa += oa * (0.025 / 12)
-            int_sa += oa * (0.01 / 12)
+            int_sa += min(oa, 20000) * (0.01 / 12)
             int_sa += sa * (0.05 / 12)
             amount_ma_eligible_for_extra_int = 60000 - oa - sa
             int_ma += amount_ma_eligible_for_extra_int * (0.05 / 12)
@@ -316,7 +317,7 @@ class TestCpfCalculateAnnualChange(object):
             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
             # add interest in this month
             int_oa += oa * (0.025 / 12)
-            int_sa += oa * (0.01 / 12)
+            int_sa += min(oa, 20000) * (0.01 / 12)
             amount_sa_eligible_for_extra_int = 60000 - oa
 
             if sa > amount_sa_eligible_for_extra_int:
@@ -344,7 +345,7 @@ class TestCpfCalculateAnnualChange(object):
             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
             # add interest in this month
             int_oa += oa * (0.025 / 12)
-            int_sa += 20000 * (0.01 / 12)
+            int_sa += min(oa, 20000) * (0.01 / 12)
             amount_sa_eligible_for_extra_int = 60000 - 20000
             int_sa += amount_sa_eligible_for_extra_int * (0.05 / 12)
             int_sa += (sa - amount_sa_eligible_for_extra_int) * (0.04 / 12)
@@ -364,7 +365,7 @@ class TestCpfCalculateAnnualChange(object):
             oa, sa, ma = self.add_monthly_contribution(oa, sa, ma, i)
             # add interest in this month
             int_oa += oa * (0.025 / 12)
-            int_sa += 20000 * (0.01 / 12)
+            int_sa += min(oa, 20000) * (0.01 / 12)
             int_sa += sa * (0.05 / 12)
             amount_ma_eligible_for_extra_int = 60000 -  20000 - sa
             int_ma += amount_ma_eligible_for_extra_int * (0.05 / 12)
