@@ -92,7 +92,7 @@ class TestCalculateCpfAllocation(object):
 
     def get_contribution_amount_by_age(self, age, with_bonus):
         bonus_annual = bonus if with_bonus is True else 0
-        cont = cpf.get_monthly_contribution_amount(salary, bonus_annual, age=age, dob=None, entity=constants.STR_COMBINED)
+        cont = cpf._get_monthly_contribution_amount(salary, bonus_annual, age=age, dob=None, entity=constants.STR_COMBINED)
         return cont
 
     def truncate(self, n, decimals=2):
@@ -196,7 +196,7 @@ class TestCalculateCpfAllocation(object):
 
 class TestCpfCalculateAnnualChange(object):
     """
-    Tests the `calculate_annual_change()` method in cpf.py.
+    Tests the `_calculate_annual_change()` method in cpf.py.
 
     Test scenarios:
     1. OA < $20k, OA+SA+MA < $60k
@@ -213,14 +213,15 @@ class TestCpfCalculateAnnualChange(object):
     #   age: immaterial here - for convenience, standardise to age 25
     #   salary: standardise to $4,000
     #   bonus: standardise to $10,000
-    global age, salary, bonus, cont_oa, cont_sa, cont_ma, cont_oa_bonus, cont_sa_bonus, cont_ma_bonus
+    global age, salary, bonus
     age, salary, bonus = (25, 4000, 10000)
-    # 0.6217, 0.1621. 0.2162 of contribution (approx. 23%, 6%, 8% of $4000/$14000)
-    cont_oa, cont_sa, cont_ma = (920.13, 239.9, 319.97)
-    cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (3220.42, 839.67, 1119.91)
-
+    
     # helper function
     def add_monthly_contribution(self, oa, sa, ma, month):
+        # 0.6217, 0.1621. 0.2162 of contribution (approx. 23%, 6%, 8% of $4000/$14000)
+        cont_oa, cont_sa, cont_ma = (920.13, 239.9, 319.97)
+        cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (3220.42, 839.67, 1119.91)
+        
         if month == 12: # month is December
             oa += cont_oa_bonus
             sa += cont_sa_bonus
@@ -241,7 +242,7 @@ class TestCpfCalculateAnnualChange(object):
         - balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
         """
 
-        oa_test, sa_test, ma_test = cpf.calculate_annual_change(salary * 12, bonus,
+        oa_test, sa_test, ma_test = cpf._calculate_annual_change(salary * 12, bonus,
                                         balance_orig[0], balance_orig[1], balance_orig[2], age=age)
 
         assert balance_exp[0] == oa_test
