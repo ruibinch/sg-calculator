@@ -10,8 +10,8 @@ Welcome to SG Calculator's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   pages/installation.rst
-   pages/logic.rst
+   source/installation.rst
+   source/logic.rst
 
 
 Indices and tables

@@ -1,0 +1,319 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Logic API &mdash; SG Calculator  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> SG Calculator
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Logic API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-logic.cpf">CPF Main Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-logic">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SG Calculator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Logic API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/source/logic.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="logic-api">
+<h1>Logic API<a class="headerlink" href="#logic-api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-logic.cpf">
+<span id="cpf-main-functions"></span><h2>CPF Main Functions<a class="headerlink" href="#module-logic.cpf" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="logic.cpf.calculate_cpf_allocation">
+<code class="descclassname">logic.cpf.</code><code class="descname">calculate_cpf_allocation</code><span class="sig-paren">(</span><em>salary_month</em>, <em>bonus</em>, <em>age=None</em>, <em>dob=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_cpf_allocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_cpf_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the CPF allocation for the month.</p>
+<p><a class="reference external" href="https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf/">Reference</a></p>
+<p>Steps for calculation:</p>
+<ol class="arabic simple">
+<li><p>From the total contribution amount, derive the amount allocated into SA and MA using the respective multiplier corresponding to the age.</p></li>
+<li><p>OA allocation = Total contribution - SA allocation - MA allocation.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>salary</strong> (<em>float</em>) – Monthly salary of employee</p></li>
+<li><p><strong>bonus</strong> (<em>float</em>) – Bonus/commission received in the year; only applicable in the month when bonus is disbursed</p></li>
+<li><p><strong>age</strong> (<em>int</em>) – Age of employee</p></li>
+<li><p><strong>dob</strong> (<em>str</em>) – Date of birth of employee in YYYYMM format</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Tuple containing</dt><dd><ul class="simple">
+<li><p>(float): Allocation amount into OA</p></li>
+<li><p>(float): Allocation amount into SA</p></li>
+<li><p>(float): Allocation amount into MA</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><em>tuple</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="logic.cpf.calculate_cpf_contribution">
+<code class="descclassname">logic.cpf.</code><code class="descname">calculate_cpf_contribution</code><span class="sig-paren">(</span><em>salary</em>, <em>bonus</em>, <em>age=None</em>, <em>dob=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_cpf_contribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_cpf_contribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the CPF contribution for the year.</p>
+<p>Takes into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling.</p>
+<p><a class="reference external" href="https://www.cpf.gov.sg/Assets/employers/Documents/Table%201_Pte%20and%20Npen%20CPF%20contribution%20rates%20for%20Singapore%20Citizens%20and%203rd%20year%20SPR%20Jan%202016.pdf/">Reference</a></p>
+<p>Steps for calculation:</p>
+<ol class="arabic simple">
+<li><p>Compute total CPF contribution, rounded to the nearest dollar.</p></li>
+<li><p>Compute the employees’ share (drop the cents).</p></li>
+<li><p>Employers’ share = Total contribution - employees’ share.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>salary</strong> (<em>float</em>) – Annual salary of employee</p></li>
+<li><p><strong>bonus</strong> (<em>float</em>) – Bonus/commission received in the year; assume to be credited in December</p></li>
+<li><p><strong>age</strong> (<em>int</em>) – Age of employee</p></li>
+<li><p><strong>dob</strong> (<em>str</em>) – Date of birth of employee in YYYYMM format</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Tuple containing</dt><dd><ul class="simple">
+<li><p>(float): Amount contributed by the employee in the year</p></li>
+<li><p>(float): Amount contributed by the employer in the year</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><em>tuple</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="logic.cpf.calculate_cpf_projection">
+<code class="descclassname">logic.cpf.</code><code class="descname">calculate_cpf_projection</code><span class="sig-paren">(</span><em>salary</em>, <em>bonus</em>, <em>yoy_increase_salary</em>, <em>yoy_increase_bonus</em>, <em>base_cpf</em>, <em>n_years</em>, <em>age=None</em>, <em>dob=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_cpf_projection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_cpf_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the projected account balance in the CPF accounts after <cite>n_years</cite>.</p>
+<p><a class="reference external" href="https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/">Reference</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>salary</strong> (<em>float</em>) – Annual salary of employee</p></li>
+<li><p><strong>bonus</strong> (<em>float</em>) – Bonus/commission received in the year</p></li>
+<li><p><strong>yoy_increase_salary</strong> (<em>float</em>) – Projected year-on-year percentage increase in salary</p></li>
+<li><p><strong>yoy_increase_bonus</strong> (<em>float</em>) – Projected year-on-year percentage increase in bonus</p></li>
+<li><p><strong>base_cpf</strong> (<em>list of floats</em>) – Contains the current balance in the CPF accounts</p></li>
+<li><p><strong>n_years</strong> (<em>int</em>) – Number of years into the future to predict</p></li>
+<li><p><strong>age</strong> (<em>int</em>) – Age of employee</p></li>
+<li><p><strong>dob</strong> (<em>str</em>) – Date of birth of employee in YYYYMM format</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Tuple containing</dt><dd><ul class="simple">
+<li><p>(float): OA balance after <cite>n_years</cite></p></li>
+<li><p>(float): SA balance after <cite>n_years</cite></p></li>
+<li><p>(float): MA balance after <cite>n_years</cite></p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><em>tuple</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-logic">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-logic" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Fellowship
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

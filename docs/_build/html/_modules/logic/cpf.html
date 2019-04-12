@@ -1,35 +1,148 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>logic.cpf &#8212; SG Calculator  documentation</title>
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>logic.cpf &mdash; SG Calculator  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
    
-  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head><body>
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
           
 
-          <div class="body" role="main">
+          
+            <a href="../../index.html" class="icon icon-home"> SG Calculator
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/logic.html">Logic API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">SG Calculator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>logic.cpf</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <h1>Source code for logic.cpf</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">logic</span> <span class="k">import</span> <span class="n">cpf_constants</span> <span class="k">as</span> <span class="n">constants</span>
@@ -37,7 +150,7 @@
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 
 
-<div class="viewcode-block" id="calculate_cpf_contribution"><a class="viewcode-back" href="../../pages/logic.html#logic.cpf.calculate_cpf_contribution">[docs]</a><span class="k">def</span> <span class="nf">calculate_cpf_contribution</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="calculate_cpf_contribution"><a class="viewcode-back" href="../../source/logic.html#logic.cpf.calculate_cpf_contribution">[docs]</a><span class="k">def</span> <span class="nf">calculate_cpf_contribution</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="c1"># TODO: further enhancement to specify bonus month</span>
     <span class="sd">&quot;&quot;&quot;Calculates the CPF contribution for the year.</span>
 <span class="sd">    </span>
@@ -58,8 +171,9 @@
 <span class="sd">        dob (str): Date of birth of employee in YYYYMM format</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        float: Amount contributed by the employee in the year</span>
-<span class="sd">        float: Amount contributed by the employer in the year</span>
+<span class="sd">        *tuple*: Tuple containing</span>
+<span class="sd">            - (float): Amount contributed by the employee in the year</span>
+<span class="sd">            - (float): Amount contributed by the employer in the year</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     
@@ -75,7 +189,7 @@
     <span class="k">return</span> <span class="n">cont_employee</span><span class="p">,</span> <span class="n">cont_total</span> <span class="o">-</span> <span class="n">cont_employee</span></div>
 
 
-<div class="viewcode-block" id="calculate_cpf_allocation"><a class="viewcode-back" href="../../pages/logic.html#logic.cpf.calculate_cpf_allocation">[docs]</a><span class="k">def</span> <span class="nf">calculate_cpf_allocation</span><span class="p">(</span><span class="n">salary_month</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="calculate_cpf_allocation"><a class="viewcode-back" href="../../source/logic.html#logic.cpf.calculate_cpf_allocation">[docs]</a><span class="k">def</span> <span class="nf">calculate_cpf_allocation</span><span class="p">(</span><span class="n">salary_month</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculates the CPF allocation for the month.</span>
 
 <span class="sd">    `Reference &lt;https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf/&gt;`_</span>
@@ -92,9 +206,10 @@
 <span class="sd">        dob (str): Date of birth of employee in YYYYMM format</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        float: Allocation amount into OA</span>
-<span class="sd">        float: Allocation amount into SA</span>
-<span class="sd">        float: Allocation amount into MA</span>
+<span class="sd">        *tuple*: Tuple containing</span>
+<span class="sd">            - (float): Allocation amount into OA</span>
+<span class="sd">            - (float): Allocation amount into SA</span>
+<span class="sd">            - (float): Allocation amount into MA</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">cont_monthly</span> <span class="o">=</span> <span class="n">_get_monthly_contribution_amount</span><span class="p">(</span><span class="n">salary_month</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">age</span><span class="p">,</span> <span class="n">dob</span><span class="p">,</span> <span class="n">entity</span><span class="o">=</span><span class="n">constants</span><span class="o">.</span><span class="n">STR_COMBINED</span><span class="p">)</span>
@@ -105,11 +220,11 @@
     <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">oa_alloc</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">sa_alloc</span><span class="p">,</span> <span class="n">ma_alloc</span></div>
 
 
-<div class="viewcode-block" id="calculate_cpf_projection"><a class="viewcode-back" href="../../pages/logic.html#logic.cpf.calculate_cpf_projection">[docs]</a><span class="k">def</span> <span class="nf">calculate_cpf_projection</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">yoy_increase_salary</span><span class="p">,</span> <span class="n">yoy_increase_bonus</span><span class="p">,</span>
+<div class="viewcode-block" id="calculate_cpf_projection"><a class="viewcode-back" href="../../source/logic.html#logic.cpf.calculate_cpf_projection">[docs]</a><span class="k">def</span> <span class="nf">calculate_cpf_projection</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">yoy_increase_salary</span><span class="p">,</span> <span class="n">yoy_increase_bonus</span><span class="p">,</span>
                             <span class="n">base_cpf</span><span class="p">,</span> <span class="n">n_years</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculates the projected account balance in the CPF accounts after `n_years`.</span>
 
-<span class="sd">    Reference for interest calculation: https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf</span>
+<span class="sd">    `Reference &lt;https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/&gt;`_</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        salary (float): Annual salary of employee</span>
@@ -122,9 +237,10 @@
 <span class="sd">        dob (str): Date of birth of employee in YYYYMM format</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        float: OA balance after `n_years`</span>
-<span class="sd">        float: SA balance after `n_years`</span>
-<span class="sd">        float: MA balance after `n_years`</span>
+<span class="sd">        *tuple*: Tuple containing</span>
+<span class="sd">            - (float): OA balance after `n_years`</span>
+<span class="sd">            - (float): SA balance after `n_years`</span>
+<span class="sd">            - (float): MA balance after `n_years`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span> <span class="o">=</span> <span class="n">base_cpf</span><span class="p">[</span><span class="s1">&#39;oa&#39;</span><span class="p">],</span> <span class="n">base_cpf</span><span class="p">[</span><span class="s1">&#39;sa&#39;</span><span class="p">],</span> <span class="n">base_cpf</span><span class="p">[</span><span class="s1">&#39;ma&#39;</span><span class="p">]</span>
@@ -136,7 +252,7 @@
         <span class="n">salary_proj</span> <span class="o">=</span> <span class="n">salary</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">yoy_increase_salary</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="n">bonus_proj</span> <span class="o">=</span> <span class="n">bonus</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">yoy_increase_bonus</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span> <span class="o">=</span> <span class="n">_calculate_annual_change</span><span class="p">(</span><span class="n">salary_proj</span><span class="p">,</span> <span class="n">bonus_proj</span><span class="p">,</span> <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> 
-                                             <span class="n">date_start</span><span class="o">=</span><span class="n">date_start</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="n">dob</span><span class="p">)</span>
+                                              <span class="n">date_start</span><span class="o">=</span><span class="n">date_start</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="n">dob</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span></div>
 
@@ -472,64 +588,43 @@
     <span class="k">return</span> <span class="n">oa_new</span><span class="p">,</span> <span class="n">sa_new</span><span class="p">,</span> <span class="n">ma_new</span>
 </pre></div>
 
+           </div>
+           
           </div>
-          
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Fellowship
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">SG Calculator</a></h1>
+
+    </section>
+
+  </div>
+  
 
 
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
 
-
-
-
-
-
-<h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../pages/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../pages/logic.html">logic package</a></li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2019, Fellowship.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.9</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
-      
-    </div>
-
+  
+  
     
+   
 
-    
-  </body>
+</body>
 </html>

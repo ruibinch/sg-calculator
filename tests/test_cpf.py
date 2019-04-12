@@ -87,7 +87,7 @@ class TestCalculateCpfAllocation(object):
     7. Age >65
     """
 
-    global salary, bonus
+    global salary, bonus # pylint: disable=redefined-builtin
     salary, bonus = (4000, 10000)
 
     def get_contribution_amount_by_age(self, age, with_bonus):

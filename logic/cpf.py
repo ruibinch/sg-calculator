@@ -24,8 +24,9 @@ def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
         dob (str): Date of birth of employee in YYYYMM format
 
     Returns:
-        float: Amount contributed by the employee in the year
-        float: Amount contributed by the employer in the year
+        *tuple*: Tuple containing
+            - (float): Amount contributed by the employee in the year
+            - (float): Amount contributed by the employer in the year
 
     """
     
@@ -58,9 +59,10 @@ def calculate_cpf_allocation(salary_month, bonus, age=None, dob=None):
         dob (str): Date of birth of employee in YYYYMM format
 
     Returns:
-        float: Allocation amount into OA
-        float: Allocation amount into SA
-        float: Allocation amount into MA
+        *tuple*: Tuple containing
+            - (float): Allocation amount into OA
+            - (float): Allocation amount into SA
+            - (float): Allocation amount into MA
     """
 
     cont_monthly = _get_monthly_contribution_amount(salary_month, bonus, age, dob, entity=constants.STR_COMBINED)
@@ -75,7 +77,7 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
                             base_cpf, n_years, age=None, dob=None):
     """Calculates the projected account balance in the CPF accounts after `n_years`.
 
-    Reference for interest calculation: https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf
+    `Reference <https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/>`_
 
     Args:
         salary (float): Annual salary of employee
@@ -88,9 +90,10 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         dob (str): Date of birth of employee in YYYYMM format
 
     Returns:
-        float: OA balance after `n_years`
-        float: SA balance after `n_years`
-        float: MA balance after `n_years`
+        *tuple*: Tuple containing
+            - (float): OA balance after `n_years`
+            - (float): SA balance after `n_years`
+            - (float): MA balance after `n_years`
     """
 
     oa, sa, ma = base_cpf['oa'], base_cpf['sa'], base_cpf['ma']
@@ -102,7 +105,7 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
         bonus_proj = bonus * pow(1 + yoy_increase_bonus, i)
         oa, sa, ma = _calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma, 
-                                             date_start=date_start, dob=dob)
+                                              date_start=date_start, dob=dob)
 
     return oa, sa, ma
 
