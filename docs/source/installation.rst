@@ -1,4 +1,4 @@
 Installation
 =============
 
-.. include:: ../../README.md
+Refer to the README file.

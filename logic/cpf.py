@@ -3,8 +3,7 @@ import math
 import datetime as dt
 
 
-def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
-    # TODO: further enhancement to specify bonus month
+def calculate_cpf_contribution(salary, bonus, bonus_month=12, age=None, dob=None):
     """Calculates the CPF contribution for the year.
     
     Takes into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling.
@@ -20,6 +19,7 @@ def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
     Args:
         salary (float): Annual salary of employee
         bonus (float): Bonus/commission received in the year; assume to be credited in December
+        bonus_month (int): Month where bonus is received (1-12)
         age (int): Age of employee
         dob (str): Date of birth of employee in YYYYMM format
 
@@ -33,8 +33,7 @@ def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
     cont_total, cont_employee = (0, 0)
 
     for i in range(1, 13):
-        # bonus is only calculated in the month of December
-        bonus_annual = bonus if i == 12 else 0
+        bonus_annual = bonus if i == bonus_month else 0
 
         cont_total += _get_monthly_contribution_amount(salary / 12, bonus_annual, age, dob, entity=constants.STR_COMBINED)
         cont_employee += _get_monthly_contribution_amount(salary / 12, bonus_annual, age, dob, entity=constants.STR_EMPLOYEE)
@@ -42,7 +41,7 @@ def calculate_cpf_contribution(salary, bonus, age=None, dob=None):
     return cont_employee, cont_total - cont_employee
 
 
-def calculate_cpf_allocation(salary_month, bonus, age=None, dob=None):
+def calculate_cpf_allocation(salary_monthly, bonus, age=None, dob=None):
     """Calculates the CPF allocation for the month.
 
     `Reference <https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf/>`_
@@ -53,7 +52,7 @@ def calculate_cpf_allocation(salary_month, bonus, age=None, dob=None):
     2. OA allocation = Total contribution - SA allocation - MA allocation.
     
     Args:
-        salary (float): Monthly salary of employee
+        salary_monthly (float): Monthly salary of employee
         bonus (float): Bonus/commission received in the year; only applicable in the month when bonus is disbursed
         age (int): Age of employee
         dob (str): Date of birth of employee in YYYYMM format
@@ -65,7 +64,7 @@ def calculate_cpf_allocation(salary_month, bonus, age=None, dob=None):
             - (float): Allocation amount into MA
     """
 
-    cont_monthly = _get_monthly_contribution_amount(salary_month, bonus, age, dob, entity=constants.STR_COMBINED)
+    cont_monthly = _get_monthly_contribution_amount(salary_monthly, bonus, age, dob, entity=constants.STR_COMBINED)
     sa_alloc = _get_allocation_amount(age, dob, cont_monthly, account=constants.STR_SA)
     ma_alloc = _get_allocation_amount(age, dob, cont_monthly, account=constants.STR_MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
@@ -74,7 +73,7 @@ def calculate_cpf_allocation(salary_month, bonus, age=None, dob=None):
 
 
 def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bonus,
-                            base_cpf, n_years, age=None, dob=None):
+                            base_cpf, n_years, bonus_month=12, age=None, dob=None):
     """Calculates the projected account balance in the CPF accounts after `n_years`.
 
     `Reference <https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/>`_
@@ -86,6 +85,7 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         yoy_increase_bonus (float): Projected year-on-year percentage increase in bonus
         base_cpf (list of floats): Contains the current balance in the CPF accounts 
         n_years (int): Number of years into the future to predict
+        bonus_month (int): Month where bonus is received (1-12)
         age (int): Age of employee
         dob (str): Date of birth of employee in YYYYMM format
 
@@ -105,7 +105,7 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
         bonus_proj = bonus * pow(1 + yoy_increase_bonus, i)
         oa, sa, ma = _calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma, 
-                                              date_start=date_start, dob=dob)
+                                              bonus_month, date_start=date_start, dob=dob)
 
     return oa, sa, ma
 
@@ -344,8 +344,8 @@ def _calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma):
     return ma_interest
 
 
-def _calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr, 
-                            date_start=None, age=None, dob=None):
+def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr, 
+                            bonus_month=12, date_start=None, age=None, dob=None):
     """Calculates the total contributions and interest earned for the current year.
 
     Adds the interest, along with the contributions in the year, to the CPF account balances. \\
@@ -360,6 +360,7 @@ def _calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         oa_curr (float): Current amount in OA
         sa_curr (float): Current amount in SA
         ma_curr (float): Current amount in MA
+        bonus_month (int): Month where bonus is received (1-12)
         date_start (date): Start date of the year
         age (int): Age of employee
         dob (str): Date of birth of employee in YYYYMM format
@@ -374,7 +375,7 @@ def _calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
     oa_interest_total, sa_interest_total, ma_interest_total = (0, 0, 0)
     
     # iterate through the 12 months in the year
-    for i in range(12):
+    for i in range(1, 13):
         # to check if this month contains a bonus
         if age is None:
             # add 1 month to the date for each iteration
@@ -386,10 +387,10 @@ def _calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
             # wrap the date in a datetime object
             date_start = dt.date(year_start, month_start, 1)
             age = _get_age(dob, date_start)
-            bonus_annual = bonus if month_start == 12 else 0
+            bonus_annual = bonus if month_start == bonus_month else 0
         else:
             # else-condition only applies for unit testing
-            bonus_annual = bonus if i == 11 else 0
+            bonus_annual = bonus if i == bonus_month else 0
 
         # add the CPF allocation for this month
         # this is actually the contribution for the previous month's salary

@@ -12,6 +12,7 @@ api = Api(app)
 parser = reqparse.RequestParser()
 parser.add_argument('salary', type=float, help='Annual salary')
 parser.add_argument('bonus', type=float, help='Bonus/commission received in the year')
+parser.add_argument('bonus_month', type=int, help='Month where bonus is received')
 parser.add_argument('age', type=int, help='Age')
 parser.add_argument('dob', type=str, help='Date of birth in YYYYMM format')
 parser.add_argument('yoy_increase', type=float, help='Projected YoY increase of salary')
@@ -24,6 +25,7 @@ class CpfContribution(Resource):
         args = parser.parse_args()
         cont_employee, cont_employer = calculate_cpf_contribution(args['salary'],
                                                                   args['bonus'],
+                                                                  args['bonus_month'],
                                                                   args['age'],
                                                                   args['dob'])
         return { 'cont_employee': cont_employee, 'cont_employer': cont_employer }
