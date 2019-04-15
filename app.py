@@ -8,26 +8,29 @@ from logic.cpf import calculate_cpf_projection
 app = Flask(__name__)
 api = Api(app)
 
-# for data validation
+# For data validation
 parser = reqparse.RequestParser()
+# General
 parser.add_argument('salary', type=float, help='Annual salary')
 parser.add_argument('bonus', type=float, help='Bonus/commission received in the year')
 parser.add_argument('bonus_month', type=int, help='Month where bonus is received')
 parser.add_argument('age', type=int, help='Age')
 parser.add_argument('dob', type=str, help='Date of birth in YYYYMM format')
+# Projection-specific
 parser.add_argument('yoy_increase', type=float, help='Projected YoY increase of salary')
 parser.add_argument('base_cpf', type=list, help='Base amount in CPF accounts')
 parser.add_argument('n_years', type=int, help='Number of years into the future')
-# parser.add_argument('Authentication', location='headers') # for future authentication methods
+parser.add_argument('target_year', type=int, help='Target year in the future to project for')
+# For future authentication methods
+# parser.add_argument('Authentication', location='headers')
 
 class CpfContribution(Resource):
     def post(self):
         args = parser.parse_args()
         cont_employee, cont_employer = calculate_cpf_contribution(args['salary'],
                                                                   args['bonus'],
-                                                                  args['bonus_month'],
-                                                                  args['age'],
-                                                                  args['dob'])
+                                                                  bonus_month=args['bonus_month'],
+                                                                  dob=args['dob'])
         return { 'cont_employee': cont_employee, 'cont_employer': cont_employer }
 
 class CpfAllocation(Resource):
@@ -35,18 +38,20 @@ class CpfAllocation(Resource):
         args = parser.parse_args()
         oa_alloc, sa_alloc, ma_alloc = calculate_cpf_allocation(args['salary'],
                                                                 args['bonus'],
-                                                                args['age'],
-                                                                args['dob'])
+                                                                dob=args['dob'])
         return { 'oa_alloc': oa_alloc, 'sa_alloc': sa_alloc, 'ma_alloc': ma_alloc }
 
 class CpfProjection(Resource):
     def post(self):
         args = parser.parse_args()
-        oa, sa, ma = calculate_cpf_projection(args['age'],
-                                              args['salary'],
-                                              args['yoy_increase'],
+        oa, sa, ma = calculate_cpf_projection(args['salary'],
+                                              args['bonus'],
+                                              args['yoy_increase_salary'],
+                                              args['yoy_increase_bonus'],
                                               args['base_cpf'],
-                                              args['n_years'])
+                                              n_years=args['n_years'],
+                                              target_year=args['target_year'],
+                                              dob=args['dob'])
 
         return { 'oa': oa, 'sa': sa, 'ma': ma }
 

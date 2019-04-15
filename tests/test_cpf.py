@@ -196,7 +196,7 @@ class TestCalculateCpfAllocation(object):
 
 class TestCpfCalculateAnnualChange(object):
     """
-    Tests the `_calculate_annual_change()` method in cpf.py.
+    Tests the `calculate_annual_change()` method in cpf.py.
 
     Test scenarios:
     1. OA < $20k, OA+SA+MA < $60k
@@ -242,7 +242,7 @@ class TestCpfCalculateAnnualChange(object):
         - balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
         """
 
-        oa_test, sa_test, ma_test = cpf._calculate_annual_change(salary * 12, bonus,
+        oa_test, sa_test, ma_test = cpf.calculate_annual_change(salary * 12, bonus,
                                         balance_orig[0], balance_orig[1], balance_orig[2], age=age)
 
         assert balance_exp[0] == oa_test

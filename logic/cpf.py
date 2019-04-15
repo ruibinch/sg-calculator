@@ -3,6 +3,10 @@ import math
 import datetime as dt
 
 
+###################################################################################################
+#                                      MAIN API FUNCTIONS                                         #
+###################################################################################################
+
 def calculate_cpf_contribution(salary, bonus, bonus_month=12, age=None, dob=None):
     """Calculates the CPF contribution for the year.
     
@@ -73,8 +77,10 @@ def calculate_cpf_allocation(salary_monthly, bonus, age=None, dob=None):
 
 
 def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bonus,
-                            base_cpf, n_years, bonus_month=12, age=None, dob=None):
-    """Calculates the projected account balance in the CPF accounts after `n_years`.
+                             base_cpf, n_years=None, target_year=None,
+                             bonus_month=12, age=None, dob=None):
+    # TODO: starting point of projection should be from today
+    """Calculates the projected account balance in the CPF accounts after `n_years` or in `target_year`.
 
     `Reference <https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/>`_
 
@@ -85,6 +91,7 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         yoy_increase_bonus (float): Projected year-on-year percentage increase in bonus
         base_cpf (list of floats): Contains the current balance in the CPF accounts 
         n_years (int): Number of years into the future to predict
+        target_year (int): Target year in the future to project for
         bonus_month (int): Month where bonus is received (1-12)
         age (int): Age of employee
         dob (str): Date of birth of employee in YYYYMM format
@@ -96,105 +103,29 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
             - (float): MA balance after `n_years`
     """
 
-    oa, sa, ma = base_cpf['oa'], base_cpf['sa'], base_cpf['ma']
+    oa, sa, ma = base_cpf[0], base_cpf[1], base_cpf[2]
+    n_years = _get_num_projection_years(target_year) if n_years is None else n_years
 
     for i in range(n_years):
         # default day to 1 as it is not used
-        date_start = dt.date(dt.date.today().year + i, dt.date.today().month, 1)
+        if i == 0:
+            # it is the first year, so the starting month would be different
+            date_start = dt.date(dt.date.today().year, dt.date.today().month, 1)
+        else:
+            # for the subsequent years, start the count from January
+            date_start = dt.date(dt.date.today().year + i, 1, 1)
 
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
         bonus_proj = bonus * pow(1 + yoy_increase_bonus, i)
-        oa, sa, ma = _calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma, 
-                                              bonus_month, date_start=date_start, dob=dob)
+        oa, sa, ma = calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma, 
+                                             bonus_month, date_start=date_start, dob=dob)
 
     return oa, sa, ma
 
 
 ###################################################################################################
-#                                       HELPER FUNCTIONS                                          #
+#                               CPF-RELATED HELPER FUNCTIONS                                      #
 ###################################################################################################
-
-def _get_age(dob, date_curr=None):
-    """Returns the user's age given the user's date of birth.
-
-    If a date is explicitly specified, calculate the user's age from the specified date. 
-    Else, use today's date. \\
-    Age is determined using this logic:
-    "Your employee is considered to be 35, 45, 50, 55, 60 or 65 years old in the month
-    of his 35th, 45th, 50th, 55th, 60th or 65th birthday. The employee will be above 
-    35, 45, 50, 55, 60 or 65 years from the month after the month of his 
-    35th, 45th, 50th, 55th, 60th or 65th birthday." \\
-    Reference: https://www.cpf.gov.sg/Employers/EmployerGuides/employer-guides/paying-cpf-contributions/cpf-contribution-and-allocation-rates
-
-    Args:
-        dob (str): Date of birth of employee in YYYYMM format
-    
-    Returns:
-        int: Age of employee
-    """
-
-    birth_year, birth_month = (int(dob[0:4]), int(dob[4:6]))
-    if date_curr is not None:
-        curr_year, curr_month = (date_curr.year, date_curr.month)
-    else:
-        curr_year, curr_month = (dt.date.today().year, dt.date.today().month)
-
-    year_diff, month_diff = (curr_year - birth_year, curr_month - birth_month)
-    age = year_diff if month_diff <= 0 else year_diff + 1
-    # print('CPF:_get_age():', year_diff, month_diff, age)
-    return age
-
-
-def _get_age_bracket(age, purpose):
-    """ Gets the age bracket for the specified purpose and age.
-
-    Args:
-        age (int): Age of employee
-        purpose (str): Either 'contribution' or 'allocation'
-    
-    Returns:
-        str: Age bracket of employee
-    """
-    if purpose == constants.STR_CONTRIBUTION:
-        keys = constants.rates_cont.keys()
-    elif purpose == constants.STR_ALLOCATION:
-        keys = constants.rates_alloc.keys()
-
-    for key in keys:
-        if age <= int(key):
-            return key
-    
-    return '150' # return max by default
-
-
-def _round_half_up(n, decimals=0):
-    """Rounds the given monetary amount to the nearest dollar.
-    
-    An amount of 50 cents will be regarded as an additional dollar:
-
-    Args:
-        n (float): input amount
-
-    Returns:
-        int: rounded amount to the nearest dollar
-    """
-
-    multiplier = 10 ** decimals
-    return math.floor(n*multiplier + 0.5) / multiplier
-
-
-def _truncate(n, decimals=2):
-    """Truncates the given monetary amount to the specified number of decimal places.
-
-    Args:
-        n (float): input amount
-
-    Returns:
-        float: truncated amount to `decimals` decimal places
-    """
-    before_dec, after_dec = str(n).split('.')
-    return float('.'.join((before_dec, after_dec[0:2])))
-
 
 def _get_monthly_contribution_amount(salary, bonus, age, dob, entity):
     """Gets the monthly CPF contribution amount for the specified entity corresponding to the 
@@ -286,13 +217,6 @@ def _calculate_monthly_interest_oa(oa_accumulated):
     """
 
     oa_interest = oa_accumulated * (constants.INT_RATE_OA / 12)
-
-    # if oa_accumulated > constants.THRESHOLD_EXTRAINT_OA:
-    #     oa_interest += constants.THRESHOLD_EXTRAINT_OA * ((constants.INT_RATE_OA + constants.INT_EXTRA) / 12)
-    #     oa_interest += (oa_accumulated - constants.THRESHOLD_EXTRAINT_OA) * (constants.INT_RATE_OA / 12)
-    # else:
-    #     oa_interest += oa_accumulated * ((constants.INT_RATE_OA + constants.INT_EXTRA) / 12)
-    
     return oa_interest
 
 
@@ -361,7 +285,7 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         sa_curr (float): Current amount in SA
         ma_curr (float): Current amount in MA
         bonus_month (int): Month where bonus is received (1-12)
-        date_start (date): Start date of the year
+        date_start (date): Start date of the year to calculate from
         age (int): Age of employee
         dob (str): Date of birth of employee in YYYYMM format
 
@@ -374,23 +298,18 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
     oa_accumulated, sa_accumulated, ma_accumulated = oa_curr, sa_curr, ma_curr
     oa_interest_total, sa_interest_total, ma_interest_total = (0, 0, 0)
     
-    # iterate through the 12 months in the year
-    for i in range(1, 13):
-        # to check if this month contains a bonus
-        if age is None:
-            # add 1 month to the date for each iteration
-            year_start, month_start = (date_start.year, date_start.month + i)
-            if month_start > 12:
-                year_start += 1
-                month_start -= 12
-
+    # iterate through the months in the year
+    month_start = date_start.month if date_start is not None else 1
+    for i in range(month_start, 13):
+        if dob is not None:
             # wrap the date in a datetime object
-            date_start = dt.date(year_start, month_start, 1)
-            age = _get_age(dob, date_start)
-            bonus_annual = bonus if month_start == bonus_month else 0
+            date_start_iter = dt.date(date_start.year, i, 1)
+            age = _get_age(dob, date_start_iter)
+            bonus_annual = bonus if i == bonus_month else 0
         else:
             # else-condition only applies for unit testing
             bonus_annual = bonus if i == bonus_month else 0
+        # print('Month: {}/{}, Age: {}'.format(date_start.year, i, age))
 
         # add the CPF allocation for this month
         # this is actually the contribution for the previous month's salary
@@ -430,9 +349,9 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         ma_interest = _calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma)
         ma_interest_total += ma_interest
 
-        print(i, oa_interest, sa_interest, ma_interest)
+        # print(i, oa_interest, sa_interest, ma_interest)
 
-    print(oa_interest_total, sa_interest_total, ma_interest_total)
+    # print(oa_interest_total, sa_interest_total, ma_interest_total)
 
     # interest added at the end of the year
     oa_new = oa_accumulated + oa_interest_total
@@ -440,3 +359,103 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
     ma_new = ma_accumulated + ma_interest_total
 
     return oa_new, sa_new, ma_new
+
+
+
+###################################################################################################
+#                                   GENERIC HELPER FUNCTIONS                                      #
+###################################################################################################
+
+def _get_age(dob, date_curr=None):
+    """Returns the user's age given the user's date of birth.
+
+    If a date is explicitly specified, calculate the user's age from the specified date. 
+    Else, use today's date. \\
+    Age is determined using this logic:
+    "Your employee is considered to be 35, 45, 50, 55, 60 or 65 years old in the month
+    of his 35th, 45th, 50th, 55th, 60th or 65th birthday. The employee will be above 
+    35, 45, 50, 55, 60 or 65 years from the month after the month of his 
+    35th, 45th, 50th, 55th, 60th or 65th birthday." \\
+    Reference: https://www.cpf.gov.sg/Employers/EmployerGuides/employer-guides/paying-cpf-contributions/cpf-contribution-and-allocation-rates
+
+    Args:
+        dob (str): Date of birth of employee in YYYYMM format
+    
+    Returns:
+        int: Age of employee
+    """
+
+    birth_year, birth_month = (int(dob[0:4]), int(dob[4:6]))
+    if date_curr is not None:
+        curr_year, curr_month = (date_curr.year, date_curr.month)
+    else:
+        curr_year, curr_month = (dt.date.today().year, dt.date.today().month)
+
+    year_diff, month_diff = (curr_year - birth_year, curr_month - birth_month)
+    age = year_diff if month_diff <= 0 else year_diff + 1
+    # print('CPF:_get_age():', year_diff, month_diff, age)
+    return age
+
+
+def _get_age_bracket(age, purpose):
+    """ Gets the age bracket for the specified purpose and age.
+
+    Args:
+        age (int): Age of employee
+        purpose (str): Either 'contribution' or 'allocation'
+    
+    Returns:
+        str: Age bracket of employee
+    """
+    if purpose == constants.STR_CONTRIBUTION:
+        keys = constants.rates_cont.keys()
+    elif purpose == constants.STR_ALLOCATION:
+        keys = constants.rates_alloc.keys()
+
+    for key in keys:
+        if age <= int(key):
+            return key
+    
+    return '150' # return max by default
+
+
+def _get_num_projection_years(target_year):
+    """Returns the number of years between this year and the target year.
+
+    Args:
+        target_year (int): Target year in the future to project for
+    
+    Returns:
+        int: Number of years to project for
+    """
+
+    return target_year - dt.date.today().year + 1
+
+
+def _round_half_up(n, decimals=0):
+    """Rounds the given monetary amount to the nearest dollar.
+    
+    An amount of 50 cents will be regarded as an additional dollar:
+
+    Args:
+        n (float): input amount
+
+    Returns:
+        int: rounded amount to the nearest dollar
+    """
+
+    multiplier = 10 ** decimals
+    return math.floor(n*multiplier + 0.5) / multiplier
+
+
+def _truncate(n, decimals=2):
+    """Truncates the given monetary amount to the specified number of decimal places.
+
+    Args:
+        n (float): input amount
+
+    Returns:
+        float: truncated amount to `decimals` decimal places
+    """
+    before_dec, after_dec = str(n).split('.')
+    return float('.'.join((before_dec, after_dec[0:2])))
