@@ -1,3 +1,4 @@
+import datetime as dt
 from logic import cpf
 from logic import cpf_constants as constants
 
@@ -87,9 +88,8 @@ class TestCalculateCpfAllocation(object):
     7. Age >65
     """
 
-    def __init__(self, salary, bonus):
-        self.salary = 4000
-        self.bonus = 10000
+    salary = 4000
+    bonus = 10000
 
     def _get_contribution_amount_by_age(self, age, with_bonus):
         bonus_annual = self.bonus if with_bonus is True else 0
@@ -195,9 +195,12 @@ class TestCalculateCpfAllocation(object):
         self._perform_assertion(0, age, [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus])
 
 
-class TestCpfCalculateAnnualChange(object):
+class TestCpfCalculateAnnualChange1(object):
     """
     Tests the `calculate_annual_change()` method in cpf.py.
+
+    Focuses on interest calculation across different CPF account thresholds.
+    Variable here is the original CPF account balances, age is kept fixed.
 
     Test scenarios:
     1. OA < $20k, OA+SA+MA < $60k
@@ -210,15 +213,10 @@ class TestCpfCalculateAnnualChange(object):
     8. OA > $20k after a few months, OA+SA+MA > $60k after a few months
     """
 
-    # Class variables
-    #   age: immaterial here - for convenience, standardise to age 25
-    #   salary: standardise to $4,000
-    #   bonus: standardise to $10,000
-    def __init__(self):
-        self.age = 25
-        self.salary = 4000
-        self.bonus = 10000
-    
+    age = 25
+    salary = 4000
+    bonus = 10000
+
     # helper function
     def _add_monthly_contribution(self, oa, sa, ma, month):
         # 0.6217, 0.1621. 0.2162 of contribution (approx. 23%, 6%, 8% of $4000/$14000)
@@ -428,43 +426,136 @@ class TestCpfCalculateAnnualChange(object):
         self._perform_assertion([18000, 39000, 5000], [oa + int_oa, sa + int_sa, ma + int_ma])      
 
 
-class TestCalculateCpfProjection(object):
+class TestCpfCalculateAnnualChange2(object):
     """
-    Tests the `calculate_cpf_projection()` method in cpf.py.
+    Tests the `calculate_annual_change()` method in cpf.py.
 
-    Based on the assumption that the `calculate_annual_change()` method is correct.
+    Focuses on cases where the age bracket changes during the year.
+    Original CPF account balances are fixed here, corresponding to test scenario 1 in 
+    TestCpfCalculateAnnualChange1.
 
+    Test scenarios:
+    1. Age 35 -> 36
+    2. Age 45 -> 46
+    3. Age 50 -> 51
     """
+
+    salary = 4000
+    bonus = 10000
+    date_start = dt.date(dt.date.today().year, 1, 1)
+    
+    def _add_monthly_contribution(self, oa, sa, ma, cont_oa, cont_sa, cont_ma):
+        oa += cont_oa
+        sa += cont_sa
+        ma += cont_ma
+
+        return oa, sa, ma
+
+    def _add_monthly_interest(self, oa, sa, ma, int_oa, int_sa, int_ma):
+        int_oa += oa * (0.025 / 12)
+        int_sa += min(oa, 20000) * (0.01 / 12)
+        int_sa += sa * (0.05 / 12)
+        int_ma += ma * (0.05 / 12)
+
+        return int_oa, int_sa, int_ma
+
+    def _perform_assertion(self, balance_orig, balance_exp, dob):
+        """
+        Helper class to perform assertion checks.
+
+        Args:
+        - balance_orig (array): Original balance in CPF accounts [OA, SA, MA]
+        - balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
+        """
+
+        oa_test, sa_test, ma_test = cpf.calculate_annual_change(self.salary * 12, self.bonus,
+                                        balance_orig[0], balance_orig[1], balance_orig[2],
+                                        date_start=self.date_start, dob=dob)
+
+        assert balance_exp[0] == oa_test
+        assert balance_exp[1] == sa_test
+        assert balance_exp[2] == ma_test
 
     def test_scenario_1(self):
-        print('Test scenario 1: age=25, salary=4000, yoy_increase=0.05, n_years=1')
-        print('Test scenario 1: Base CPF amounts are equal to scenario 1 in TestCpfCalculateAnnualChange')
-        
-        # only calculate for 1 year
+        print('Test scenario 1: Age 35 -> 36')
 
         oa, sa, ma = (6000, 2000, 3000)
-        oa_cont, sa_cont, ma_cont = (1150, 300, 400) # 23%, 6%, 8% of $5000
+        cont_oa_under35, cont_sa_under35, cont_ma_under35 = (920.13, 239.9, 319.97)
+        cont_oa_over35, cont_sa_over35, cont_ma_over35 = (840.21, 279.86, 359.93)
+        # calculated based on age=36
+        cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (2940.7, 979.53, 1259.77)
+
+        dob = str(dt.date.today().year - 35) + '06' # default month to June
         int_oa, int_sa, int_ma = (0, 0, 0)
-        # OA: 3.5%
-        # SA: 5%
-        # MA: 5%
+
         for i in range(1, 13):
-            oa += oa_cont
-            sa += sa_cont
-            ma += ma_cont
+            if i <= 6:
+                oa, sa, ma = self._add_monthly_contribution(oa, sa, ma,
+                                                            cont_oa_under35, cont_sa_under35, cont_ma_under35)
+            elif i == 12:
+                oa, sa, ma = self._add_monthly_contribution(oa, sa, ma,
+                                                            cont_oa_bonus, cont_sa_bonus, cont_ma_bonus)
+            else:
+                oa, sa, ma = self._add_monthly_contribution(oa, sa, ma,
+                                                            cont_oa_over35, cont_sa_over35, cont_ma_over35)
+
             # add interest in this month
-            int_oa += oa * (0.035 / 12)
-            int_sa += sa * (0.05 / 12)
-            int_ma += ma * (0.05 / 12)
+            int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        oa += int_oa
-        sa += int_sa
-        ma += int_ma
+        self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], dob)
+    
+    def test_scenario_2(self):
+        print('Test scenario 2: Age 45 -> 46')
+
+        oa, sa, ma = (6000, 2000, 3000)
+        cont_oa_under45, cont_sa_under45, cont_ma_under45 = (840.21, 279.86, 359.93)
+        cont_oa_over45, cont_sa_over45, cont_ma_over45 = (760.14, 319.97, 399.89)
+        # calculated based on age=46
+        cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (2660.46, 1119.91, 1399.63)
+
+        dob = str(dt.date.today().year - 45) + '06' # default month to June
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        for i in range(1, 13):
+            if i <= 6:
+                oa, sa, ma = self._add_monthly_contribution(oa, sa, ma,
+                                                            cont_oa_under45, cont_sa_under45, cont_ma_under45)
+            elif i == 12:
+                oa, sa, ma = self._add_monthly_contribution(oa, sa, ma,
+                                                            cont_oa_bonus, cont_sa_bonus, cont_ma_bonus)
+            else:
+                oa, sa, ma = self._add_monthly_contribution(oa, sa, ma,
+                                                            cont_oa_over45, cont_sa_over45, cont_ma_over45)
+
+            # add interest in this month
+            int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        base_cpf = { 'oa': 6000, 'sa': 2000, 'ma': 3000}
-        oa_test, sa_test, ma_test = cpf.calculate_cpf_projection(
-                                        25, 5000, 0.05, base_cpf, 1)
-                        
-        assert oa == oa_test
-        assert sa == sa_test
-        assert ma == ma_test
+        self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], dob)
+    
+    def test_scenario_3(self):
+        print('Test scenario 3: Age 50 -> 51')
+
+        oa, sa, ma = (6000, 2000, 3000)
+        cont_oa_under50, cont_sa_under50, cont_ma_under50 = (760.14, 319.97, 399.89)
+        cont_oa_over50, cont_sa_over50, cont_ma_over50 = (600.15, 459.98, 419.87)
+        # calculated based on age=51
+        cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (2100.5, 1609.94, 1469.56)
+
+        dob = str(dt.date.today().year - 50) + '06' # default month to June
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        for i in range(1, 13):
+            if i <= 6:
+                oa, sa, ma = self._add_monthly_contribution(oa, sa, ma,
+                                                            cont_oa_under50, cont_sa_under50, cont_ma_under50)
+            elif i == 12:
+                oa, sa, ma = self._add_monthly_contribution(oa, sa, ma,
+                                                            cont_oa_bonus, cont_sa_bonus, cont_ma_bonus)
+            else:
+                oa, sa, ma = self._add_monthly_contribution(oa, sa, ma,
+                                                            cont_oa_over50, cont_sa_over50, cont_ma_over50)
+
+            # add interest in this month
+            int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
+        
+        self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], dob)
