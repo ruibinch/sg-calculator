@@ -150,6 +150,10 @@
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 
 
+<span class="c1">###################################################################################################</span>
+<span class="c1">#                                      MAIN API FUNCTIONS                                         #</span>
+<span class="c1">###################################################################################################</span>
+
 <div class="viewcode-block" id="calculate_cpf_contribution"><a class="viewcode-back" href="../../source/logic.html#logic.cpf.calculate_cpf_contribution">[docs]</a><span class="k">def</span> <span class="nf">calculate_cpf_contribution</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">bonus_month</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculates the CPF contribution for the year.</span>
 <span class="sd">    </span>
@@ -172,8 +176,8 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        *tuple*: Tuple containing</span>
-<span class="sd">            - (float): Amount contributed by the employee in the year</span>
-<span class="sd">            - (float): Amount contributed by the employer in the year</span>
+<span class="sd">            - (*float*): Amount contributed by the employee in the year</span>
+<span class="sd">            - (*float*): Amount contributed by the employer in the year</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     
@@ -206,9 +210,9 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        *tuple*: Tuple containing</span>
-<span class="sd">            - (float): Allocation amount into OA</span>
-<span class="sd">            - (float): Allocation amount into SA</span>
-<span class="sd">            - (float): Allocation amount into MA</span>
+<span class="sd">            - (*float*): Allocation amount into OA</span>
+<span class="sd">            - (*float*): Allocation amount into SA</span>
+<span class="sd">            - (*float*): Allocation amount into MA</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">cont_monthly</span> <span class="o">=</span> <span class="n">_get_monthly_contribution_amount</span><span class="p">(</span><span class="n">salary_monthly</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">age</span><span class="p">,</span> <span class="n">dob</span><span class="p">,</span> <span class="n">entity</span><span class="o">=</span><span class="n">constants</span><span class="o">.</span><span class="n">STR_COMBINED</span><span class="p">)</span>
@@ -220,8 +224,9 @@
 
 
 <div class="viewcode-block" id="calculate_cpf_projection"><a class="viewcode-back" href="../../source/logic.html#logic.cpf.calculate_cpf_projection">[docs]</a><span class="k">def</span> <span class="nf">calculate_cpf_projection</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">yoy_increase_salary</span><span class="p">,</span> <span class="n">yoy_increase_bonus</span><span class="p">,</span>
-                            <span class="n">base_cpf</span><span class="p">,</span> <span class="n">n_years</span><span class="p">,</span> <span class="n">bonus_month</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Calculates the projected account balance in the CPF accounts after `n_years`.</span>
+                             <span class="n">base_cpf</span><span class="p">,</span> <span class="n">bonus_month</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                             <span class="n">proj_start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_years</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sa_topups</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates the projected account balance in the CPF accounts after `n_years` or in `target_year`.</span>
 
 <span class="sd">    `Reference &lt;https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/&gt;`_</span>
 
@@ -231,117 +236,53 @@
 <span class="sd">        yoy_increase_salary (float): Projected year-on-year percentage increase in salary</span>
 <span class="sd">        yoy_increase_bonus (float): Projected year-on-year percentage increase in bonus</span>
 <span class="sd">        base_cpf (list of floats): Contains the current balance in the CPF accounts </span>
-<span class="sd">        n_years (int): Number of years into the future to predict</span>
 <span class="sd">        bonus_month (int): Month where bonus is received (1-12)</span>
 <span class="sd">        age (int): Age of employee</span>
 <span class="sd">        dob (str): Date of birth of employee in YYYYMM format</span>
+<span class="sd">        proj_start_date (date): Starting date of projection (*only used for testing purposes*)</span>
+<span class="sd">        n_years (int): Number of years into the future to project</span>
+<span class="sd">        target_year (int): Target end year of projection</span>
+<span class="sd">        sa_topups (dict): Cash top-ups to the SA </span>
+<span class="sd">            - key (*str*): year of cash topup in YYYY format</span>
+<span class="sd">            - value (*float*): amount to top up</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        *tuple*: Tuple containing</span>
-<span class="sd">            - (float): OA balance after `n_years`</span>
-<span class="sd">            - (float): SA balance after `n_years`</span>
-<span class="sd">            - (float): MA balance after `n_years`</span>
+<span class="sd">            - (*float*): OA balance after `n_years`</span>
+<span class="sd">            - (*float*): SA balance after `n_years`</span>
+<span class="sd">            - (*float*): MA balance after `n_years`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span> <span class="o">=</span> <span class="n">base_cpf</span><span class="p">[</span><span class="s1">&#39;oa&#39;</span><span class="p">],</span> <span class="n">base_cpf</span><span class="p">[</span><span class="s1">&#39;sa&#39;</span><span class="p">],</span> <span class="n">base_cpf</span><span class="p">[</span><span class="s1">&#39;ma&#39;</span><span class="p">]</span>
+    <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span> <span class="o">=</span> <span class="n">base_cpf</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">base_cpf</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">base_cpf</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">n_years</span> <span class="o">=</span> <span class="n">_get_num_projection_years</span><span class="p">(</span><span class="n">target_year</span><span class="p">)</span> <span class="k">if</span> <span class="n">n_years</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">n_years</span>
+    <span class="n">sa_topups</span> <span class="o">=</span> <span class="n">_convert_year_to_zero_indexing</span><span class="p">(</span><span class="n">sa_topups</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_years</span><span class="p">):</span>
         <span class="c1"># default day to 1 as it is not used</span>
-        <span class="n">date_start</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># it is the first year, so the starting month would be different</span>
+            <span class="k">if</span> <span class="n">proj_start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">date_start</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">proj_start_date</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">proj_start_date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">date_start</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># for the subsequent years, start the count from January</span>
+            <span class="n">date_start</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="n">salary_proj</span> <span class="o">=</span> <span class="n">salary</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">yoy_increase_salary</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="n">bonus_proj</span> <span class="o">=</span> <span class="n">bonus</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">yoy_increase_bonus</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-        <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span> <span class="o">=</span> <span class="n">_calculate_annual_change</span><span class="p">(</span><span class="n">salary_proj</span><span class="p">,</span> <span class="n">bonus_proj</span><span class="p">,</span> <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> 
-                                              <span class="n">bonus_month</span><span class="p">,</span> <span class="n">date_start</span><span class="o">=</span><span class="n">date_start</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="n">dob</span><span class="p">)</span>
+        <span class="n">sa_topup</span> <span class="o">=</span> <span class="n">sa_topups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span> <span class="o">=</span> <span class="n">calculate_annual_change</span><span class="p">(</span><span class="n">salary_proj</span><span class="p">,</span> <span class="n">bonus_proj</span><span class="p">,</span> <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">sa_topup</span><span class="p">,</span>
+                                             <span class="n">bonus_month</span><span class="p">,</span> <span class="n">date_start</span><span class="o">=</span><span class="n">date_start</span><span class="p">,</span> 
+                                             <span class="n">age</span><span class="o">=</span><span class="n">age</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="n">dob</span><span class="p">)</span>
+        <span class="c1"># print(&#39;Year {}: {}, {}, {}&#39;.format(i, round(oa, 2), round(sa, 2), round(ma, 2)))</span>
 
-    <span class="k">return</span> <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span></div>
+    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">oa</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">sa</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">ma</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span></div>
 
 
 <span class="c1">###################################################################################################</span>
-<span class="c1">#                                       HELPER FUNCTIONS                                          #</span>
+<span class="c1">#                               CPF-RELATED HELPER FUNCTIONS                                      #</span>
 <span class="c1">###################################################################################################</span>
-
-<span class="k">def</span> <span class="nf">_get_age</span><span class="p">(</span><span class="n">dob</span><span class="p">,</span> <span class="n">date_curr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns the user&#39;s age given the user&#39;s date of birth.</span>
-
-<span class="sd">    If a date is explicitly specified, calculate the user&#39;s age from the specified date. </span>
-<span class="sd">    Else, use today&#39;s date. \\</span>
-<span class="sd">    Age is determined using this logic:</span>
-<span class="sd">    &quot;Your employee is considered to be 35, 45, 50, 55, 60 or 65 years old in the month</span>
-<span class="sd">    of his 35th, 45th, 50th, 55th, 60th or 65th birthday. The employee will be above </span>
-<span class="sd">    35, 45, 50, 55, 60 or 65 years from the month after the month of his </span>
-<span class="sd">    35th, 45th, 50th, 55th, 60th or 65th birthday.&quot; \\</span>
-<span class="sd">    Reference: https://www.cpf.gov.sg/Employers/EmployerGuides/employer-guides/paying-cpf-contributions/cpf-contribution-and-allocation-rates</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        dob (str): Date of birth of employee in YYYYMM format</span>
-<span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">        int: Age of employee</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">birth_year</span><span class="p">,</span> <span class="n">birth_month</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">dob</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">dob</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]))</span>
-    <span class="k">if</span> <span class="n">date_curr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">curr_year</span><span class="p">,</span> <span class="n">curr_month</span> <span class="o">=</span> <span class="p">(</span><span class="n">date_curr</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">date_curr</span><span class="o">.</span><span class="n">month</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">curr_year</span><span class="p">,</span> <span class="n">curr_month</span> <span class="o">=</span> <span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">month</span><span class="p">)</span>
-
-    <span class="n">year_diff</span><span class="p">,</span> <span class="n">month_diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">curr_year</span> <span class="o">-</span> <span class="n">birth_year</span><span class="p">,</span> <span class="n">curr_month</span> <span class="o">-</span> <span class="n">birth_month</span><span class="p">)</span>
-    <span class="n">age</span> <span class="o">=</span> <span class="n">year_diff</span> <span class="k">if</span> <span class="n">month_diff</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">year_diff</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="c1"># print(&#39;CPF:_get_age():&#39;, year_diff, month_diff, age)</span>
-    <span class="k">return</span> <span class="n">age</span>
-
-
-<span class="k">def</span> <span class="nf">_get_age_bracket</span><span class="p">(</span><span class="n">age</span><span class="p">,</span> <span class="n">purpose</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Gets the age bracket for the specified purpose and age.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        age (int): Age of employee</span>
-<span class="sd">        purpose (str): Either &#39;contribution&#39; or &#39;allocation&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">        str: Age bracket of employee</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">purpose</span> <span class="o">==</span> <span class="n">constants</span><span class="o">.</span><span class="n">STR_CONTRIBUTION</span><span class="p">:</span>
-        <span class="n">keys</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">rates_cont</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-    <span class="k">elif</span> <span class="n">purpose</span> <span class="o">==</span> <span class="n">constants</span><span class="o">.</span><span class="n">STR_ALLOCATION</span><span class="p">:</span>
-        <span class="n">keys</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">rates_alloc</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">age</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">key</span>
-    
-    <span class="k">return</span> <span class="s1">&#39;150&#39;</span> <span class="c1"># return max by default</span>
-
-
-<span class="k">def</span> <span class="nf">_round_half_up</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Rounds the given monetary amount to the nearest dollar.</span>
-<span class="sd">    </span>
-<span class="sd">    An amount of 50 cents will be regarded as an additional dollar:</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        n (float): input amount</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        int: rounded amount to the nearest dollar</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">multiplier</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">decimals</span>
-    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">multiplier</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">/</span> <span class="n">multiplier</span>
-
-
-<span class="k">def</span> <span class="nf">_truncate</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Truncates the given monetary amount to the specified number of decimal places.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        n (float): input amount</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        float: truncated amount to `decimals` decimal places</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">before_dec</span><span class="p">,</span> <span class="n">after_dec</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">before_dec</span><span class="p">,</span> <span class="n">after_dec</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])))</span>
-
 
 <span class="k">def</span> <span class="nf">_get_monthly_contribution_amount</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">age</span><span class="p">,</span> <span class="n">dob</span><span class="p">,</span> <span class="n">entity</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Gets the monthly CPF contribution amount for the specified entity corresponding to the </span>
@@ -433,13 +374,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">oa_interest</span> <span class="o">=</span> <span class="n">oa_accumulated</span> <span class="o">*</span> <span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">INT_RATE_OA</span> <span class="o">/</span> <span class="mi">12</span><span class="p">)</span>
-
-    <span class="c1"># if oa_accumulated &gt; constants.THRESHOLD_EXTRAINT_OA:</span>
-    <span class="c1">#     oa_interest += constants.THRESHOLD_EXTRAINT_OA * ((constants.INT_RATE_OA + constants.INT_EXTRA) / 12)</span>
-    <span class="c1">#     oa_interest += (oa_accumulated - constants.THRESHOLD_EXTRAINT_OA) * (constants.INT_RATE_OA / 12)</span>
-    <span class="c1"># else:</span>
-    <span class="c1">#     oa_interest += oa_accumulated * ((constants.INT_RATE_OA + constants.INT_EXTRA) / 12)</span>
-    
     <span class="k">return</span> <span class="n">oa_interest</span>
 
 
@@ -491,15 +425,14 @@
     <span class="k">return</span> <span class="n">ma_interest</span>
 
 
-<div class="viewcode-block" id="calculate_annual_change"><a class="viewcode-back" href="../../source/logic.html#logic.cpf.calculate_annual_change">[docs]</a><span class="k">def</span> <span class="nf">calculate_annual_change</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">oa_curr</span><span class="p">,</span> <span class="n">sa_curr</span><span class="p">,</span> <span class="n">ma_curr</span><span class="p">,</span> 
+<div class="viewcode-block" id="calculate_annual_change"><a class="viewcode-back" href="../../source/logic.html#logic.cpf.calculate_annual_change">[docs]</a><span class="k">def</span> <span class="nf">calculate_annual_change</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">oa_curr</span><span class="p">,</span> <span class="n">sa_curr</span><span class="p">,</span> <span class="n">ma_curr</span><span class="p">,</span> <span class="n">sa_topup</span><span class="p">,</span>
                             <span class="n">bonus_month</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">date_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculates the total contributions and interest earned for the current year.</span>
 
 <span class="sd">    Adds the interest, along with the contributions in the year, to the CPF account balances. \\</span>
 <span class="sd">    Returns the projected amount in the CPF accounts at the end of the year.</span>
 
-<span class="sd">    `date_start` and `dob` are used for actual scenarios. \\</span>
-<span class="sd">    `age` is used for unit testing.</span>
+<span class="sd">    Age variable is updated every month.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        salary (float): Annual salary of employee</span>
@@ -507,44 +440,45 @@
 <span class="sd">        oa_curr (float): Current amount in OA</span>
 <span class="sd">        sa_curr (float): Current amount in SA</span>
 <span class="sd">        ma_curr (float): Current amount in MA</span>
+<span class="sd">        sa_topup (float): Amount to top up into the SA (assume Jan for now)</span>
 <span class="sd">        bonus_month (int): Month where bonus is received (1-12)</span>
-<span class="sd">        date_start (date): Start date of the year</span>
+<span class="sd">        date_start (date): Start date of the year to calculate from</span>
 <span class="sd">        age (int): Age of employee</span>
 <span class="sd">        dob (str): Date of birth of employee in YYYYMM format</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        float: New amount in OA, after contributions and interest for this year</span>
-<span class="sd">        float: New amount in SA, after contributions and interest for this year</span>
-<span class="sd">        float: New amount in MA, after contributions and interest for this year</span>
+<span class="sd">        *tuple*: Tuple containing</span>
+<span class="sd">            - (*float*): New amount in OA, after contributions and interest for this year</span>
+<span class="sd">            - (*float*): New amount in SA, after contributions and interest for this year</span>
+<span class="sd">            - (*float*): New amount in MA, after contributions and interest for this year</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">oa_accumulated</span><span class="p">,</span> <span class="n">sa_accumulated</span><span class="p">,</span> <span class="n">ma_accumulated</span> <span class="o">=</span> <span class="n">oa_curr</span><span class="p">,</span> <span class="n">sa_curr</span><span class="p">,</span> <span class="n">ma_curr</span>
     <span class="n">oa_interest_total</span><span class="p">,</span> <span class="n">sa_interest_total</span><span class="p">,</span> <span class="n">ma_interest_total</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     
-    <span class="c1"># iterate through the 12 months in the year</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
-        <span class="c1"># to check if this month contains a bonus</span>
-        <span class="k">if</span> <span class="n">age</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># add 1 month to the date for each iteration</span>
-            <span class="n">year_start</span><span class="p">,</span> <span class="n">month_start</span> <span class="o">=</span> <span class="p">(</span><span class="n">date_start</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">date_start</span><span class="o">.</span><span class="n">month</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">month_start</span> <span class="o">&gt;</span> <span class="mi">12</span><span class="p">:</span>
-                <span class="n">year_start</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="n">month_start</span> <span class="o">-=</span> <span class="mi">12</span>
-
+    <span class="c1"># iterate through the months in the year</span>
+    <span class="n">month_start</span> <span class="o">=</span> <span class="n">date_start</span><span class="o">.</span><span class="n">month</span> <span class="k">if</span> <span class="n">date_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">month_start</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">dob</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># wrap the date in a datetime object</span>
-            <span class="n">date_start</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">year_start</span><span class="p">,</span> <span class="n">month_start</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">age</span> <span class="o">=</span> <span class="n">_get_age</span><span class="p">(</span><span class="n">dob</span><span class="p">,</span> <span class="n">date_start</span><span class="p">)</span>
-            <span class="n">bonus_annual</span> <span class="o">=</span> <span class="n">bonus</span> <span class="k">if</span> <span class="n">month_start</span> <span class="o">==</span> <span class="n">bonus_month</span> <span class="k">else</span> <span class="mi">0</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># else-condition only applies for unit testing</span>
+            <span class="n">date_start_iter</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">date_start</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">age</span> <span class="o">=</span> <span class="n">_get_age</span><span class="p">(</span><span class="n">dob</span><span class="p">,</span> <span class="n">date_start_iter</span><span class="p">)</span>
             <span class="n">bonus_annual</span> <span class="o">=</span> <span class="n">bonus</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">bonus_month</span> <span class="k">else</span> <span class="mi">0</span>
-
+            <span class="c1"># print(&#39;Month: {}/{}, Age: {}&#39;.format(date_start_iter.year, i, age))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># else-condition only applies for unit testing of class TestCpfCalculateAnnualChange1</span>
+            <span class="n">bonus_annual</span> <span class="o">=</span> <span class="n">bonus</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">bonus_month</span> <span class="k">else</span> <span class="mi">0</span>
+        
         <span class="c1"># add the CPF allocation for this month</span>
         <span class="c1"># this is actually the contribution for the previous month&#39;s salary</span>
         <span class="n">oa_alloc</span><span class="p">,</span> <span class="n">sa_alloc</span><span class="p">,</span> <span class="n">ma_alloc</span> <span class="o">=</span> <span class="n">calculate_cpf_allocation</span><span class="p">(</span><span class="n">salary</span> <span class="o">/</span> <span class="mi">12</span><span class="p">,</span> <span class="n">bonus_annual</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="n">age</span><span class="p">)</span>
         <span class="n">oa_accumulated</span> <span class="o">+=</span> <span class="n">oa_alloc</span>
         <span class="n">sa_accumulated</span> <span class="o">+=</span> <span class="n">sa_alloc</span>
         <span class="n">ma_accumulated</span> <span class="o">+=</span> <span class="n">ma_alloc</span>
+
+        <span class="c1"># for now, assume that SA top-ups are done in January</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">sa_accumulated</span> <span class="o">+=</span> <span class="n">sa_topup</span>
 
         <span class="c1">###########################################################################################</span>
         <span class="c1">#                                   INTEREST CALCULATION                                  #</span>
@@ -567,8 +501,8 @@
                                             <span class="nb">min</span><span class="p">(</span><span class="n">oa_accumulated</span><span class="p">,</span> <span class="n">constants</span><span class="o">.</span><span class="n">THRESHOLD_EXTRAINT_OA</span><span class="p">)</span>
         <span class="c1"># second priority is SA</span>
         <span class="n">sa_interest</span> <span class="o">=</span> <span class="n">_calculate_monthly_interest_sa</span><span class="p">(</span><span class="n">oa_accumulated</span><span class="p">,</span>
-                                                    <span class="n">sa_accumulated</span><span class="p">,</span> 
-                                                    <span class="n">rem_amount_for_extra_int_sa_ma</span><span class="p">)</span>
+                                                     <span class="n">sa_accumulated</span><span class="p">,</span> 
+                                                     <span class="n">rem_amount_for_extra_int_sa_ma</span><span class="p">)</span>
         <span class="n">sa_interest_total</span> <span class="o">+=</span> <span class="n">sa_interest</span>
 
         <span class="c1"># remaining amount available for extra interest to be received in MA depends on the amount in SA </span>
@@ -577,9 +511,9 @@
         <span class="n">ma_interest</span> <span class="o">=</span> <span class="n">_calculate_monthly_interest_ma</span><span class="p">(</span><span class="n">ma_accumulated</span><span class="p">,</span> <span class="n">rem_amount_for_extra_int_ma</span><span class="p">)</span>
         <span class="n">ma_interest_total</span> <span class="o">+=</span> <span class="n">ma_interest</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">oa_interest</span><span class="p">,</span> <span class="n">sa_interest</span><span class="p">,</span> <span class="n">ma_interest</span><span class="p">)</span>
+        <span class="c1"># print(i, oa_interest, sa_interest, ma_interest)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="n">oa_interest_total</span><span class="p">,</span> <span class="n">sa_interest_total</span><span class="p">,</span> <span class="n">ma_interest_total</span><span class="p">)</span>
+    <span class="c1"># print(oa_interest_total, sa_interest_total, ma_interest_total)</span>
 
     <span class="c1"># interest added at the end of the year</span>
     <span class="n">oa_new</span> <span class="o">=</span> <span class="n">oa_accumulated</span> <span class="o">+</span> <span class="n">oa_interest_total</span>
@@ -587,6 +521,123 @@
     <span class="n">ma_new</span> <span class="o">=</span> <span class="n">ma_accumulated</span> <span class="o">+</span> <span class="n">ma_interest_total</span>
 
     <span class="k">return</span> <span class="n">oa_new</span><span class="p">,</span> <span class="n">sa_new</span><span class="p">,</span> <span class="n">ma_new</span></div>
+
+
+<span class="c1">###################################################################################################</span>
+<span class="c1">#                                   GENERIC HELPER FUNCTIONS                                      #</span>
+<span class="c1">###################################################################################################</span>
+
+<span class="k">def</span> <span class="nf">_get_age</span><span class="p">(</span><span class="n">dob</span><span class="p">,</span> <span class="n">date_curr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the user&#39;s age given the user&#39;s date of birth.</span>
+
+<span class="sd">    If a date is explicitly specified, calculate the user&#39;s age from the specified date. </span>
+<span class="sd">    Else, use today&#39;s date. \\</span>
+<span class="sd">    Age is determined using this logic:</span>
+<span class="sd">    &quot;Your employee is considered to be 35, 45, 50, 55, 60 or 65 years old in the month</span>
+<span class="sd">    of his 35th, 45th, 50th, 55th, 60th or 65th birthday. The employee will be above </span>
+<span class="sd">    35, 45, 50, 55, 60 or 65 years from the month after the month of his </span>
+<span class="sd">    35th, 45th, 50th, 55th, 60th or 65th birthday.&quot; \\</span>
+<span class="sd">    Reference: https://www.cpf.gov.sg/Employers/EmployerGuides/employer-guides/paying-cpf-contributions/cpf-contribution-and-allocation-rates</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dob (str): Date of birth of employee in YYYYMM format</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        int: Age of employee</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">birth_year</span><span class="p">,</span> <span class="n">birth_month</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">dob</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">dob</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">date_curr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">curr_year</span><span class="p">,</span> <span class="n">curr_month</span> <span class="o">=</span> <span class="p">(</span><span class="n">date_curr</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">date_curr</span><span class="o">.</span><span class="n">month</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">curr_year</span><span class="p">,</span> <span class="n">curr_month</span> <span class="o">=</span> <span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">month</span><span class="p">)</span>
+
+    <span class="n">year_diff</span><span class="p">,</span> <span class="n">month_diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">curr_year</span> <span class="o">-</span> <span class="n">birth_year</span><span class="p">,</span> <span class="n">curr_month</span> <span class="o">-</span> <span class="n">birth_month</span><span class="p">)</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">year_diff</span> <span class="k">if</span> <span class="n">month_diff</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">year_diff</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="c1"># print(&#39;CPF:_get_age():&#39;, year_diff, month_diff, age)</span>
+    <span class="k">return</span> <span class="n">age</span>
+
+
+<span class="k">def</span> <span class="nf">_get_age_bracket</span><span class="p">(</span><span class="n">age</span><span class="p">,</span> <span class="n">purpose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Gets the age bracket for the specified purpose and age.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        age (int): Age of employee</span>
+<span class="sd">        purpose (str): Either &#39;contribution&#39; or &#39;allocation&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Age bracket of employee</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">purpose</span> <span class="o">==</span> <span class="n">constants</span><span class="o">.</span><span class="n">STR_CONTRIBUTION</span><span class="p">:</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">rates_cont</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">purpose</span> <span class="o">==</span> <span class="n">constants</span><span class="o">.</span><span class="n">STR_ALLOCATION</span><span class="p">:</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">rates_alloc</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">age</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">key</span>
+    
+    <span class="k">return</span> <span class="s1">&#39;150&#39;</span> <span class="c1"># return max by default</span>
+
+
+<span class="k">def</span> <span class="nf">_get_num_projection_years</span><span class="p">(</span><span class="n">target_year</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the number of years between this year and the target year.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        target_year (int): Target year in the future to project for</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        int: Number of years to project for</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">target_year</span> <span class="o">-</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span> <span class="o">+</span> <span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_year_to_zero_indexing</span><span class="p">(</span><span class="n">sa_topups</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts the keys in the dict from the actual year to zero indexing based on the current year.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sa_topups (dict): Cash top-ups to the SA </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: The same dict, with keys converted to zero indexing</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sa_topups_new</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">sa_topups</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">year_zero_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">-</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span>
+        <span class="n">sa_topups_new</span><span class="p">[</span><span class="n">year_zero_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">sa_topups_new</span>
+            
+
+<span class="k">def</span> <span class="nf">_round_half_up</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Rounds the given monetary amount to the nearest dollar.</span>
+<span class="sd">    </span>
+<span class="sd">    An amount of 50 cents will be regarded as an additional dollar:</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n (float): input amount</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: rounded amount to the nearest dollar</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">multiplier</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">decimals</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">multiplier</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">/</span> <span class="n">multiplier</span>
+
+
+<span class="k">def</span> <span class="nf">_truncate</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Truncates the given monetary amount to the specified number of decimal places.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n (float): input amount</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float: truncated amount to `decimals` decimal places</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">before_dec</span><span class="p">,</span> <span class="n">after_dec</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">before_dec</span><span class="p">,</span> <span class="n">after_dec</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])))</span>
 </pre></div>
 
            </div>

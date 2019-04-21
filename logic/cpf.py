@@ -29,8 +29,8 @@ def calculate_cpf_contribution(salary, bonus, bonus_month=12, age=None, dob=None
 
     Returns:
         *tuple*: Tuple containing
-            - (float): Amount contributed by the employee in the year
-            - (float): Amount contributed by the employer in the year
+            - (*float*): Amount contributed by the employee in the year
+            - (*float*): Amount contributed by the employer in the year
 
     """
     
@@ -63,9 +63,9 @@ def calculate_cpf_allocation(salary_monthly, bonus, age=None, dob=None):
 
     Returns:
         *tuple*: Tuple containing
-            - (float): Allocation amount into OA
-            - (float): Allocation amount into SA
-            - (float): Allocation amount into MA
+            - (*float*): Allocation amount into OA
+            - (*float*): Allocation amount into SA
+            - (*float*): Allocation amount into MA
     """
 
     cont_monthly = _get_monthly_contribution_amount(salary_monthly, bonus, age, dob, entity=constants.STR_COMBINED)
@@ -78,7 +78,7 @@ def calculate_cpf_allocation(salary_monthly, bonus, age=None, dob=None):
 
 def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bonus,
                              base_cpf, bonus_month=12, age=None, dob=None,
-                             proj_start_date=None, n_years=None, target_year=None):
+                             proj_start_date=None, n_years=None, target_year=None, sa_topups=None):
     """Calculates the projected account balance in the CPF accounts after `n_years` or in `target_year`.
 
     `Reference <https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/>`_
@@ -95,16 +95,20 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         proj_start_date (date): Starting date of projection (*only used for testing purposes*)
         n_years (int): Number of years into the future to project
         target_year (int): Target end year of projection
+        sa_topups (dict): Cash top-ups to the SA 
+            - key (*str*): year of cash topup in YYYY format
+            - value (*float*): amount to top up
 
     Returns:
         *tuple*: Tuple containing
-            - (float): OA balance after `n_years`
-            - (float): SA balance after `n_years`
-            - (float): MA balance after `n_years`
+            - (*float*): OA balance after `n_years`
+            - (*float*): SA balance after `n_years`
+            - (*float*): MA balance after `n_years`
     """
 
     oa, sa, ma = base_cpf[0], base_cpf[1], base_cpf[2]
     n_years = _get_num_projection_years(target_year) if n_years is None else n_years
+    sa_topups = _convert_year_to_zero_indexing(sa_topups)
 
     for i in range(n_years):
         # default day to 1 as it is not used
@@ -120,11 +124,13 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
 
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
         bonus_proj = bonus * pow(1 + yoy_increase_bonus, i)
-        oa, sa, ma = calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma, 
+        sa_topup = sa_topups.get(i, 0)
+        oa, sa, ma = calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma, sa_topup,
                                              bonus_month, date_start=date_start, 
                                              age=age, dob=dob)
+        # print('Year {}: {}, {}, {}'.format(i, round(oa, 2), round(sa, 2), round(ma, 2)))
 
-    return oa, sa, ma
+    return round(oa, 2), round(sa, 2), round(ma, 2)
 
 
 ###################################################################################################
@@ -272,7 +278,7 @@ def _calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma):
     return ma_interest
 
 
-def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr, 
+def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr, sa_topup,
                             bonus_month=12, date_start=None, age=None, dob=None):
     """Calculates the total contributions and interest earned for the current year.
 
@@ -287,15 +293,17 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         oa_curr (float): Current amount in OA
         sa_curr (float): Current amount in SA
         ma_curr (float): Current amount in MA
+        sa_topup (float): Amount to top up into the SA (assume Jan for now)
         bonus_month (int): Month where bonus is received (1-12)
         date_start (date): Start date of the year to calculate from
         age (int): Age of employee
         dob (str): Date of birth of employee in YYYYMM format
 
     Returns:
-        float: New amount in OA, after contributions and interest for this year
-        float: New amount in SA, after contributions and interest for this year
-        float: New amount in MA, after contributions and interest for this year
+        *tuple*: Tuple containing
+            - (*float*): New amount in OA, after contributions and interest for this year
+            - (*float*): New amount in SA, after contributions and interest for this year
+            - (*float*): New amount in MA, after contributions and interest for this year
     """
 
     oa_accumulated, sa_accumulated, ma_accumulated = oa_curr, sa_curr, ma_curr
@@ -309,7 +317,7 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
             date_start_iter = dt.date(date_start.year, i, 1)
             age = _get_age(dob, date_start_iter)
             bonus_annual = bonus if i == bonus_month else 0
-            print('Month: {}/{}, Age: {}'.format(date_start_iter.year, i, age))
+            # print('Month: {}/{}, Age: {}'.format(date_start_iter.year, i, age))
         else:
             # else-condition only applies for unit testing of class TestCpfCalculateAnnualChange1
             bonus_annual = bonus if i == bonus_month else 0
@@ -320,6 +328,10 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         oa_accumulated += oa_alloc
         sa_accumulated += sa_alloc
         ma_accumulated += ma_alloc
+
+        # for now, assume that SA top-ups are done in January
+        if i == 1:
+            sa_accumulated += sa_topup
 
         ###########################################################################################
         #                                   INTEREST CALCULATION                                  #
@@ -342,8 +354,8 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
                                             min(oa_accumulated, constants.THRESHOLD_EXTRAINT_OA)
         # second priority is SA
         sa_interest = _calculate_monthly_interest_sa(oa_accumulated,
-                                                    sa_accumulated, 
-                                                    rem_amount_for_extra_int_sa_ma)
+                                                     sa_accumulated, 
+                                                     rem_amount_for_extra_int_sa_ma)
         sa_interest_total += sa_interest
 
         # remaining amount available for extra interest to be received in MA depends on the amount in SA 
@@ -362,7 +374,6 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
     ma_new = ma_accumulated + ma_interest_total
 
     return oa_new, sa_new, ma_new
-
 
 
 ###################################################################################################
@@ -434,6 +445,24 @@ def _get_num_projection_years(target_year):
 
     return target_year - dt.date.today().year + 1
 
+
+def _convert_year_to_zero_indexing(sa_topups):
+    """Converts the keys in the dict from the actual year to zero indexing based on the current year.
+
+    Args:
+        sa_topups (dict): Cash top-ups to the SA 
+
+    Returns:
+        dict: The same dict, with keys converted to zero indexing
+    """
+
+    sa_topups_new = {}
+    for key, value in sa_topups.items():
+        year_zero_index = int(key) - dt.date.today().year
+        sa_topups_new[year_zero_index] = value
+
+    return sa_topups_new
+            
 
 def _round_half_up(n, decimals=0):
     """Rounds the given monetary amount to the nearest dollar.

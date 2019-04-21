@@ -21,6 +21,7 @@ parser.add_argument('yoy_increase', type=float, help='Projected YoY increase of 
 parser.add_argument('base_cpf', type=list, help='Base amount in CPF accounts')
 parser.add_argument('n_years', type=int, help='Number of years into the future')
 parser.add_argument('target_year', type=int, help='Target year in the future to project for')
+parser.add_argument('sa_topups', type=dict, help='Cash top-ups to the SA')
 # For future authentication methods
 # parser.add_argument('Authentication', location='headers')
 
@@ -49,9 +50,10 @@ class CpfProjection(Resource):
                                               args['yoy_increase_salary'],
                                               args['yoy_increase_bonus'],
                                               args['base_cpf'],
+                                              dob=args['dob'],
                                               n_years=args['n_years'],
                                               target_year=args['target_year'],
-                                              dob=args['dob'])
+                                              sa_topups=args['sa_topups'])
 
         return { 'oa': oa, 'sa': sa, 'ma': ma }
 
