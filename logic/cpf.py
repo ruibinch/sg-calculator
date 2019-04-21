@@ -78,7 +78,8 @@ def calculate_cpf_allocation(salary_monthly, bonus, age=None, dob=None):
 
 def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bonus,
                              base_cpf, bonus_month=12, age=None, dob=None,
-                             proj_start_date=None, n_years=None, target_year=None, sa_topups=None):
+                             proj_start_date=None, n_years=None, target_year=None, 
+                             oa_withdrawals=None, sa_topups=None):
     """Calculates the projected account balance in the CPF accounts after `n_years` or in `target_year`.
 
     `Reference <https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/>`_
@@ -95,6 +96,9 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         proj_start_date (date): Starting date of projection (*only used for testing purposes*)
         n_years (int): Number of years into the future to project
         target_year (int): Target end year of projection
+        oa_withdrawals (dict): Withdrawals from the OA
+            - key (*str*): year of withdrawal in YYYY format
+            - value (*float*): amount to withdraw
         sa_topups (dict): Cash top-ups to the SA 
             - key (*str*): year of cash topup in YYYY format
             - value (*float*): amount to top up
@@ -108,6 +112,7 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
 
     oa, sa, ma = base_cpf[0], base_cpf[1], base_cpf[2]
     n_years = _get_num_projection_years(target_year) if n_years is None else n_years
+    oa_withdrawals = _convert_year_to_zero_indexing(oa_withdrawals)
     sa_topups = _convert_year_to_zero_indexing(sa_topups)
 
     for i in range(n_years):
@@ -124,8 +129,11 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
 
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
         bonus_proj = bonus * pow(1 + yoy_increase_bonus, i)
+        oa_withdrawal = oa_withdrawals.get(i, 0)
         sa_topup = sa_topups.get(i, 0)
-        oa, sa, ma = calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma, sa_topup,
+
+        oa, sa, ma = calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma,
+                                             oa_withdrawal, sa_topup,
                                              bonus_month, date_start=date_start, 
                                              age=age, dob=dob)
         # print('Year {}: {}, {}, {}'.format(i, round(oa, 2), round(sa, 2), round(ma, 2)))
@@ -278,7 +286,8 @@ def _calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma):
     return ma_interest
 
 
-def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr, sa_topup,
+def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
+                            oa_withdrawal, sa_topup,
                             bonus_month=12, date_start=None, age=None, dob=None):
     """Calculates the total contributions and interest earned for the current year.
 
@@ -293,6 +302,7 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr, sa_topup,
         oa_curr (float): Current amount in OA
         sa_curr (float): Current amount in SA
         ma_curr (float): Current amount in MA
+        oa_withdrawal (float): Amount to withdraw from the OA (assume Jan for now)
         sa_topup (float): Amount to top up into the SA (assume Jan for now)
         bonus_month (int): Month where bonus is received (1-12)
         date_start (date): Start date of the year to calculate from
@@ -329,8 +339,9 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr, sa_topup,
         sa_accumulated += sa_alloc
         ma_accumulated += ma_alloc
 
-        # for now, assume that SA top-ups are done in January
+        # for now, assume that OA withdrawals and SA top-ups are done in January
         if i == 1:
+            oa_accumulated -= oa_withdrawal
             sa_accumulated += sa_topup
 
         ###########################################################################################
@@ -446,22 +457,22 @@ def _get_num_projection_years(target_year):
     return target_year - dt.date.today().year + 1
 
 
-def _convert_year_to_zero_indexing(sa_topups):
+def _convert_year_to_zero_indexing(dict_orig):
     """Converts the keys in the dict from the actual year to zero indexing based on the current year.
 
     Args:
-        sa_topups (dict): Cash top-ups to the SA 
+        dict_orig (dict): Original dict 
 
     Returns:
         dict: The same dict, with keys converted to zero indexing
     """
 
-    sa_topups_new = {}
-    for key, value in sa_topups.items():
+    dict_new = {}
+    for key, value in dict_orig.items():
         year_zero_index = int(key) - dt.date.today().year
-        sa_topups_new[year_zero_index] = value
+        dict_new[year_zero_index] = value
 
-    return sa_topups_new
+    return dict_new
             
 
 def _round_half_up(n, decimals=0):
