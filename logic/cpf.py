@@ -101,7 +101,7 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
             - value (*float*): amount to withdraw
         sa_topups (dict): Cash top-ups to the SA 
             - key (*str*): year of cash topup in YYYY format
-            - value (*float*): amount to top up
+            - value (*list* of *float*, *boolean*): amount to top up; whether it is coming from the OA
 
     Returns:
         *tuple*: Tuple containing
@@ -130,10 +130,12 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
         bonus_proj = bonus * pow(1 + yoy_increase_bonus, i)
         oa_withdrawal = oa_withdrawals.get(i, 0)
-        sa_topup = sa_topups.get(i, 0)
+        sa_topup_details = sa_topups.get(i, [])
+        sa_topup = sa_topup_details[0] if sa_topup_details != [] else 0
+        sa_topup_from_oa = sa_topup_details[1] if sa_topup_details != [] else None
 
         oa, sa, ma = calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma,
-                                             oa_withdrawal, sa_topup,
+                                             oa_withdrawal, sa_topup, sa_topup_from_oa,
                                              bonus_month, date_start=date_start, 
                                              age=age, dob=dob)
         # print('Year {}: {}, {}, {}'.format(i, round(oa, 2), round(sa, 2), round(ma, 2)))
@@ -287,7 +289,7 @@ def _calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma):
 
 
 def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
-                            oa_withdrawal, sa_topup,
+                            oa_withdrawal=None, sa_topup=None, sa_topup_from_oa=None,
                             bonus_month=12, date_start=None, age=None, dob=None):
     """Calculates the total contributions and interest earned for the current year.
 
@@ -304,6 +306,7 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         ma_curr (float): Current amount in MA
         oa_withdrawal (float): Amount to withdraw from the OA (assume Jan for now)
         sa_topup (float): Amount to top up into the SA (assume Jan for now)
+        sa_topup_from_oa (boolean): Whether the top-up amount to the SA is coming from the OA
         bonus_month (int): Month where bonus is received (1-12)
         date_start (date): Start date of the year to calculate from
         age (int): Age of employee
@@ -321,16 +324,16 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
     
     # iterate through the months in the year
     month_start = date_start.month if date_start is not None else 1
-    for i in range(month_start, 13):
+    for month in range(month_start, 13):
         if dob is not None:
             # wrap the date in a datetime object
-            date_start_iter = dt.date(date_start.year, i, 1)
+            date_start_iter = dt.date(date_start.year, month, 1)
             age = _get_age(dob, date_start_iter)
-            bonus_annual = bonus if i == bonus_month else 0
+            bonus_annual = bonus if month == bonus_month else 0
             # print('Month: {}/{}, Age: {}'.format(date_start_iter.year, i, age))
         else:
             # else-condition only applies for unit testing of class TestCpfCalculateAnnualChange1
-            bonus_annual = bonus if i == bonus_month else 0
+            bonus_annual = bonus if month == bonus_month else 0
         
         # add the CPF allocation for this month
         # this is actually the contribution for the previous month's salary
@@ -340,9 +343,11 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         ma_accumulated += ma_alloc
 
         # for now, assume that OA withdrawals and SA top-ups are done in January
-        if i == 1:
+        if month == 1 and all(v is not None for v in [oa_withdrawal, sa_topup, sa_topup_from_oa]):
             oa_accumulated -= oa_withdrawal
             sa_accumulated += sa_topup
+            if sa_topup_from_oa is True:
+                oa_accumulated -= sa_topup
 
         ###########################################################################################
         #                                   INTEREST CALCULATION                                  #
@@ -468,9 +473,11 @@ def _convert_year_to_zero_indexing(dict_orig):
     """
 
     dict_new = {}
-    for key, value in dict_orig.items():
-        year_zero_index = int(key) - dt.date.today().year
-        dict_new[year_zero_index] = value
+
+    if dict_orig is not None:
+        for key, value in dict_orig.items():
+            year_zero_index = int(key) - dt.date.today().year
+            dict_new[year_zero_index] = value
 
     return dict_new
             
