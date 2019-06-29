@@ -112,10 +112,10 @@ class TestCalculateCpfAllocation(object):
         Round the values to 2 decimal places when checking for equality.
 
         Args:
-            - age (int): Age of employee
-            - salary (float): Monthly salary of employee
-            - bonus (float): Bonus/commission received in the year
-            - alloc_exp (array): Expected amount to be allocated into the CPF accounts [OA, SA, MA]
+            age (int): Age of employee
+            salary (float): Monthly salary of employee
+            bonus (float): Bonus/commission received in the year
+            alloc_exp (array): Expected amount to be allocated into the CPF accounts [OA, SA, MA]
         """
         
         oa_alloc_test, sa_alloc_test, ma_alloc_test = cpf.calculate_cpf_allocation(
@@ -239,8 +239,8 @@ class TestCpfCalculateAnnualChange1(object):
         Helper class to perform assertion checks.
 
         Args:
-        - balance_orig (array): Original balance in CPF accounts [OA, SA, MA]
-        - balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
+            balance_orig (array): Original balance in CPF accounts [OA, SA, MA]
+            balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
         """
 
         oa_test, sa_test, ma_test = cpf.calculate_annual_change(self.salary * 12, self.bonus,
@@ -464,8 +464,8 @@ class TestCpfCalculateAnnualChange2(object):
         Helper class to perform assertion checks.
 
         Args:
-        - balance_orig (array): Original balance in CPF accounts [OA, SA, MA]
-        - balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
+            balance_orig (array): Original balance in CPF accounts [OA, SA, MA]
+            balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
         """
 
         oa_test, sa_test, ma_test = cpf.calculate_annual_change(self.salary * 12, self.bonus,
@@ -559,3 +559,202 @@ class TestCpfCalculateAnnualChange2(object):
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], dob)
+
+
+class TestCpfCalculateAnnualChange3(object):
+    """
+    Tests the `calculate_annual_change()` method in cpf.py.
+
+    Focuses on cases where there are changes in withdrawals/topups from the OA/SA respectively
+    in the year.
+    Original CPF account balances are fixed here, corresponding to test scenario 1 in 
+    TestCpfCalculateAnnualChange1.
+
+    Test scenarios:
+    1. Topup OA
+    2. Withdraw from OA
+    3. Topup SA via cash
+    4. Topup SA via OA
+    5. Withdraw from SA
+    6. Topup MA
+    7. Withdraw from MA
+    """
+
+    salary, bonus = (4000, 10000)
+    age = 25
+    base_cpf = [6000, 2000, 3000]
+    date_start = dt.date(dt.date.today().year, 1, 1)
+    # standardise the month where the topup/withdrawal occurs
+    delta_month = 5
+    # standardise the topup/withdrawal amount too
+    delta_amount = 1000
+
+    def _add_monthly_contribution(self, oa, sa, ma, month):
+        # 0.6217, 0.1621. 0.2162 of contribution (approx. 23%, 6%, 8% of $4000/$14000)
+        cont_oa, cont_sa, cont_ma = (920.13, 239.9, 319.97)
+        cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (3220.42, 839.67, 1119.91)
+        
+        if month == 12: # month is December
+            oa += cont_oa_bonus
+            sa += cont_sa_bonus
+            ma += cont_ma_bonus
+        else:
+            oa += cont_oa
+            sa += cont_sa
+            ma += cont_ma
+
+        return oa, sa, ma
+    
+
+    def _add_monthly_interest(self, oa, sa, ma, int_oa, int_sa, int_ma):
+        int_oa += oa * (0.025 / 12)
+        int_sa += min(oa, 20000) * (0.01 / 12)
+        int_sa += sa * (0.05 / 12)
+        int_ma += ma * (0.05 / 12)
+
+        return int_oa, int_sa, int_ma
+
+    def _perform_assertion(self, balance_orig, balance_exp, account_deltas):
+        """
+        Helper class to perform assertion checks.
+
+        Args:
+            balance_orig (array): Original balance in CPF accounts [OA, SA, MA]
+            balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
+        """
+
+        oa_test, sa_test, ma_test = cpf.calculate_annual_change(self.salary * 12, self.bonus,
+                                        balance_orig[0], balance_orig[1], balance_orig[2],
+                                        account_deltas=account_deltas,
+                                        date_start=self.date_start, age=self.age)
+
+        assert round(balance_exp[0], 3) == round(oa_test, 3)
+        assert round(balance_exp[1], 3) == round(sa_test, 3)
+        assert round(balance_exp[2], 3) == round(ma_test, 3)
+
+    def test_scenario_1(self):
+        print('Test scenario 1: Topup OA')
+        
+        oa, sa, ma = (6000, 2000, 3000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        for i in range(1, 13):
+            oa, sa, ma = self._add_monthly_contribution(oa, sa, ma, i)
+            if i == self.delta_month:
+                oa += self.delta_amount
+
+            # add interest in this month
+            int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
+        
+        oa_topups = [(self.delta_month, self.delta_amount)]
+        account_deltas = [oa_topups, [], [], [], [], []]
+        self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
+
+    def test_scenario_2(self):
+        print('Test scenario 2: Withdraw from OA')
+        
+        oa, sa, ma = (6000, 2000, 3000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        for i in range(1, 13):
+            oa, sa, ma = self._add_monthly_contribution(oa, svotaa, ma, i)
+            if i == self.delta_month:
+                oa -= self.delta_amount
+
+            # add interest in this month
+            int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
+        
+        oa_withdrawals = [(self.delta_month, self.delta_amount)]
+        account_deltas = [[], oa_withdrawals, [], [], [], []]
+        self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
+
+    def test_scenario_3(self):
+        print('Test scenario 3: Topup SA via cash')
+        
+        oa, sa, ma = (6000, 2000, 3000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        for i in range(1, 13):
+            oa, sa, ma = self._add_monthly_contribution(oa, sa, ma, i)
+            if i == self.delta_month:
+                sa += self.delta_amount
+
+            # add interest in this month
+            int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
+        
+        sa_topups = [(self.delta_month, self.delta_amount, False)]
+        account_deltas = [[], [], sa_topups, [], [], []]
+        self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
+
+    def test_scenario_4(self):
+        print('Test scenario 4: Topup SA via OA')
+        
+        oa, sa, ma = (6000, 2000, 3000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        for i in range(1, 13):
+            oa, sa, ma = self._add_monthly_contribution(oa, sa, ma, i)
+            if i == self.delta_month:
+                sa += self.delta_amount
+                oa -= self.delta_amount
+
+            # add interest in this month
+            int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
+        
+        sa_topups = [(self.delta_month, self.delta_amount, True)]
+        account_deltas = [[], [], sa_topups, [], [], []]
+        self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
+
+    def test_scenario_5(self):
+        print('Test scenario 5: Withdraw from SA')
+        
+        oa, sa, ma = (6000, 2000, 3000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        for i in range(1, 13):
+            oa, sa, ma = self._add_monthly_contribution(oa, sa, ma, i)
+            if i == self.delta_month:
+                sa -= self.delta_amount
+
+            # add interest in this month
+            int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
+        
+        sa_withdrawals = [(self.delta_month, self.delta_amount)]
+        account_deltas = [[], [], [], sa_withdrawals, [], []]
+        self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
+
+    def test_scenario_6(self):
+        print('Test scenario 6: Topup MA')
+        
+        oa, sa, ma = (6000, 2000, 3000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        for i in range(1, 13):
+            oa, sa, ma = self._add_monthly_contribution(oa, sa, ma, i)
+            if i == self.delta_month:
+                ma += self.delta_amount
+
+            # add interest in this month
+            int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
+        
+        ma_topups = [(self.delta_month, self.delta_amount)]
+        account_deltas = [[], [], [], [], ma_topups, []]
+        self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
+
+    def test_scenario_7(self):
+        print('Test scenario 7: Withdraw from MA')
+        
+        oa, sa, ma = (6000, 2000, 3000)
+        int_oa, int_sa, int_ma = (0, 0, 0)
+
+        for i in range(1, 13):
+            oa, sa, ma = self._add_monthly_contribution(oa, sa, ma, i)
+            if i == self.delta_month:
+                ma -= self.delta_amount
+
+            # add interest in this month
+            int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
+        
+        ma_withdrawals = [(self.delta_month, self.delta_amount)]
+        account_deltas = [[], [], [], [], [], ma_withdrawals]
+        self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
