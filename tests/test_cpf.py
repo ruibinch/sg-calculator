@@ -657,7 +657,7 @@ class TestCpfCalculateAnnualChange3(object):
         int_oa, int_sa, int_ma = (0, 0, 0)
 
         for i in range(1, 13):
-            oa, sa, ma = self._add_monthly_contribution(oa, svotaa, ma, i)
+            oa, sa, ma = self._add_monthly_contribution(oa, sa, ma, i)
             if i == self.delta_month:
                 oa -= self.delta_amount
 

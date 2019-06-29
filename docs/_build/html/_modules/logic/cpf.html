@@ -225,7 +225,10 @@
 
 <div class="viewcode-block" id="calculate_cpf_projection"><a class="viewcode-back" href="../../source/logic.html#logic.cpf.calculate_cpf_projection">[docs]</a><span class="k">def</span> <span class="nf">calculate_cpf_projection</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">yoy_increase_salary</span><span class="p">,</span> <span class="n">yoy_increase_bonus</span><span class="p">,</span>
                              <span class="n">base_cpf</span><span class="p">,</span> <span class="n">bonus_month</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                             <span class="n">proj_start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_years</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sa_topups</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                             <span class="n">proj_start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_years</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                             <span class="n">oa_topups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oa_withdrawals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                             <span class="n">sa_topups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sa_withdrawals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                             <span class="n">ma_topups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ma_withdrawals</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculates the projected account balance in the CPF accounts after `n_years` or in `target_year`.</span>
 
 <span class="sd">    `Reference &lt;https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/&gt;`_</span>
@@ -242,9 +245,25 @@
 <span class="sd">        proj_start_date (date): Starting date of projection (*only used for testing purposes*)</span>
 <span class="sd">        n_years (int): Number of years into the future to project</span>
 <span class="sd">        target_year (int): Target end year of projection</span>
-<span class="sd">        sa_topups (dict): Cash top-ups to the SA </span>
-<span class="sd">            - key (*str*): year of cash topup in YYYY format</span>
-<span class="sd">            - value (*float*): amount to top up</span>
+<span class="sd">        oa_topups (list): Cash top-ups to the OA; each entry is a tuple containing:</span>
+<span class="sd">            - *str*: year of cash topup in YYYY or YYYYMM format</span>
+<span class="sd">            - *float*: amount to topup</span>
+<span class="sd">        oa_withdrawals (list): Withdrawals from the OA; each entry is a tuple containing:</span>
+<span class="sd">            - *str*: year of cash withdrawal in YYYY or YYYYMM format</span>
+<span class="sd">            - *float*: amount to withdraw</span>
+<span class="sd">        sa_topups (list): Cash top-ups to the SA; each entry is a tuple containing:</span>
+<span class="sd">            - *str*: year of cash topup in YYYY or YYYYMM format</span>
+<span class="sd">            - *float*: amount to topup</span>
+<span class="sd">            - *boolean*: whether this amount is coming from the OA</span>
+<span class="sd">        sa_withdrawals (list): Withdrawals from the SA</span>
+<span class="sd">            - *str*: year of cash withdrawal in YYYY or YYYYMM format</span>
+<span class="sd">            - *float*: amount to withdraw</span>
+<span class="sd">        ma_topups (list): Cash top-ups to the MA</span>
+<span class="sd">            - *str*: year of cash topup in YYYY or YYYYMM format</span>
+<span class="sd">            - *float*: amount to topup</span>
+<span class="sd">        ma_withdrawals (list): Withdrawals from the MA</span>
+<span class="sd">            - *str*: year of cash withdrawal in YYYY or YYYYMM format</span>
+<span class="sd">            - *float*: amount to withdraw</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        *tuple*: Tuple containing</span>
@@ -255,7 +274,14 @@
 
     <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span> <span class="o">=</span> <span class="n">base_cpf</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">base_cpf</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">base_cpf</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
     <span class="n">n_years</span> <span class="o">=</span> <span class="n">_get_num_projection_years</span><span class="p">(</span><span class="n">target_year</span><span class="p">)</span> <span class="k">if</span> <span class="n">n_years</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">n_years</span>
+
+    <span class="c1"># convert all topup/withdrawal tuples to zero-indexing of year</span>
+    <span class="n">oa_topups</span> <span class="o">=</span> <span class="n">_convert_year_to_zero_indexing</span><span class="p">(</span><span class="n">oa_topups</span><span class="p">)</span>
+    <span class="n">oa_withdrawals</span> <span class="o">=</span> <span class="n">_convert_year_to_zero_indexing</span><span class="p">(</span><span class="n">oa_withdrawals</span><span class="p">)</span>
     <span class="n">sa_topups</span> <span class="o">=</span> <span class="n">_convert_year_to_zero_indexing</span><span class="p">(</span><span class="n">sa_topups</span><span class="p">)</span>
+    <span class="n">sa_withdrawals</span> <span class="o">=</span> <span class="n">_convert_year_to_zero_indexing</span><span class="p">(</span><span class="n">sa_withdrawals</span><span class="p">)</span>
+    <span class="n">ma_topups</span> <span class="o">=</span> <span class="n">_convert_year_to_zero_indexing</span><span class="p">(</span><span class="n">ma_topups</span><span class="p">)</span>
+    <span class="n">ma_withdrawals</span> <span class="o">=</span> <span class="n">_convert_year_to_zero_indexing</span><span class="p">(</span><span class="n">ma_withdrawals</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_years</span><span class="p">):</span>
         <span class="c1"># default day to 1 as it is not used</span>
@@ -271,10 +297,24 @@
 
         <span class="n">salary_proj</span> <span class="o">=</span> <span class="n">salary</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">yoy_increase_salary</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="n">bonus_proj</span> <span class="o">=</span> <span class="n">bonus</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">yoy_increase_bonus</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-        <span class="n">sa_topup</span> <span class="o">=</span> <span class="n">sa_topups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span> <span class="o">=</span> <span class="n">calculate_annual_change</span><span class="p">(</span><span class="n">salary_proj</span><span class="p">,</span> <span class="n">bonus_proj</span><span class="p">,</span> <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">sa_topup</span><span class="p">,</span>
-                                             <span class="n">bonus_month</span><span class="p">,</span> <span class="n">date_start</span><span class="o">=</span><span class="n">date_start</span><span class="p">,</span> 
-                                             <span class="n">age</span><span class="o">=</span><span class="n">age</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="n">dob</span><span class="p">)</span>
+        <span class="c1"># get OA/SA/MA topup/withdrawal details in this year</span>
+        <span class="n">oa_topups_year</span> <span class="o">=</span> <span class="n">_get_account_deltas_year</span><span class="p">(</span><span class="n">oa_topups</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">oa_withdrawals_year</span> <span class="o">=</span> <span class="n">_get_account_deltas_year</span><span class="p">(</span><span class="n">oa_withdrawals</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">sa_topups_year</span> <span class="o">=</span> <span class="n">_get_account_deltas_year</span><span class="p">(</span><span class="n">sa_topups</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">sa_withdrawals_year</span> <span class="o">=</span> <span class="n">_get_account_deltas_year</span><span class="p">(</span><span class="n">sa_withdrawals</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">ma_topups_year</span> <span class="o">=</span> <span class="n">_get_account_deltas_year</span><span class="p">(</span><span class="n">ma_topups</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">ma_withdrawals_year</span> <span class="o">=</span> <span class="n">_get_account_deltas_year</span><span class="p">(</span><span class="n">ma_withdrawals</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">account_deltas</span> <span class="o">=</span> <span class="p">(</span><span class="n">oa_topups_year</span><span class="p">,</span> <span class="n">oa_withdrawals_year</span><span class="p">,</span> <span class="n">sa_topups_year</span><span class="p">,</span> <span class="n">sa_withdrawals_year</span><span class="p">,</span> <span class="n">ma_topups_year</span><span class="p">,</span> <span class="n">ma_withdrawals_year</span><span class="p">)</span>
+
+        <span class="c1"># get SA topup/OA withdrawal details</span>
+        <span class="c1"># oa_withdrawal = oa_withdrawals.get(i, 0)</span>
+        <span class="c1"># sa_topup_details = sa_topups.get(i, [])</span>
+        <span class="c1"># sa_topup = sa_topup_details[0] if sa_topup_details != [] else 0</span>
+        <span class="c1"># sa_topup_from_oa = sa_topup_details[1] if sa_topup_details != [] else None</span>
+
+        <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span> <span class="o">=</span> <span class="n">calculate_annual_change</span><span class="p">(</span><span class="n">salary_proj</span><span class="p">,</span> <span class="n">bonus_proj</span><span class="p">,</span> <span class="n">oa</span><span class="p">,</span> <span class="n">sa</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span>
+                                             <span class="n">account_deltas</span><span class="p">,</span> <span class="n">bonus_month</span><span class="p">,</span> 
+                                             <span class="n">date_start</span><span class="o">=</span><span class="n">date_start</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="n">age</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="n">dob</span><span class="p">)</span>
         <span class="c1"># print(&#39;Year {}: {}, {}, {}&#39;.format(i, round(oa, 2), round(sa, 2), round(ma, 2)))</span>
 
     <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">oa</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">sa</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">ma</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span></div>
@@ -425,8 +465,9 @@
     <span class="k">return</span> <span class="n">ma_interest</span>
 
 
-<div class="viewcode-block" id="calculate_annual_change"><a class="viewcode-back" href="../../source/logic.html#logic.cpf.calculate_annual_change">[docs]</a><span class="k">def</span> <span class="nf">calculate_annual_change</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">oa_curr</span><span class="p">,</span> <span class="n">sa_curr</span><span class="p">,</span> <span class="n">ma_curr</span><span class="p">,</span> <span class="n">sa_topup</span><span class="p">,</span>
-                            <span class="n">bonus_month</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">date_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="calculate_annual_change"><a class="viewcode-back" href="../../source/logic.html#logic.cpf.calculate_annual_change">[docs]</a><span class="k">def</span> <span class="nf">calculate_annual_change</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span> <span class="n">bonus</span><span class="p">,</span> <span class="n">oa_curr</span><span class="p">,</span> <span class="n">sa_curr</span><span class="p">,</span> <span class="n">ma_curr</span><span class="p">,</span>
+                            <span class="n">account_deltas</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bonus_month</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> 
+                            <span class="n">date_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dob</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculates the total contributions and interest earned for the current year.</span>
 
 <span class="sd">    Adds the interest, along with the contributions in the year, to the CPF account balances. \\</span>
@@ -440,7 +481,7 @@
 <span class="sd">        oa_curr (float): Current amount in OA</span>
 <span class="sd">        sa_curr (float): Current amount in SA</span>
 <span class="sd">        ma_curr (float): Current amount in MA</span>
-<span class="sd">        sa_topup (float): Amount to top up into the SA (assume Jan for now)</span>
+<span class="sd">        account_deltas (list): List of topups/withdrawals to the OA/SA/MA accounts respectively</span>
 <span class="sd">        bonus_month (int): Month where bonus is received (1-12)</span>
 <span class="sd">        date_start (date): Start date of the year to calculate from</span>
 <span class="sd">        age (int): Age of employee</span>
@@ -458,16 +499,18 @@
     
     <span class="c1"># iterate through the months in the year</span>
     <span class="n">month_start</span> <span class="o">=</span> <span class="n">date_start</span><span class="o">.</span><span class="n">month</span> <span class="k">if</span> <span class="n">date_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">1</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">month_start</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">month</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">month_start</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">dob</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># wrap the date in a datetime object</span>
-            <span class="n">date_start_iter</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">date_start</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">date_start_iter</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">date_start</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">age</span> <span class="o">=</span> <span class="n">_get_age</span><span class="p">(</span><span class="n">dob</span><span class="p">,</span> <span class="n">date_start_iter</span><span class="p">)</span>
-            <span class="n">bonus_annual</span> <span class="o">=</span> <span class="n">bonus</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">bonus_month</span> <span class="k">else</span> <span class="mi">0</span>
             <span class="c1"># print(&#39;Month: {}/{}, Age: {}&#39;.format(date_start_iter.year, i, age))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># else-condition only applies for unit testing of class TestCpfCalculateAnnualChange1</span>
-            <span class="n">bonus_annual</span> <span class="o">=</span> <span class="n">bonus</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">bonus_month</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     # else-condition only applies for unit testing of class TestCpfCalculateAnnualChange1</span>
+        <span class="c1">#     bonus_annual = bonus if month == bonus_month else 0</span>
+        
+        <span class="c1"># check if this month is the month where bonus is received</span>
+        <span class="n">bonus_annual</span> <span class="o">=</span> <span class="n">bonus</span> <span class="k">if</span> <span class="n">month</span> <span class="o">==</span> <span class="n">bonus_month</span> <span class="k">else</span> <span class="mi">0</span>
         
         <span class="c1"># add the CPF allocation for this month</span>
         <span class="c1"># this is actually the contribution for the previous month&#39;s salary</span>
@@ -476,9 +519,19 @@
         <span class="n">sa_accumulated</span> <span class="o">+=</span> <span class="n">sa_alloc</span>
         <span class="n">ma_accumulated</span> <span class="o">+=</span> <span class="n">ma_alloc</span>
 
-        <span class="c1"># for now, assume that SA top-ups are done in January</span>
-        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">sa_accumulated</span> <span class="o">+=</span> <span class="n">sa_topup</span>
+        <span class="k">if</span> <span class="n">account_deltas</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># if there have been topups/withdrawals in the accounts this month</span>
+            <span class="p">(</span><span class="n">delta_oa</span><span class="p">,</span> <span class="n">delta_sa</span><span class="p">,</span> <span class="n">delta_ma</span><span class="p">)</span> <span class="o">=</span> <span class="n">_get_account_deltas_month</span><span class="p">(</span><span class="n">account_deltas</span><span class="p">,</span> <span class="n">month</span><span class="p">)</span>
+            <span class="n">oa_accumulated</span> <span class="o">+=</span> <span class="n">delta_oa</span>
+            <span class="n">sa_accumulated</span> <span class="o">+=</span> <span class="n">delta_sa</span>
+            <span class="n">ma_accumulated</span> <span class="o">+=</span> <span class="n">delta_ma</span>
+        <span class="c1"># for now, assume that OA withdrawals and SA top-ups are done in January</span>
+        <span class="c1"># if month == 1 and all(v is not None for v in [oa_withdrawal, sa_topup, sa_topup_from_oa]):</span>
+        <span class="c1">#     oa_accumulated -= oa_withdrawal</span>
+        <span class="c1">#     sa_accumulated += sa_topup</span>
+        <span class="c1">#     if sa_topup_from_oa is True:</span>
+        <span class="c1">#         oa_accumulated -= sa_topup</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Algo - Month </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">sa_accumulated</span><span class="p">))</span>
 
         <span class="c1">###########################################################################################</span>
         <span class="c1">#                                   INTEREST CALCULATION                                  #</span>
@@ -543,7 +596,7 @@
 <span class="sd">        dob (str): Date of birth of employee in YYYYMM format</span>
 <span class="sd">    </span>
 <span class="sd">    Returns:</span>
-<span class="sd">        int: Age of employee</span>
+<span class="sd">        *int*: Age of employee</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">birth_year</span><span class="p">,</span> <span class="n">birth_month</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">dob</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">dob</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]))</span>
@@ -593,34 +646,110 @@
     <span class="k">return</span> <span class="n">target_year</span> <span class="o">-</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span> <span class="o">+</span> <span class="mi">1</span>
 
 
-<span class="k">def</span> <span class="nf">_convert_year_to_zero_indexing</span><span class="p">(</span><span class="n">sa_topups</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts the keys in the dict from the actual year to zero indexing based on the current year.</span>
+<span class="k">def</span> <span class="nf">_convert_year_to_zero_indexing</span><span class="p">(</span><span class="n">list_orig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts the year values in the list from the actual year to zero indexing based on the current year.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        sa_topups (dict): Cash top-ups to the SA </span>
+<span class="sd">        list_orig (list): Original list in structure - (date in YYYYMM or YYYY format, amount)</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: The same dict, with keys converted to zero indexing</span>
+<span class="sd">        *list*: Structure - (zero-indexed year, month, amount, optional boolean)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">sa_topups_new</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">sa_topups</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">year_zero_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">-</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span>
-        <span class="n">sa_topups_new</span><span class="p">[</span><span class="n">year_zero_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">list_new</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">return</span> <span class="n">sa_topups_new</span>
+    <span class="k">if</span> <span class="n">list_orig</span> <span class="ow">is</span> <span class="ow">not</span> <span class="p">[]:</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">list_orig</span><span class="p">:</span>
+            <span class="n">date</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># in YYYY or YYYYMM format</span>
+            <span class="n">amount</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="c1"># extract year and month (if applicable) from the date</span>
+            <span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">date</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">])</span>
+            <span class="n">month</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">date</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">])</span> <span class="k">if</span> <span class="n">date</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s1">&#39;&#39;</span> <span class="k">else</span> <span class="mi">0</span>
+
+            <span class="n">year_zero_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">)</span> <span class="o">-</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># item[2] is only used if it is a SA topup</span>
+                <span class="n">list_new</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">year_zero_index</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="n">list_new</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">year_zero_index</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">amount</span><span class="p">))</span>
+                
+    <span class="k">return</span> <span class="n">list_new</span>
             
+
+<span class="k">def</span> <span class="nf">_get_account_deltas_year</span><span class="p">(</span><span class="n">list_entries</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the topup/withdrawal entries in the list that correspond to the current year. \\</span>
+<span class="sd">        Remove the zero-indexed year in the tuple.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            list_entries (list): List of topup/withdrawal entries</span>
+<span class="sd">            year (int): Zero-indexed year</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *list*: List of entries that correspond to the current year - (month, amount, boolean)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">list_entries</span> <span class="k">if</span> <span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">year</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_get_account_deltas_month</span><span class="p">(</span><span class="n">account_deltas</span><span class="p">,</span> <span class="n">month_curr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the amount deltas in the respective OA, SA and MA accounts.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            account_deltas (list): List of topups/withdrawals to the OA/SA/MA accounts respectively in the year</span>
+<span class="sd">            month_curr (int): Current month in numeric representation</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *tuple*: Tuple containing</span>
+<span class="sd">                - (*float*): Delta change in OA in this month</span>
+<span class="sd">                - (*float*): Delta change in SA in this month</span>
+<span class="sd">                - (*float*): Delta change in MA in this month</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">delta_oa</span><span class="p">,</span> <span class="n">delta_sa</span><span class="p">,</span> <span class="n">delta_ma</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">months_search</span> <span class="o">=</span> <span class="p">[</span><span class="n">month_curr</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">month_curr</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># account topups/withdrawals with no specified month are defaulted to occur in Jan</span>
+        <span class="n">months_search</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">oa_topups_year</span><span class="p">,</span> <span class="n">oa_withdrawals_year</span> <span class="o">=</span> <span class="n">account_deltas</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">account_deltas</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">sa_topups_year</span><span class="p">,</span> <span class="n">sa_withdrawals_year</span> <span class="o">=</span> <span class="n">account_deltas</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">account_deltas</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">ma_topups_year</span><span class="p">,</span> <span class="n">ma_withdrawals_year</span> <span class="o">=</span> <span class="n">account_deltas</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">account_deltas</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span> <span class="ow">in</span> <span class="n">oa_topups_year</span><span class="p">:</span>
+        <span class="n">delta_oa</span> <span class="o">+=</span> <span class="n">amount</span> <span class="k">if</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">months_search</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span> <span class="ow">in</span> <span class="n">oa_withdrawals_year</span><span class="p">:</span>
+        <span class="n">delta_oa</span> <span class="o">-=</span> <span class="n">amount</span> <span class="k">if</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">months_search</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">is_from_oa</span><span class="p">)</span> <span class="ow">in</span> <span class="n">sa_topups_year</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">months_search</span><span class="p">:</span>
+            <span class="n">delta_sa</span> <span class="o">+=</span> <span class="n">amount</span>
+            <span class="n">delta_oa</span> <span class="o">-=</span> <span class="n">amount</span> <span class="k">if</span> <span class="n">is_from_oa</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span> <span class="ow">in</span> <span class="n">sa_withdrawals_year</span><span class="p">:</span>
+        <span class="n">delta_sa</span> <span class="o">-=</span> <span class="n">amount</span> <span class="k">if</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">months_search</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span> <span class="ow">in</span> <span class="n">ma_topups_year</span><span class="p">:</span>
+        <span class="n">delta_ma</span> <span class="o">+=</span> <span class="n">amount</span> <span class="k">if</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">months_search</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span> <span class="ow">in</span> <span class="n">ma_withdrawals_year</span><span class="p">:</span>
+        <span class="n">delta_ma</span> <span class="o">-=</span> <span class="n">amount</span> <span class="k">if</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">months_search</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">delta_oa</span><span class="p">,</span> <span class="n">delta_sa</span><span class="p">,</span> <span class="n">delta_ma</span><span class="p">)</span>
+
 
 <span class="k">def</span> <span class="nf">_round_half_up</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Rounds the given monetary amount to the nearest dollar.</span>
 <span class="sd">    </span>
-<span class="sd">    An amount of 50 cents will be regarded as an additional dollar:</span>
+<span class="sd">    An amount of 50 cents will be regarded as an additional dollar.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        n (float): input amount</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        int: rounded amount to the nearest dollar</span>
+<span class="sd">        *int*: rounded amount to the nearest dollar</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">multiplier</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">decimals</span>
@@ -634,7 +763,7 @@
 <span class="sd">        n (float): input amount</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        float: truncated amount to `decimals` decimal places</span>
+<span class="sd">        *float*: truncated amount to `decimals` decimal places</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">before_dec</span><span class="p">,</span> <span class="n">after_dec</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">before_dec</span><span class="p">,</span> <span class="n">after_dec</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])))</span>

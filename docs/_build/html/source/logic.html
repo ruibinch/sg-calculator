@@ -156,7 +156,7 @@
 <span id="cpf-main-functions"></span><h2>CPF Main Functions<a class="headerlink" href="#module-logic.cpf" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="logic.cpf.calculate_annual_change">
-<code class="descclassname">logic.cpf.</code><code class="descname">calculate_annual_change</code><span class="sig-paren">(</span><em>salary</em>, <em>bonus</em>, <em>oa_curr</em>, <em>sa_curr</em>, <em>ma_curr</em>, <em>sa_topup</em>, <em>bonus_month=12</em>, <em>date_start=None</em>, <em>age=None</em>, <em>dob=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_annual_change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_annual_change" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">logic.cpf.</code><code class="sig-name descname">calculate_annual_change</code><span class="sig-paren">(</span><em class="sig-param">salary</em>, <em class="sig-param">bonus</em>, <em class="sig-param">oa_curr</em>, <em class="sig-param">sa_curr</em>, <em class="sig-param">ma_curr</em>, <em class="sig-param">account_deltas=None</em>, <em class="sig-param">bonus_month=12</em>, <em class="sig-param">date_start=None</em>, <em class="sig-param">age=None</em>, <em class="sig-param">dob=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_annual_change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_annual_change" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the total contributions and interest earned for the current year.</p>
 <p>Adds the interest, along with the contributions in the year, to the CPF account balances. Returns the projected amount in the CPF accounts at the end of the year.</p>
 <p>Age variable is updated every month.</p>
@@ -168,7 +168,7 @@
 <li><p><strong>oa_curr</strong> (<em>float</em>) – Current amount in OA</p></li>
 <li><p><strong>sa_curr</strong> (<em>float</em>) – Current amount in SA</p></li>
 <li><p><strong>ma_curr</strong> (<em>float</em>) – Current amount in MA</p></li>
-<li><p><strong>sa_topup</strong> (<em>float</em>) – Amount to top up into the SA (assume Jan for now)</p></li>
+<li><p><strong>account_deltas</strong> (<em>list</em>) – List of topups/withdrawals to the OA/SA/MA accounts respectively</p></li>
 <li><p><strong>bonus_month</strong> (<em>int</em>) – Month where bonus is received (1-12)</p></li>
 <li><p><strong>date_start</strong> (<em>date</em>) – Start date of the year to calculate from</p></li>
 <li><p><strong>age</strong> (<em>int</em>) – Age of employee</p></li>
@@ -194,7 +194,7 @@
 
 <dl class="function">
 <dt id="logic.cpf.calculate_cpf_allocation">
-<code class="descclassname">logic.cpf.</code><code class="descname">calculate_cpf_allocation</code><span class="sig-paren">(</span><em>salary_monthly</em>, <em>bonus</em>, <em>age=None</em>, <em>dob=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_cpf_allocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_cpf_allocation" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">logic.cpf.</code><code class="sig-name descname">calculate_cpf_allocation</code><span class="sig-paren">(</span><em class="sig-param">salary_monthly</em>, <em class="sig-param">bonus</em>, <em class="sig-param">age=None</em>, <em class="sig-param">dob=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_cpf_allocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_cpf_allocation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the CPF allocation for the month.</p>
 <p><a class="reference external" href="https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf/">Reference</a></p>
 <p>Steps for calculation:</p>
@@ -230,7 +230,7 @@
 
 <dl class="function">
 <dt id="logic.cpf.calculate_cpf_contribution">
-<code class="descclassname">logic.cpf.</code><code class="descname">calculate_cpf_contribution</code><span class="sig-paren">(</span><em>salary</em>, <em>bonus</em>, <em>bonus_month=12</em>, <em>age=None</em>, <em>dob=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_cpf_contribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_cpf_contribution" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">logic.cpf.</code><code class="sig-name descname">calculate_cpf_contribution</code><span class="sig-paren">(</span><em class="sig-param">salary</em>, <em class="sig-param">bonus</em>, <em class="sig-param">bonus_month=12</em>, <em class="sig-param">age=None</em>, <em class="sig-param">dob=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_cpf_contribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_cpf_contribution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the CPF contribution for the year.</p>
 <p>Takes into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling.</p>
 <p><a class="reference external" href="https://www.cpf.gov.sg/Assets/employers/Documents/Table%201_Pte%20and%20Npen%20CPF%20contribution%20rates%20for%20Singapore%20Citizens%20and%203rd%20year%20SPR%20Jan%202016.pdf/">Reference</a></p>
@@ -268,7 +268,7 @@
 
 <dl class="function">
 <dt id="logic.cpf.calculate_cpf_projection">
-<code class="descclassname">logic.cpf.</code><code class="descname">calculate_cpf_projection</code><span class="sig-paren">(</span><em>salary</em>, <em>bonus</em>, <em>yoy_increase_salary</em>, <em>yoy_increase_bonus</em>, <em>base_cpf</em>, <em>bonus_month=12</em>, <em>age=None</em>, <em>dob=None</em>, <em>proj_start_date=None</em>, <em>n_years=None</em>, <em>target_year=None</em>, <em>sa_topups=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_cpf_projection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_cpf_projection" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">logic.cpf.</code><code class="sig-name descname">calculate_cpf_projection</code><span class="sig-paren">(</span><em class="sig-param">salary</em>, <em class="sig-param">bonus</em>, <em class="sig-param">yoy_increase_salary</em>, <em class="sig-param">yoy_increase_bonus</em>, <em class="sig-param">base_cpf</em>, <em class="sig-param">bonus_month=12</em>, <em class="sig-param">age=None</em>, <em class="sig-param">dob=None</em>, <em class="sig-param">proj_start_date=None</em>, <em class="sig-param">n_years=None</em>, <em class="sig-param">target_year=None</em>, <em class="sig-param">oa_topups=None</em>, <em class="sig-param">oa_withdrawals=None</em>, <em class="sig-param">sa_topups=None</em>, <em class="sig-param">sa_withdrawals=None</em>, <em class="sig-param">ma_topups=None</em>, <em class="sig-param">ma_withdrawals=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logic/cpf.html#calculate_cpf_projection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#logic.cpf.calculate_cpf_projection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the projected account balance in the CPF accounts after <cite>n_years</cite> or in <cite>target_year</cite>.</p>
 <p><a class="reference external" href="https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/">Reference</a></p>
 <dl class="field-list simple">
@@ -285,9 +285,25 @@
 <li><p><strong>proj_start_date</strong> (<em>date</em>) – Starting date of projection (<em>only used for testing purposes</em>)</p></li>
 <li><p><strong>n_years</strong> (<em>int</em>) – Number of years into the future to project</p></li>
 <li><p><strong>target_year</strong> (<em>int</em>) – Target end year of projection</p></li>
-<li><p><strong>sa_topups</strong> (<em>dict</em>) – Cash top-ups to the SA
-- key (<em>str</em>): year of cash topup in YYYY format
-- value (<em>float</em>): amount to top up</p></li>
+<li><p><strong>oa_topups</strong> (<em>list</em>) – Cash top-ups to the OA; each entry is a tuple containing:
+- <em>str</em>: year of cash topup in YYYY or YYYYMM format
+- <em>float</em>: amount to topup</p></li>
+<li><p><strong>oa_withdrawals</strong> (<em>list</em>) – Withdrawals from the OA; each entry is a tuple containing:
+- <em>str</em>: year of cash withdrawal in YYYY or YYYYMM format
+- <em>float</em>: amount to withdraw</p></li>
+<li><p><strong>sa_topups</strong> (<em>list</em>) – Cash top-ups to the SA; each entry is a tuple containing:
+- <em>str</em>: year of cash topup in YYYY or YYYYMM format
+- <em>float</em>: amount to topup
+- <em>boolean</em>: whether this amount is coming from the OA</p></li>
+<li><p><strong>sa_withdrawals</strong> (<em>list</em>) – Withdrawals from the SA
+- <em>str</em>: year of cash withdrawal in YYYY or YYYYMM format
+- <em>float</em>: amount to withdraw</p></li>
+<li><p><strong>ma_topups</strong> (<em>list</em>) – Cash top-ups to the MA
+- <em>str</em>: year of cash topup in YYYY or YYYYMM format
+- <em>float</em>: amount to topup</p></li>
+<li><p><strong>ma_withdrawals</strong> (<em>list</em>) – Withdrawals from the MA
+- <em>str</em>: year of cash withdrawal in YYYY or YYYYMM format
+- <em>float</em>: amount to withdraw</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
