@@ -21,8 +21,12 @@ parser.add_argument('yoy_increase', type=float, help='Projected YoY increase of 
 parser.add_argument('base_cpf', type=list, help='Base amount in CPF accounts')
 parser.add_argument('n_years', type=int, help='Number of years into the future')
 parser.add_argument('target_year', type=int, help='Target year in the future to project for')
-parser.add_argument('oa_withdrawals', type=dict, help='Withdrawals from the OA')
-parser.add_argument('sa_topups', type=dict, help='Cash top-ups to the SA')
+parser.add_argument('oa_topups', type=list, help='Top-ups to the OA')
+parser.add_argument('oa_withdrawals', type=list, help='Withdrawals from the OA')
+parser.add_argument('sa_topups', type=list, help='Top-ups to the SA')
+parser.add_argument('sa_withdrawals', type=list, help='Withdrawals from the SA')
+parser.add_argument('ma_topups', type=list, help='Top-ups to the MA')
+parser.add_argument('ma_withdrawals', type=list, help='Withdrawals from the MA')
 # For future authentication methods
 # parser.add_argument('Authentication', location='headers')
 
@@ -51,12 +55,18 @@ class CpfProjection(Resource):
                                               args['yoy_increase_salary'],
                                               args['yoy_increase_bonus'],
                                               args['base_cpf'],
+                                              bonus_month=args['bonus_month'],
                                               dob=args['dob'],
                                               n_years=args['n_years'],
                                               target_year=args['target_year'],
+                                              oa_topups=args['oa_topups'],
                                               oa_withdrawals=args['oa_withdrawals'],
-                                              sa_topups=args['sa_topups'])
-
+                                              sa_topups=args['sa_topups'],
+                                              sa_withdrawals=args['sa_withdrawals'],
+                                              ma_topups=args['ma_topups'],
+                                              ma_withdrawals=args['ma_withdrawals']
+                                             )
+                                              
         return { 'oa': oa, 'sa': sa, 'ma': ma }
 
 api.add_resource(CpfContribution, '/cpf/contribution')
