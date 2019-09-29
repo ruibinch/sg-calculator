@@ -29,8 +29,8 @@ def calculate_cpf_contribution(salary, bonus, bonus_month=12, age=None, dob=None
 
     Returns:
         *tuple*: Tuple containing
-            - (*float*): Amount contributed by the employee in the year
-            - (*float*): Amount contributed by the employer in the year
+            - (value (float)): Amount contributed by the employee in the year
+            - (value (float)): Amount contributed by the employer in the year
 
     """
     
@@ -63,9 +63,9 @@ def calculate_cpf_allocation(salary_monthly, bonus, age=None, dob=None):
 
     Returns:
         *tuple*: Tuple containing
-            - (*float*): Allocation amount into OA
-            - (*float*): Allocation amount into SA
-            - (*float*): Allocation amount into MA
+            - (value (float)): Allocation amount into OA
+            - (value (float)): Allocation amount into SA
+            - (value (float)): Allocation amount into MA
     """
 
     cont_monthly = _get_monthly_contribution_amount(salary_monthly, bonus, age, dob, entity=constants.STR_COMBINED)
@@ -91,44 +91,50 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         bonus (float): Bonus/commission received in the year
         yoy_increase_salary (float): Projected year-on-year percentage increase in salary
         yoy_increase_bonus (float): Projected year-on-year percentage increase in bonus
-        base_cpf (list of floats): Contains the current balance in the CPF accounts 
+        base_cpf (dict): Contains the current balance in the CPF accounts (keys: oa, sa, ma)
         bonus_month (int): Month where bonus is received (1-12)
         age (int): Age of employee
         dob (str): Date of birth of employee in YYYYMM format
         proj_start_date (date): Starting date of projection (*only used for testing purposes*)
         n_years (int): Number of years into the future to project
         target_year (int): Target end year of projection
-        oa_topups (list): Cash top-ups to the OA; each entry is a tuple containing:
-            - *str*: year of cash topup in YYYY or YYYYMM format
-            - *float*: amount to topup
-        oa_withdrawals (list): Withdrawals from the OA; each entry is a tuple containing:
-            - *str*: year of cash withdrawal in YYYY or YYYYMM format
-            - *float*: amount to withdraw
-        sa_topups (list): Cash top-ups to the SA; each entry is a tuple containing:
-            - *str*: year of cash topup in YYYY or YYYYMM format
-            - *float*: amount to topup
-            - *boolean*: whether this amount is coming from the OA
-        sa_withdrawals (list): Withdrawals from the SA
-            - *str*: year of cash withdrawal in YYYY or YYYYMM format
-            - *float*: amount to withdraw
-        ma_topups (list): Cash top-ups to the MA
-            - *str*: year of cash topup in YYYY or YYYYMM format
-            - *float*: amount to topup
-        ma_withdrawals (list): Withdrawals from the MA
-            - *str*: year of cash withdrawal in YYYY or YYYYMM format
-            - *float*: amount to withdraw
+        oa_topups (dict): Cash top-ups to the OA
+            - key (str): year of cash topup in YYYY or YYYYMM format
+            - value:
+                - 'amount' (float): amount to topup
+        oa_withdrawals (dict): Withdrawals from the OA
+            - key (str): year of cash withdrawal in YYYY or YYYYMM format
+            - value:
+                - 'amount' (float): amount to withdraw
+        sa_topups (dict): Cash top-ups to the SA
+            - key (str): year of cash topup in YYYY or YYYYMM format
+            - value:
+                - 'amount' (float): amount to topup
+                - 'is_sa_topup_from_oa' (bool): whether this amount is coming from the OA
+        sa_withdrawals (dict): Withdrawals from the SA
+            - key (str): year of cash withdrawal in YYYY or YYYYMM format
+            - value:
+                - 'amount' (float): amount to withdraw
+        ma_topups (dict): Cash top-ups to the MA
+            - key (str): year of cash topup in YYYY or YYYYMM format
+            - value:
+                - 'amount' (float): amount to topup
+        ma_withdrawals (dict): Withdrawals from the MA
+            - key (str): year of cash withdrawal in YYYY or YYYYMM format
+            - value:
+                - 'amount' (float): amount to withdraw
 
     Returns:
         *tuple*: Tuple containing
-            - (*float*): OA balance after `n_years`
-            - (*float*): SA balance after `n_years`
-            - (*float*): MA balance after `n_years`
+            - (value (float)): OA balance after `n_years`
+            - (value (float)): SA balance after `n_years`
+            - (value (float)): MA balance after `n_years`
     """
 
-    oa, sa, ma = base_cpf[0], base_cpf[1], base_cpf[2]
+    oa, sa, ma = base_cpf['oa'], base_cpf['sa'], base_cpf['ma']
     n_years = _get_num_projection_years(target_year) if n_years is None else n_years
 
-    # convert all topup/withdrawal tuples to zero-indexing of year
+    # convert all topup/withdrawal dicts to zero-indexing of year
     oa_topups = _convert_year_to_zero_indexing(oa_topups)
     oa_withdrawals = _convert_year_to_zero_indexing(oa_withdrawals)
     sa_topups = _convert_year_to_zero_indexing(sa_topups)
@@ -157,7 +163,16 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         sa_withdrawals_year = _get_account_deltas_year(sa_withdrawals, i)
         ma_topups_year = _get_account_deltas_year(ma_topups, i)
         ma_withdrawals_year = _get_account_deltas_year(ma_withdrawals, i)
-        account_deltas = (oa_topups_year, oa_withdrawals_year, sa_topups_year, sa_withdrawals_year, ma_topups_year, ma_withdrawals_year)
+
+        # package all into an account_deltas dict
+        account_deltas = {
+            'oa_topups': oa_topups_year,
+            'oa_withdrawals': oa_withdrawals_year,
+            'sa_topups': sa_topups_year,
+            'sa_withdrawals': sa_withdrawals_year,
+            'ma_topups': ma_topups_year,
+            'ma_withdrawals': ma_withdrawals_year
+        }
 
         # get SA topup/OA withdrawal details
         # oa_withdrawal = oa_withdrawals.get(i, 0)
@@ -334,7 +349,8 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         oa_curr (float): Current amount in OA
         sa_curr (float): Current amount in SA
         ma_curr (float): Current amount in MA
-        account_deltas (list): List of topups/withdrawals to the OA/SA/MA accounts respectively
+        account_deltas (dict): List of keys: 
+            ['oa_topups', 'oa_withdrawals', 'sa_topups', 'sa_withdrawals', 'ma_topups', 'ma_withdrawals']
         bonus_month (int): Month where bonus is received (1-12)
         date_start (date): Start date of the year to calculate from
         age (int): Age of employee
@@ -342,9 +358,9 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
 
     Returns:
         *tuple*: Tuple containing
-            - (*float*): New amount in OA, after contributions and interest for this year
-            - (*float*): New amount in SA, after contributions and interest for this year
-            - (*float*): New amount in MA, after contributions and interest for this year
+            - (value (float)): New amount in OA, after contributions and interest for this year
+            - (value (float)): New amount in SA, after contributions and interest for this year
+            - (value (float)): New amount in MA, after contributions and interest for this year
     """
 
     oa_accumulated, sa_accumulated, ma_accumulated = oa_curr, sa_curr, ma_curr
@@ -372,19 +388,12 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         sa_accumulated += sa_alloc
         ma_accumulated += ma_alloc
 
-        if account_deltas is not None:
+        if account_deltas is not None and len(account_deltas.keys()) != 0:
             # if there have been topups/withdrawals in the accounts this month
             (delta_oa, delta_sa, delta_ma) = _get_account_deltas_month(account_deltas, month)
             oa_accumulated += delta_oa
             sa_accumulated += delta_sa
             ma_accumulated += delta_ma
-        # for now, assume that OA withdrawals and SA top-ups are done in January
-        # if month == 1 and all(v is not None for v in [oa_withdrawal, sa_topup, sa_topup_from_oa]):
-        #     oa_accumulated -= oa_withdrawal
-        #     sa_accumulated += sa_topup
-        #     if sa_topup_from_oa is True:
-        #         oa_accumulated -= sa_topup
-        print('Algo - Month {}: {}'.format(month, sa_accumulated))
 
         ###########################################################################################
         #                                   INTEREST CALCULATION                                  #
@@ -499,51 +508,60 @@ def _get_num_projection_years(target_year):
     return target_year - dt.date.today().year + 1
 
 
-def _convert_year_to_zero_indexing(list_orig):
+def _convert_year_to_zero_indexing(dict_orig):
     """Converts the year values in the list from the actual year to zero indexing based on the current year.
 
     Args:
-        list_orig (list): Original list in structure - (date in YYYYMM or YYYY format, amount)
+        dict_orig (dict): Original dict of topups/withdrawals
+        - key: date in YYYYMM/YYYY format
+        - value: amount
 
     Returns:
-        *list*: Structure - (zero-indexed year, month, amount, optional boolean)
+        *dict*: { <zero-indexed year>: { <month>: { 'amount' : <amount>, 'is_sa_topup_from_oa': <boolean> } } }
     """
 
-    list_new = []
+    dict_new = {}
 
-    if list_orig is not []:
-        for item in list_orig:
-            date = item[0] # in YYYY or YYYYMM format
-            amount = item[1]
+    for key in dict_orig.keys():
+        date = key # in YYYY or YYYYMM format
+        amount = dict_orig[key]['amount']
 
-            # extract year and month (if applicable) from the date
-            year = int(date[0:4])
-            month = int(date[4:6]) if date[4:6] is not '' else 0
+        # extract year and month (if applicable) from the date
+        year = int(date[0:4])
+        month = int(date[4:6]) if date[4:6] is not '' else 0
 
-            year_zero_index = int(year) - dt.date.today().year
-            try:
-                # item[2] is only used if it is a SA topup
-                list_new.append((year_zero_index, month, amount, item[2]))
-            except IndexError:
-                list_new.append((year_zero_index, month, amount))
-                
-    return list_new
-            
+        year_zero_index = int(year) - dt.date.today().year
+        if year_zero_index not in dict_new.keys():
+            # create an empty object if this year is not in the new dict yet
+            dict_new[year_zero_index] = {}
 
-def _get_account_deltas_year(list_entries, year):
+        try:
+            # this will be used only if it is a SA topup
+            dict_new[year_zero_index][month] = { 'amount': amount,
+                                                 'is_sa_topup_from_oa': dict_orig[key]['is_sa_topup_from_oa']
+                                               }
+        except KeyError:
+            dict_new[year_zero_index][month] = { 'amount': amount }
+
+    return dict_new
+
+
+def _get_account_deltas_year(dict_entries, year):
     """
         Returns the topup/withdrawal entries in the list that correspond to the current year. \\
         Remove the zero-indexed year in the tuple.
 
         Args:
-            list_entries (list): List of topup/withdrawal entries
+            dict_entries (dict): Topup/withdrawal entries
             year (int): Zero-indexed year
 
         Returns:
-            *list*: List of entries that correspond to the current year - (month, amount, boolean)
+            *dict*: Topup/withdrawal entries for the year
+            - key: month
+            - values: 'amount', 'is_sa_topup_from_oa'
     """
 
-    return [entry[1:] for entry in list_entries if entry[0] == year]
+    return dict_entries[year] if year in dict_entries.keys() else {}
 
 
 def _get_account_deltas_month(account_deltas, month_curr):
@@ -551,44 +569,44 @@ def _get_account_deltas_month(account_deltas, month_curr):
         Returns the amount deltas in the respective OA, SA and MA accounts.
 
         Args:
-            account_deltas (list): List of topups/withdrawals to the OA/SA/MA accounts respectively in the year
+            account_deltas (dict): List of keys: 
+                ['oa_topups', 'oa_withdrawals', 'sa_topups', 'sa_withdrawals', 'ma_topups', 'ma_withdrawals']
             month_curr (int): Current month in numeric representation
 
         Returns:
             *tuple*: Tuple containing
-                - (*float*): Delta change in OA in this month
-                - (*float*): Delta change in SA in this month
-                - (*float*): Delta change in MA in this month
-    """
+                - (value (float)): Delta change in OA in this month
+                - (value (float)): Delta change in SA in this month
+                - (value (float)): Delta change in MA in this month
+    """ 
     delta_oa, delta_sa, delta_ma = (0, 0, 0)
     months_search = [month_curr]
     if month_curr == 1:
         # account topups/withdrawals with no specified month are defaulted to occur in Jan
         months_search.append(0)
 
-    oa_topups_year, oa_withdrawals_year = account_deltas[0], account_deltas[1]
-    sa_topups_year, sa_withdrawals_year = account_deltas[2], account_deltas[3]
-    ma_topups_year, ma_withdrawals_year = account_deltas[4], account_deltas[5]
-
-    for (month, amount) in oa_topups_year:
-        delta_oa += amount if month in months_search else 0
-
-    for (month, amount) in oa_withdrawals_year:
-        delta_oa -= amount if month in months_search else 0
-
-    for (month, amount, is_from_oa) in sa_topups_year:
-        if month in months_search:
-            delta_sa += amount
-            delta_oa -= amount if is_from_oa else 0
-
-    for (month, amount) in sa_withdrawals_year:
-        delta_sa -= amount if month in months_search else 0
-
-    for (month, amount) in ma_topups_year:
-        delta_ma += amount if month in months_search else 0
-
-    for (month, amount) in ma_withdrawals_year:
-        delta_ma -= amount if month in months_search else 0
+    for delta_type in account_deltas.keys():
+        if delta_type == 'oa_topups':
+            for month in account_deltas[delta_type]:
+                delta_oa += account_deltas[delta_type][month]['amount'] if month in months_search else 0
+        elif delta_type == 'oa_withdrawals':
+            for month in account_deltas[delta_type]:
+                delta_oa -= account_deltas[delta_type][month]['amount'] if month in months_search else 0
+        elif delta_type == 'sa_topups':
+            for month in account_deltas[delta_type]:
+                if month in months_search:
+                    month_delta = account_deltas[delta_type][month]
+                    delta_sa += month_delta['amount']
+                    delta_oa -= month_delta['amount'] if month_delta['is_sa_topup_from_oa'] else 0
+        elif delta_type == 'sa_withdrawals':
+            for month in account_deltas[delta_type]:
+                delta_sa -= account_deltas[delta_type][month]['amount'] if month in months_search else 0
+        elif delta_type == 'ma_topups':
+            for month in account_deltas[delta_type]:
+                delta_ma += account_deltas[delta_type][month]['amount'] if month in months_search else 0
+        elif delta_type == 'ma_withdrawals':
+            for month in account_deltas[delta_type]:
+                delta_ma -= account_deltas[delta_type][month]['amount'] if month in months_search else 0
 
     return (delta_oa, delta_sa, delta_ma)
 
@@ -616,7 +634,7 @@ def _truncate(n, decimals=2):
         n (float): input amount
 
     Returns:
-        *float*: truncated amount to `decimals` decimal places
+        value (float): truncated amount to `decimals` decimal places
     """
     before_dec, after_dec = str(n).split('.')
     return float('.'.join((before_dec, after_dec[0:2])))
