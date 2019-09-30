@@ -34,32 +34,32 @@ parser.add_argument('ma_withdrawals', type=dict, help='Withdrawals from the MA')
 class CpfContribution(Resource):
     def post(self):
         args = parser.parse_args()
-        cont_employee, cont_employer = calculate_cpf_contribution(float(args['salary']),
-                                                                  float(args['bonus']),
-                                                                  bonus_month=int(args['bonus_month']),
+        cont_employee, cont_employer = calculate_cpf_contribution(args['salary'],
+                                                                  args['bonus'],
+                                                                  bonus_month=args['bonus_month'],
                                                                   dob=args['dob'])
         return { 'cont_employee': cont_employee, 'cont_employer': cont_employer }
 
 class CpfAllocation(Resource):
     def post(self):
         args = parser.parse_args()
-        oa_alloc, sa_alloc, ma_alloc = calculate_cpf_allocation(float(args['salary']),
-                                                                float(args['bonus']),
+        oa_alloc, sa_alloc, ma_alloc = calculate_cpf_allocation(args['salary'],
+                                                                args['bonus'],
                                                                 dob=args['dob'])
         return { 'oa_alloc': oa_alloc, 'sa_alloc': sa_alloc, 'ma_alloc': ma_alloc }
 
 class CpfProjection(Resource):
     def post(self):
         args = parser.parse_args()
-        oa, sa, ma = calculate_cpf_projection(float(args['salary']),
-                                              float(args['bonus']),
-                                              float(args['yoy_increase_salary']),
-                                              float(args['yoy_increase_bonus']),
+        oa, sa, ma = calculate_cpf_projection(args['salary'],
+                                              args['bonus'],
+                                              args['yoy_increase_salary'],
+                                              args['yoy_increase_bonus'],
                                               args['base_cpf'],
                                               bonus_month=args['bonus_month'],
                                               dob=args['dob'],
-                                              n_years=int(args['n_years']),
-                                              target_year=int(args['target_year']),
+                                              n_years=args['n_years'],
+                                              target_year=args['target_year'],
                                               oa_topups=args['oa_topups'],
                                               oa_withdrawals=args['oa_withdrawals'],
                                               sa_topups=args['sa_topups'],
