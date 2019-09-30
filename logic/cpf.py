@@ -110,28 +110,28 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         oa_topups (dict): Cash top-ups to the OA
             - key (str): year of cash topup in YYYY or YYYYMM format
             - value:
-                - 'amount' (float): amount to topup
+                - 'amount' (str): amount to topup
         oa_withdrawals (dict): Withdrawals from the OA
             - key (str): year of cash withdrawal in YYYY or YYYYMM format
             - value:
-                - 'amount' (float): amount to withdraw
+                - 'amount' (str): amount to withdraw
         sa_topups (dict): Cash top-ups to the SA
             - key (str): year of cash topup in YYYY or YYYYMM format
             - value:
-                - 'amount' (float): amount to topup
+                - 'amount' (str): amount to topup
                 - 'is_sa_topup_from_oa' (bool): whether this amount is coming from the OA
         sa_withdrawals (dict): Withdrawals from the SA
             - key (str): year of cash withdrawal in YYYY or YYYYMM format
             - value:
-                - 'amount' (float): amount to withdraw
+                - 'amount' (str): amount to withdraw
         ma_topups (dict): Cash top-ups to the MA
             - key (str): year of cash topup in YYYY or YYYYMM format
             - value:
-                - 'amount' (float): amount to topup
+                - 'amount' (str): amount to topup
         ma_withdrawals (dict): Withdrawals from the MA
             - key (str): year of cash withdrawal in YYYY or YYYYMM format
             - value:
-                - 'amount' (float): amount to withdraw
+                - 'amount' (str): amount to withdraw
 
     Returns:
         *tuple*: Tuple containing
@@ -613,25 +613,25 @@ def _get_account_deltas_month(account_deltas, month_curr):
     for delta_type in account_deltas.keys():
         if delta_type == 'oa_topups':
             for month in account_deltas[delta_type]:
-                delta_oa += account_deltas[delta_type][month]['amount'] if month in months_search else 0
+                delta_oa += float(account_deltas[delta_type][month]['amount']) if month in months_search else 0
         elif delta_type == 'oa_withdrawals':
             for month in account_deltas[delta_type]:
-                delta_oa -= account_deltas[delta_type][month]['amount'] if month in months_search else 0
+                delta_oa -= float(account_deltas[delta_type][month]['amount']) if month in months_search else 0
         elif delta_type == 'sa_topups':
             for month in account_deltas[delta_type]:
                 if month in months_search:
                     month_delta = account_deltas[delta_type][month]
-                    delta_sa += month_delta['amount']
-                    delta_oa -= month_delta['amount'] if month_delta['is_sa_topup_from_oa'] else 0
+                    delta_sa += float(month_delta['amount'])
+                    delta_oa -= float(month_delta['amount']) if month_delta['is_sa_topup_from_oa'] else 0
         elif delta_type == 'sa_withdrawals':
             for month in account_deltas[delta_type]:
-                delta_sa -= account_deltas[delta_type][month]['amount'] if month in months_search else 0
+                delta_sa -= float(account_deltas[delta_type][month]['amount']) if month in months_search else 0
         elif delta_type == 'ma_topups':
             for month in account_deltas[delta_type]:
-                delta_ma += account_deltas[delta_type][month]['amount'] if month in months_search else 0
+                delta_ma += float(account_deltas[delta_type][month]['amount']) if month in months_search else 0
         elif delta_type == 'ma_withdrawals':
             for month in account_deltas[delta_type]:
-                delta_ma -= account_deltas[delta_type][month]['amount'] if month in months_search else 0
+                delta_ma -= float(account_deltas[delta_type][month]['amount']) if month in months_search else 0
 
     return (delta_oa, delta_sa, delta_ma)
 
