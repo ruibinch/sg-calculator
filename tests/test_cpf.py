@@ -19,9 +19,9 @@ class TestCalculateCpfContribution(object):
     """
 
     def _perform_assertion(self, salary, bonus, age, cont_employee, cont_employer):
-        cont_employee_test, cont_employer_test = cpf.calculate_cpf_contribution(salary, bonus, age=age)
-        assert round(cont_employee, 2) == round(cont_employee_test, 2)
-        assert round(cont_employer, 2) == round(cont_employer_test, 2)
+        contributions = cpf.calculate_cpf_contribution(salary, bonus, None, 12, age=age)
+        assert round(cont_employee, 2) == round(contributions['cont_employee'], 2)
+        assert round(cont_employer, 2) == round(contributions['cont_employer'], 2)
 
     def test_scenario_1a(self):
         salary, bonus, age = (50 * 12, 0, 30)
@@ -118,11 +118,10 @@ class TestCalculateCpfAllocation(object):
             alloc_exp (array): Expected amount to be allocated into the CPF accounts [OA, SA, MA]
         """
         
-        oa_alloc_test, sa_alloc_test, ma_alloc_test = cpf.calculate_cpf_allocation(
-                                                        self.salary, bonus, age=age)
-        assert round(alloc_exp[0], 2) == round(oa_alloc_test, 2)
-        assert round(alloc_exp[1], 2) == round(sa_alloc_test, 2)
-        assert round(alloc_exp[2], 2) == round(ma_alloc_test, 2)
+        allocations = cpf.calculate_cpf_allocation(self.salary * 12, bonus, None, age=age)
+        assert round(alloc_exp[0], 2) == round(allocations['oa_alloc'], 2)
+        assert round(alloc_exp[1], 2) == round(allocations['sa_alloc'], 2)
+        assert round(alloc_exp[2], 2) == round(allocations['ma_alloc'], 2)
 
     def test_scenario_1(self):
         age = 35

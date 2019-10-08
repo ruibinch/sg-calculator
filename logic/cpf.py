@@ -7,7 +7,7 @@ import datetime as dt
 #                                      MAIN API FUNCTIONS                                         #
 ###################################################################################################
 
-def calculate_cpf_contribution(salary, bonus, bonus_month=None, dob=None, age=None):
+def calculate_cpf_contribution(salary, bonus, dob, bonus_month, age=None):
     """Calculates the CPF contribution for the year.
     
     Takes into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling.
@@ -23,21 +23,16 @@ def calculate_cpf_contribution(salary, bonus, bonus_month=None, dob=None, age=No
     Args:
         salary (str): Annual salary of employee
         bonus (str): Bonus/commission received in the year; assume to be credited in December
-        bonus_month (str): Month where bonus is received (1-12)
         dob (str): Date of birth of employee in YYYYMM format
+        bonus_month (str): Month where bonus is received (1-12)
         age (int): Age of employee (*only used for testing purposes*)
 
     Returns:
-        *tuple*: Tuple containing
-            - (value (float)): Amount contributed by the employee in the year
-            - (value (float)): Amount contributed by the employer in the year
+        *dict*:
+            - cont_employee (float): Amount contributed by the employee in the year
+            - cont_employer (float): Amount contributed by the employer in the year
 
     """
-    
-    # input type conversion/validation
-    salary = float(salary)
-    bonus = float(bonus)
-    bonus_month = int(bonus_month) if bonus_month is not None else 12
     
     cont_total, cont_employee = (0, 0)
 
@@ -47,10 +42,13 @@ def calculate_cpf_contribution(salary, bonus, bonus_month=None, dob=None, age=No
         cont_total += _get_monthly_contribution_amount(salary / 12, bonus_annual, age, dob, entity=constants.STR_COMBINED)
         cont_employee += _get_monthly_contribution_amount(salary / 12, bonus_annual, age, dob, entity=constants.STR_EMPLOYEE)
 
-    return round(cont_employee, 2), round(cont_total - cont_employee, 2)
+    return {
+        'cont_employee': round(cont_employee, 2), 
+        'cont_employer': round(cont_total - cont_employee, 2)
+    }
 
 
-def calculate_cpf_allocation(salary_monthly, bonus, dob=None, age=None):
+def calculate_cpf_allocation(salary, bonus, dob, age=None):
     """Calculates the CPF allocation for the month.
 
     `Reference <https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf/>`_
@@ -61,36 +59,35 @@ def calculate_cpf_allocation(salary_monthly, bonus, dob=None, age=None):
     2. OA allocation = Total contribution - SA allocation - MA allocation.
     
     Args:
-        salary_monthly (str): Monthly salary of employee
+        salary (str): Annual salary of employee
         bonus (str): Bonus/commission received in the year; only applicable in the month when bonus is disbursed
         dob (str): Date of birth of employee in YYYYMM format
         age (int): Age of employee (*only used for testing purposes*)
 
     Returns:
-        *tuple*: Tuple containing
-            - (value (float)): Allocation amount into OA
-            - (value (float)): Allocation amount into SA
-            - (value (float)): Allocation amount into MA
+        *dict*:
+            - oa_alloc (float): Allocation amount into OA
+            - sa_alloc (float): Allocation amount into SA
+            - ma_alloc (float): Allocation amount into MA
     """
     
-    # input type conversion/validation
-    salary_monthly = float(salary_monthly)
-    bonus = float(bonus)
-
-    cont_monthly = _get_monthly_contribution_amount(salary_monthly, bonus, age, dob, entity=constants.STR_COMBINED)
+    cont_monthly = _get_monthly_contribution_amount(salary / 12, bonus, age, dob, entity=constants.STR_COMBINED)
     sa_alloc = _get_allocation_amount(age, dob, cont_monthly, account=constants.STR_SA)
     ma_alloc = _get_allocation_amount(age, dob, cont_monthly, account=constants.STR_MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
 
-    return round(oa_alloc, 2), sa_alloc, ma_alloc
+    return {
+        'oa_alloc': round(oa_alloc, 2), 
+        'sa_alloc': sa_alloc,
+        'ma_alloc': ma_alloc
+    }
 
 
 def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bonus,
-                             base_cpf, bonus_month, dob, n_years, target_year,
-                             age=None, proj_start_date=None,  
-                             oa_topups=None, oa_withdrawals=None,
-                             sa_topups=None, sa_withdrawals=None,
-                             ma_topups=None, ma_withdrawals=None):
+                             dob, base_cpf, bonus_month, n_years, target_year, 
+                             oa_topups, oa_withdrawals, sa_topups, 
+                             sa_withdrawals, ma_topups, ma_withdrawals,
+                             age=None, proj_start_date=None): 
     """Calculates the projected account balance in the CPF accounts after `n_years` or in `target_year`.
 
     `Reference <https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/>`_
@@ -100,13 +97,11 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         bonus (str): Bonus/commission received in the year
         yoy_increase_salary (str): Projected year-on-year percentage increase in salary
         yoy_increase_bonus (str): Projected year-on-year percentage increase in bonus
+        dob (str): Date of birth of employee in YYYYMM format
         base_cpf (dict): Contains the current balance in the CPF accounts (keys: oa, sa, ma)
         bonus_month (str): Month where bonus is received (1-12)
-        dob (str): Date of birth of employee in YYYYMM format
         n_years (str): Number of years into the future to project
         target_year (str): Target end year of projection
-        age (int): Age of employee (*only used for testing purposes*)
-        proj_start_date (date): Starting date of projection (*only used for testing purposes*)
         oa_topups (dict): Cash top-ups to the OA
             - key (str): year of cash topup in YYYY or YYYYMM format
             - value:
@@ -132,29 +127,16 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
             - key (str): year of cash withdrawal in YYYY or YYYYMM format
             - value:
                 - 'amount' (str): amount to withdraw
+        age (int): Age of employee (*only used for testing purposes*)
+        proj_start_date (date): Starting date of projection (*only used for testing purposes*)
 
     Returns:
-        *tuple*: Tuple containing
-            - (value (float)): OA balance after `n_years`
-            - (value (float)): SA balance after `n_years`
-            - (value (float)): MA balance after `n_years`
+        *dict*:
+            - oa (float): OA balance after number of projected years
+            - sa (float): SA balance after number of projected years
+            - ma (float): MA balance after number of projected years
     """
     
-    # input type conversion/validation
-    salary = float(salary)
-    bonus = float(bonus)
-    yoy_increase_salary = float(yoy_increase_salary)
-    yoy_increase_bonus = float(yoy_increase_bonus)
-    bonus_month = int(bonus_month) if bonus_month is not None else 12
-    n_years = int(n_years) if n_years is not None else None
-    target_year = int(target_year) if target_year is not None else None
-    oa_topups = oa_topups if oa_topups is not None else {}
-    oa_withdrawals = oa_withdrawals if oa_withdrawals is not None else {}
-    sa_topups = sa_topups if sa_topups is not None else {}
-    sa_withdrawals = sa_withdrawals if sa_withdrawals is not None else {}
-    ma_topups = ma_topups if ma_topups is not None else {}
-    ma_withdrawals = ma_withdrawals if ma_withdrawals is not None else {}
-
     # getting some variables
     oa, sa, ma = float(base_cpf['oa']), float(base_cpf['sa']), float(base_cpf['ma'])
     n_years = _get_num_projection_years(target_year) if n_years is None else n_years
@@ -210,8 +192,11 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
                                              date_start=date_start, age=age, dob=dob)
         # print('Year {}: {}, {}, {}'.format(i, round(oa, 2), round(sa, 2), round(ma, 2)))
 
-    return round(oa, 2), round(sa, 2), round(ma, 2)
-
+    return {
+        'oa': round(oa, 2),
+        'sa': round(sa, 2),
+        'ma': round(ma, 2)
+    }
 
 ###################################################################################################
 #                               CPF-RELATED HELPER FUNCTIONS                                      #
@@ -408,10 +393,10 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         
         # add the CPF allocation for this month
         # this is actually the contribution for the previous month's salary
-        oa_alloc, sa_alloc, ma_alloc = calculate_cpf_allocation(salary / 12, bonus_annual, age=age)
-        oa_accumulated += oa_alloc
-        sa_accumulated += sa_alloc
-        ma_accumulated += ma_alloc
+        allocations = calculate_cpf_allocation(salary, bonus_annual, None, age=age)
+        oa_accumulated += allocations['oa_alloc']
+        sa_accumulated += allocations['sa_alloc']
+        ma_accumulated += allocations['ma_alloc']
 
         if account_deltas is not None and len(account_deltas.keys()) != 0:
             # if there have been topups/withdrawals in the accounts this month
