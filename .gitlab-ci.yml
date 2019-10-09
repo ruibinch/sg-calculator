@@ -27,7 +27,8 @@ unit_test:
 zip_files:
   stage: build
   script:
-    - apt-get install zip
+    - apt-get update
+    - apt-get install -y zip
     - zip deploy/calculator-bff.zip lambda_function.py -r logic -i '*.py'
 
 update_lambda_function:
