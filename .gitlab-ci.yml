@@ -2,6 +2,8 @@ image: python:3.7-stretch
 
 stages:
   - test
+  - build
+  - deploy
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -21,3 +23,18 @@ unit_test:
   stage: test
   script:
     - pytest
+
+zip_files:
+  stage: build
+  script:
+    - zip deploy/calculator-bff.zip lambda_function.py -r logic -i '*.py'
+
+update_lambda_function:
+  stage: deploy
+  script:
+    - pip install awscli
+    - aws lambda update-function-code --function-name calcCpfContribution --zip-file fileb://deploy/calculator-bff.zip
+    - aws lambda update-function-code --function-name calcCpfAllocation --zip-file fileb://deploy/calculator-bff.zip
+    - aws lambda update-function-code --function-name calcCpfProjection --zip-file fileb://deploy/calculator-bff.zip
+  only:
+    - master
