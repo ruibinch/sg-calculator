@@ -29,14 +29,14 @@ zip_files:
   script:
     - apt-get update
     - apt-get install -y zip
-    - zip deploy/calculator-bff.zip lambda_function.py -r logic -i '*.py'
+    - zip calculator-bff.zip lambda_function.py -r logic -i '*.py'
 
 update_lambda_function:
   stage: deploy
   script:
     - pip install awscli
-    - aws lambda update-function-code --function-name calcCpfContribution --zip-file fileb://deploy/calculator-bff.zip
-    - aws lambda update-function-code --function-name calcCpfAllocation --zip-file fileb://deploy/calculator-bff.zip
-    - aws lambda update-function-code --function-name calcCpfProjection --zip-file fileb://deploy/calculator-bff.zip
+    - aws lambda update-function-code --function-name calcCpfContribution --zip-file fileb://calculator-bff.zip
+    - aws lambda update-function-code --function-name calcCpfAllocation --zip-file fileb://calculator-bff.zip
+    - aws lambda update-function-code --function-name calcCpfProjection --zip-file fileb://calculator-bff.zip
   only:
     - master
