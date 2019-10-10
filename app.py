@@ -4,6 +4,8 @@ from flask_restful import Resource, Api, reqparse
 from logic.cpf import calculate_cpf_contribution
 from logic.cpf import calculate_cpf_allocation
 from logic.cpf import calculate_cpf_projection
+from common import endpoints
+from lambda_function import parse_params
 
 app = Flask(__name__)
 api = Api(app)
@@ -34,41 +36,54 @@ parser.add_argument('ma_withdrawals', type=dict, help='Withdrawals from the MA')
 class CpfContribution(Resource):
     def post(self):
         args = parser.parse_args()
-        cont_employee, cont_employer = calculate_cpf_contribution(args['salary'],
-                                                                  args['bonus'],
-                                                                  bonus_month=args['bonus_month'],
-                                                                  dob=args['dob'])
-        return { 'cont_employee': cont_employee, 'cont_employer': cont_employer }
+        params = parse_params(args, endpoints.ENDPOINT_CPF_CONTRIBUTION)
+
+        body = calculate_cpf_contribution(
+            params['salary'],
+            params['bonus'],
+            params['dob'],
+            params['bonus_month']
+        )
+
+        return { 'statusCode': 200, 'body': body }
 
 class CpfAllocation(Resource):
     def post(self):
         args = parser.parse_args()
-        oa_alloc, sa_alloc, ma_alloc = calculate_cpf_allocation(args['salary'],
-                                                                args['bonus'],
-                                                                dob=args['dob'])
-        return { 'oa_alloc': oa_alloc, 'sa_alloc': sa_alloc, 'ma_alloc': ma_alloc }
+        params = parse_params(args, endpoints.ENDPOINT_CPF_ALLOCATION)
+
+        body = calculate_cpf_allocation(
+            params['salary'],
+            params['bonus'],
+            params['dob']
+        )
+                                                                
+        return { 'statusCode': 200, 'body': body }
 
 class CpfProjection(Resource):
     def post(self):
         args = parser.parse_args()
-        oa, sa, ma = calculate_cpf_projection(args['salary'],
-                                              args['bonus'],
-                                              args['yoy_increase_salary'],
-                                              args['yoy_increase_bonus'],
-                                              args['base_cpf'],
-                                              bonus_month=args['bonus_month'],
-                                              dob=args['dob'],
-                                              n_years=args['n_years'],
-                                              target_year=args['target_year'],
-                                              oa_topups=args['oa_topups'],
-                                              oa_withdrawals=args['oa_withdrawals'],
-                                              sa_topups=args['sa_topups'],
-                                              sa_withdrawals=args['sa_withdrawals'],
-                                              ma_topups=args['ma_topups'],
-                                              ma_withdrawals=args['ma_withdrawals']
-                                             )
+        params = parse_params(args, endpoints.ENDPOINT_CPF_PROJECTION)
+
+        body = calculate_cpf_projection(
+            params['salary'],
+            params['bonus'],
+            params['yoy_increase_salary'],
+            params['yoy_increase_bonus'],
+            params['dob'],
+            params['base_cpf'],
+            params['bonus_month'],
+            params['n_years'],
+            params['target_year'],
+            params['oa_topups'],
+            params['oa_withdrawals'],
+            params['sa_topups'],
+            params['sa_withdrawals'],
+            params['ma_topups'],
+            params['ma_withdrawals']
+        )
                                               
-        return { 'oa': oa, 'sa': sa, 'ma': ma }
+        return { 'statusCode': 200, 'body': body }
 
 api.add_resource(CpfContribution, '/cpf/contribution')
 api.add_resource(CpfAllocation, '/cpf/allocation')

@@ -1,31 +1,26 @@
 import json
+from common import endpoints
 from logic import cpf
-
-
-# Names of the endpoints used in AWS API Gateway
-ENDPOINT_CPF_CONTRIBUTION = '/cpf/contribution'
-ENDPOINT_CPF_ALLOCATION = '/cpf/allocation'
-ENDPOINT_CPF_PROJECTION = '/cpf/projection'
 
 
 def handler(event, context):
     body = json.loads(event['body'])
     params = parse_params(body, event['path'])
 
-    if event['path'] == ENDPOINT_CPF_CONTRIBUTION:
+    if event['path'] == endpoints.ENDPOINT_CPF_CONTRIBUTION:
         response = cpf.calculate_cpf_contribution(
             params['salary'],
             params['bonus'],
             params['dob'],
             params['bonus_month']
         )
-    elif event['path'] == ENDPOINT_CPF_ALLOCATION:
+    elif event['path'] == endpoints.ENDPOINT_CPF_ALLOCATION:
         response = cpf.calculate_cpf_allocation(
             params['salary'],
             params['bonus'],
             params['dob']
         )
-    elif event['path'] == ENDPOINT_CPF_PROJECTION:
+    elif event['path'] == endpoints.ENDPOINT_CPF_PROJECTION:
         response = cpf.calculate_cpf_projection(
             params['salary'],
             params['bonus'],
@@ -58,7 +53,7 @@ def parse_params(body, path):
 
     # TODO: some checking to ensure that all params in `body` are of types str/dict, else return a error
 
-    if path == ENDPOINT_CPF_CONTRIBUTION:
+    if path == endpoints.ENDPOINT_CPF_CONTRIBUTION:
         salary = float(body['salary'])
         bonus = float(body['bonus'])
         dob = body['dob']
@@ -70,7 +65,7 @@ def parse_params(body, path):
             'dob': dob,
             'bonus_month': bonus_month
         }
-    elif path == ENDPOINT_CPF_ALLOCATION:
+    elif path == endpoints.ENDPOINT_CPF_ALLOCATION:
         salary = float(body['salary'])
         bonus = float(body['bonus'])
         dob = body['dob']
@@ -80,7 +75,7 @@ def parse_params(body, path):
             'bonus': bonus,
             'dob': dob
         }
-    elif path == ENDPOINT_CPF_PROJECTION:
+    elif path == endpoints.ENDPOINT_CPF_PROJECTION:
         salary = float(body['salary'])
         bonus = float(body['bonus'])
         yoy_increase_salary = float(body['yoy_increase_salary'])
@@ -88,14 +83,14 @@ def parse_params(body, path):
         dob = body['dob']
         base_cpf = body['base_cpf']
         bonus_month = body['bonus_month'] if 'bonus_month' in body.keys() else 12
-        n_years = int(n_years) if n_years is not None else None
-        target_year = int(target_year) if target_year is not None else None
-        oa_topups = oa_topups if oa_topups is not None else {}
-        oa_withdrawals = oa_withdrawals if oa_withdrawals is not None else {}
-        sa_topups = sa_topups if sa_topups is not None else {}
-        sa_withdrawals = sa_withdrawals if sa_withdrawals is not None else {}
-        ma_topups = ma_topups if ma_topups is not None else {}
-        ma_withdrawals = ma_withdrawals if ma_withdrawals is not None else {}
+        n_years = int(body['n_years']) if body['n_years'] is not None else None
+        target_year = int(body['target_year']) if body['target_year'] is not None else None
+        oa_topups = body['oa_topups'] if body['oa_topups'] is not None else {}
+        oa_withdrawals = body['oa_withdrawals'] if body['oa_withdrawals'] is not None else {}
+        sa_topups = body['sa_topups'] if body['sa_topups'] is not None else {}
+        sa_withdrawals = body['sa_withdrawals'] if body['sa_withdrawals'] is not None else {}
+        ma_topups = body['ma_topups'] if body['ma_topups'] is not None else {}
+        ma_withdrawals = body['ma_withdrawals'] if body['ma_withdrawals'] is not None else {}
 
         return {
             'salary': salary,
