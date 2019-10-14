@@ -1,5 +1,5 @@
 import json
-from common import endpoints
+from utils import endpoints
 from logic import cpf
 
 

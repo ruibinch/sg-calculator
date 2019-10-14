@@ -4,7 +4,7 @@ from flask_restful import Resource, Api, reqparse
 from logic.cpf import calculate_cpf_contribution
 from logic.cpf import calculate_cpf_allocation
 from logic.cpf import calculate_cpf_projection
-from common import endpoints
+from utils import endpoints
 from lambda_function import parse_params
 
 app = Flask(__name__)

@@ -1,7 +1,10 @@
 from logic import cpf_constants as constants
 import math
+import logging
 import datetime as dt
 
+
+logger = logging.getLogger(__name__)
 
 ###################################################################################################
 #                                      MAIN API FUNCTIONS                                         #
@@ -31,7 +34,6 @@ def calculate_cpf_contribution(salary, bonus, dob, bonus_month, age=None):
         *dict*:
             - cont_employee (float): Amount contributed by the employee in the year
             - cont_employer (float): Amount contributed by the employer in the year
-
     """
     
     cont_total, cont_employee = (0, 0)
