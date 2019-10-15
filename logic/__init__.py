@@ -6,7 +6,6 @@ try:
     with open('config/logger.yaml', 'r') as f:
         logger_config = yaml.safe_load(f.read())
         logging.config.dictConfig(logger_config)
-    print('Configuring logger via YAML file')
 except FileNotFoundError:
     print('Configuring logger via basicConfig')
     logging.basicConfig(
