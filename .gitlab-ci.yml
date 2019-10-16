@@ -12,16 +12,14 @@ cache:
     - .cache/pip
     - venv/
 
-before_script:
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
-  - pip install -r requirements.txt
-  - mkdir logs
-
 unit_test:
   stage: test
   script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -r requirements-dev.txt
+    - mkdir logs
     - pytest
 
 update_lambda_function:
@@ -29,7 +27,11 @@ update_lambda_function:
   script:
     - apt-get update
     - apt-get install -y zip
-    - zip calculator-bff.zip lambda_function.py -r config logic utils -i '*.py' '*.yaml'
+    - pip install --target ./package -r requirements.txt
+    - cd package
+    - zip -r9 ${OLDPWD}/function.zip .
+    - cd $OLDPWD
+    - zip -g calculator-bff.zip lambda_function.py -r config logic utils -i '*.py' '*.yaml'
     - pip install awscli
     - aws lambda update-function-code --function-name calcCpfContribution --zip-file fileb://calculator-bff.zip
     - aws lambda update-function-code --function-name calcCpfAllocation --zip-file fileb://calculator-bff.zip

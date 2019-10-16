@@ -1,7 +1,1 @@
-flask
-flask-restful
-pytest
-sphinx
-sphinxcontrib-napoleon
-sphinx_rtd_theme
 pyyaml
