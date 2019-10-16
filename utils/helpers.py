@@ -22,9 +22,14 @@ def parse_into_json_format(str_raw):
             (str): JSON-appropriate string
     """
 
-    s = str_raw.replace('\'', '"')
-    s = s.replace('True', 'true')
-    s = s.replace('False', 'false')
+    s = str_raw
+    try:
+        s = s.replace('\'', '"')
+        s = s.replace('True', 'true')
+        s = s.replace('False', 'false')
+    except AttributeError:
+        # `str_raw` is not a string
+        pass
 
     logger.debug(f'Parsed {str_raw} into {s}')
     return s
@@ -35,13 +40,14 @@ def extract_param(body, output, param, mould, required=True, defaultValue=None):
         Helper function for extraction of parameters.
         Checks for 2 potential errors:
         1. KeyError - parameter does not exist
-        2. TypeError - parameter is of invalid type preventing the type conversion
+        2. ValueError - parameter is of invalid type preventing the type conversion
+        3. TypeError - if parameter is to be of dict type but the input cannot be JSON-serialised
 
         Args:
             body (dict): Contents of request body
             output (dict): Output to be returned
             param (str): Name of desired parameter
-            mould (*): Can take on many types, depending on the desired type conversion
+            mould (*): Serves as a mould for type-casting
             required (bool): Denote whether this parameter is required
             defaultValue (*): Denotes the default value if the desired parameter is not found
                 in the body; mandatory if `required` is set to False
@@ -60,7 +66,6 @@ def extract_param(body, output, param, mould, required=True, defaultValue=None):
         else:
             param_value = type(mould)(body[param])
 
-        # logger.warning(f'Param value is {param_value}')
         logger.info(f'Setting "{param}" to {param_value}')
         output[strings.KEY_PARAMS][param] = param_value
     except KeyError:
@@ -90,6 +95,34 @@ def extract_param(body, output, param, mould, required=True, defaultValue=None):
 
     return output
 
+
+def check_conditional_params(body, output, params):
+    """
+        Helper function to check the presence of parameters whereby at least one is required.
+        If both are missing, then throw an error.
+
+        Args:
+            body (dict): Contents of request body
+            output (dict): Output to be returned
+            params (list): List of parameter names, whereby at least one must be present
+
+        Returns:
+            (dict): Output to be returned
+    """
+
+    body_params = list(body.keys())
+    params_present = [param for param in params if param in body_params]
+
+    if len(params_present) == 0:
+        output[strings.KEY_STATUSCODE] = http.HTTPCODE_INFO_INCOMPLETE
+        params_str = ', '.join(params)
+        logger.debug(f'None of ({params_str}) are present')
+
+        for param in params:
+            output[strings.KEY_ERROR][param] = f'At least one of ({params_str}) must be present'
+
+    return output
+    
 
 def parse_args(body, path):
     """
@@ -142,5 +175,6 @@ def parse_args(body, path):
         output = extract_param(body, output, 'sa_withdrawals', MOULD_DICT, required=False, defaultValue={})
         output = extract_param(body, output, 'ma_topups', MOULD_DICT, required=False, defaultValue={})
         output = extract_param(body, output, 'ma_withdrawals', MOULD_DICT, required=False, defaultValue={})
+        output = check_conditional_params(body, output, ['n_years', 'target_year'])
 
     return output
