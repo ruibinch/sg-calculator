@@ -8,10 +8,6 @@ def setup():
         Sets up the logging module with the config specified in `config/logger.yaml`.
     """
 
-    log_output_dir = '/tmp'
-    if not os.path.exists(log_output_dir):
-        os.makedirs(log_output_dir)
-
     try:
         with open('config/logger.yaml', 'r') as f:
             logger_config = yaml.safe_load(f.read())
