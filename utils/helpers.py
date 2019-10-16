@@ -113,17 +113,20 @@ def parse_args(body, path):
     output = {key: {} for key in keys}
 
     if path == endpoints.ENDPOINT_CPF_CONTRIBUTION:
+        logger.debug(f'Calling endpoint {path}')
         output = extract_param(body, output, 'salary', MOULD_FLOAT)
         output = extract_param(body, output, 'bonus', MOULD_FLOAT)
         output = extract_param(body, output, 'dob', MOULD_STR)
         output = extract_param(body, output, 'bonus_month', MOULD_INT, required=False, defaultValue=12)
 
     elif path == endpoints.ENDPOINT_CPF_ALLOCATION:
+        logger.debug(f'Calling endpoint {path}')
         output = extract_param(body, output, 'salary', MOULD_FLOAT)
         output = extract_param(body, output, 'bonus', MOULD_FLOAT)
         output = extract_param(body, output, 'dob', MOULD_STR)
 
     elif path == endpoints.ENDPOINT_CPF_PROJECTION:
+        logger.debug(f'Calling endpoint {path}')
         output = extract_param(body, output, 'salary', MOULD_FLOAT)
         output = extract_param(body, output, 'bonus', MOULD_FLOAT)
         output = extract_param(body, output, 'yoy_increase_salary', MOULD_FLOAT)
@@ -140,5 +143,4 @@ def parse_args(body, path):
         output = extract_param(body, output, 'ma_topups', MOULD_DICT, required=False, defaultValue={})
         output = extract_param(body, output, 'ma_withdrawals', MOULD_DICT, required=False, defaultValue={})
 
-    print('\n', output)
     return output

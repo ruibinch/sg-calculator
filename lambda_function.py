@@ -1,14 +1,14 @@
 import json
 
 from logic import cpf
-from utils import common
 from utils import endpoints
+from utils import helpers
 from utils import http_codes as http
 
 
 def handler(event, context):
     body = json.loads(event['body'])
-    output = common.parse_args(body, event['path'])
+    output = helpers.parse_args(body, event['path'])
 
     if output['statusCode'] != {}:
         status_code = output['statusCode']
