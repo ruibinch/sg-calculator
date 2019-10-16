@@ -27,10 +27,17 @@ update_lambda_function:
   script:
     - apt-get update
     - apt-get install -y zip
+    # install external dependencies
     - pip install --target ./package -r requirements.txt
     - cd package
     - zip -r9 ${OLDPWD}/calculator-bff.zip .
     - cd $OLDPWD
+    # create logs folder to save logs in
+    - mkdir logs
+    - cd logs 
+    - touch placeholder.log
+    - cd $OLDPWD
+    # add files and update Lambda
     - zip -g calculator-bff.zip lambda_function.py -r config logic logs utils -i '*.py' '*.yaml' '*.log'
     - pip install awscli
     - aws lambda update-function-code --function-name calcCpfContribution --zip-file fileb://calculator-bff.zip
