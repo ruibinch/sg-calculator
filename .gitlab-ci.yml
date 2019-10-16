@@ -29,7 +29,7 @@ update_lambda_function:
     - apt-get install -y zip
     - pip install --target ./package -r requirements.txt
     - cd package
-    - zip -r9 ${OLDPWD}/function.zip .
+    - zip -r9 ${OLDPWD}/calculator-bff.zip .
     - cd $OLDPWD
     - zip -g calculator-bff.zip lambda_function.py -r config logic utils -i '*.py' '*.yaml'
     - pip install awscli
