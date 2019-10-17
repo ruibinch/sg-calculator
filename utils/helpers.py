@@ -58,10 +58,11 @@ def extract_param(body, output, param, mould, required=True, defaultValue=None):
 
     logger.debug(f'Extracting parameter "{param}"')
     try:
-        if type(mould) is dict:
-            logger.debug(f'Mould is of dict type, param value is {body[param]}')
+        if type(mould) is dict and type(body[param]) is not dict:
+            # special handling for str->dict conversions
+            logger.debug(f'Mould is of dict type, param value "{body[param]}" is of {type(body[param])} type')
             param_str = parse_into_json_format(body[param])
-            param_json = json.loads(param_str)
+            param_json = json.loads(param_str) # bomes dict type
             param_value = type(mould)(param_json)
         else:
             param_value = type(mould)(body[param])
