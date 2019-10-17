@@ -1,5 +1,7 @@
-# key names for JSON response
-KEY_PARAMS = 'params'
+# key names for JSON parsing
+KEY_BODY = 'body'
 KEY_ERROR = 'errors'
-KEY_STATUSCODE = 'statusCode'
+KEY_PARAMS = 'params'
+KEY_PATH = 'path'
 KEY_RESULTS = 'results'
+KEY_STATUSCODE = 'statusCode'
