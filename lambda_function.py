@@ -2,19 +2,30 @@ import json
 
 from logic import cpf
 from utils import endpoints
-from utils import helpers
+from utils import parser
 from utils import http_codes as http
 from utils import strings
 
 
 def handler(event, context):
+    """Handler for AWS Lambda function calls.
+
+    Args:
+        event (dict): Contains information on the function call event
+        context (dict): Provides information about the invocation, function and execution environment
+        
+    Returns an object with the following keys:
+        - `statusCode` - HTTP status code
+        - `body` - Response body
+    """
+
     body = json.loads(event[strings.KEY_BODY])
-    output = helpers.parse_args(body, event[strings.KEY_PATH])
+    output = parser.parse_args(body, event[strings.KEY_PATH])
 
     if type(output[strings.KEY_STATUSCODE]) is int:
         # there is a status code denoting an error
         status_code = output[strings.KEY_STATUSCODE]
-        response = { strings.KEY_ERROR: output[strings.KEY_ERROR] }
+        response = {strings.KEY_ERROR: output[strings.KEY_ERROR]}
     else:
         status_code = http.HTTPCODE_OK
         params = output[strings.KEY_PARAMS]
@@ -50,7 +61,7 @@ def handler(event, context):
                 params['ma_withdrawals']
             )
 
-        response = { strings.KEY_RESULTS: results }
+        response = {strings.KEY_RESULTS: results}
 
     return {
         strings.KEY_STATUSCODE: status_code,

@@ -4,9 +4,7 @@ import os
 import yaml
 
 def setup():
-    """
-        Sets up the logging module with the config specified in `config/logger.yaml`.
-    """
+    """Sets up the logging module with the config specified in `config/logger.yaml`."""
 
     try:
         with open('config/logger.yaml', 'r') as f:

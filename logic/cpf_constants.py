@@ -28,7 +28,6 @@ INT_EXTRA = 0.01
 THRESHOLD_EXTRAINT_OA = 20000
 THRESHOLD_EXTRAINT_TOTAL = 60000
 
-
 # CPF contribution rates
 rates_cont = {
     '55': [

@@ -1,21 +1,17 @@
 import json
 import requests
 
+from config import aws_settings as aws
 from utils import http_codes
 from utils import endpoints
 
-# AWS config
-RESTAPI_ID = '3myv824x89'
-REGION = 'ap-southeast-1'
-STAGE_NAME = 'alpha'
 # API Gateway URLs
-URL_CPF_CONTRIBUTION = f'https://{RESTAPI_ID}.execute-api.{REGION}.amazonaws.com/{STAGE_NAME}{endpoints.ENDPOINT_CPF_CONTRIBUTION}'
-URL_CPF_ALLOCATION = f'https://{RESTAPI_ID}.execute-api.{REGION}.amazonaws.com/{STAGE_NAME}{endpoints.ENDPOINT_CPF_ALLOCATION}'
-URL_CPF_PROJECTION = f'https://{RESTAPI_ID}.execute-api.{REGION}.amazonaws.com/{STAGE_NAME}{endpoints.ENDPOINT_CPF_PROJECTION}'
+URL_CPF_CONTRIBUTION = f'https://{aws.RESTAPI_ID}.execute-api.{aws.REGION}.amazonaws.com/{aws.STAGE_NAME}{endpoints.ENDPOINT_CPF_CONTRIBUTION}'
+URL_CPF_ALLOCATION = f'https://{aws.RESTAPI_ID}.execute-api.{aws.REGION}.amazonaws.com/{aws.STAGE_NAME}{endpoints.ENDPOINT_CPF_ALLOCATION}'
+URL_CPF_PROJECTION = f'https://{aws.RESTAPI_ID}.execute-api.{aws.REGION}.amazonaws.com/{aws.STAGE_NAME}{endpoints.ENDPOINT_CPF_PROJECTION}'
 
 class TestLambdaFunction(object):
-    """
-    Tests the Lambda functions via the exposed endpoints on API Gateway.
+    """Tests the Lambda functions via the exposed endpoints on API Gateway.
 
     Performs assertions on just the returned status code; logic testing is handled in `test_cpf.py`.
     """

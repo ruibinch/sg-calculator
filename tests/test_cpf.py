@@ -4,8 +4,7 @@ from logic import cpf_constants as constants
 
 
 class TestCalculateCpfContribution(object):
-    """
-    Tests the `calculate_cpf_contribution()` method in cpf.py.
+    """Tests the `calculate_cpf_contribution()` method in cpf.py.
 
     Test scenarios: 
     1. Age <=55
@@ -72,9 +71,9 @@ class TestCalculateCpfContribution(object):
 
 
 class TestCalculateCpfAllocation(object):
-    """
-    Tests the `calculate_cpf_allocation()` method in cpf.py. \\
-    Assume that `calculate_cpf_contribution()` method is correct.
+    """Tests the `calculate_cpf_allocation()` method in cpf.py.
+   
+    Assumption: `calculate_cpf_contribution()` method is correct.
 
     Age is the only variable here. \\
     Each test scenario contains 2 assertions - one with bonus and one without bonus. \\
@@ -195,8 +194,7 @@ class TestCalculateCpfAllocation(object):
 
 
 class TestCpfCalculateAnnualChange1(object):
-    """
-    Tests the `calculate_annual_change()` method in cpf.py.
+    """Tests the `calculate_annual_change()` method in cpf.py.
 
     Focuses on interest calculation across different CPF account thresholds.
     Variable here is the original CPF account balances, age is kept fixed.
@@ -426,8 +424,7 @@ class TestCpfCalculateAnnualChange1(object):
 
 
 class TestCpfCalculateAnnualChange2(object):
-    """
-    Tests the `calculate_annual_change()` method in cpf.py.
+    """Tests the `calculate_annual_change()` method in cpf.py.
 
     Focuses on cases where the age bracket changes during the year.
     Original CPF account balances are fixed here, corresponding to test scenario 1 in 
@@ -561,8 +558,7 @@ class TestCpfCalculateAnnualChange2(object):
 
 
 class TestCpfCalculateAnnualChange3(object):
-    """
-    Tests the `calculate_annual_change()` method in cpf.py.
+    """Tests the `calculate_annual_change()` method in cpf.py.
 
     Focuses on cases where there are changes in withdrawals/topups from the OA/SA respectively
     in the year.

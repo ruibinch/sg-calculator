@@ -6,7 +6,7 @@ from logic.cpf import calculate_cpf_contribution
 from logic.cpf import calculate_cpf_allocation
 from logic.cpf import calculate_cpf_projection
 from utils import endpoints
-from utils import helpers
+from utils import parser
 from utils import http_codes as http
 from utils import strings
 
@@ -41,11 +41,11 @@ class CpfContribution(Resource):
     def post(self):
         args = parser.parse_args()
         args = {k:v for k,v in args.items() if v is not None}
-        output = helpers.parse_args(args, endpoints.ENDPOINT_CPF_CONTRIBUTION)
+        output = parser.parse_args(args, endpoints.ENDPOINT_CPF_CONTRIBUTION)
 
         if output[strings.KEY_STATUSCODE] != {}:
             status_code = output[strings.KEY_STATUSCODE]
-            response = { strings.KEY_ERROR : output[strings.KEY_ERROR] }
+            response = {strings.KEY_ERROR: output[strings.KEY_ERROR]}
         else:
             status_code = http.HTTPCODE_OK
             params = output[strings.KEY_PARAMS]
@@ -55,7 +55,7 @@ class CpfContribution(Resource):
                 params['dob'],
                 params['bonus_month']
             )
-            response = { strings.KEY_RESULTS: results }
+            response = {strings.KEY_RESULTS: results}
 
         return response, status_code
 
@@ -63,11 +63,11 @@ class CpfAllocation(Resource):
     def post(self):
         args = parser.parse_args()
         args = {k:v for k,v in args.items() if v is not None}
-        output = helpers.parse_args(args, endpoints.ENDPOINT_CPF_ALLOCATION)
+        output = parser.parse_args(args, endpoints.ENDPOINT_CPF_ALLOCATION)
 
         if output[strings.KEY_STATUSCODE] != {}:
             status_code = output[strings.KEY_STATUSCODE]
-            response = { strings.KEY_ERROR : output[strings.KEY_ERROR] }
+            response = {strings.KEY_ERROR: output[strings.KEY_ERROR]}
         else:
             status_code = http.HTTPCODE_OK
             params = output[strings.KEY_PARAMS]
@@ -76,7 +76,7 @@ class CpfAllocation(Resource):
                 params['bonus'],
                 params['dob']
             )
-            response = { strings.KEY_RESULTS: results }
+            response = {strings.KEY_RESULTS: results}
                                                                 
         return response, status_code
 
@@ -84,11 +84,11 @@ class CpfProjection(Resource):
     def post(self):
         args = parser.parse_args()
         args = {k:v for k,v in args.items() if v is not None}
-        output = helpers.parse_args(args, endpoints.ENDPOINT_CPF_PROJECTION)
+        output = parser.parse_args(args, endpoints.ENDPOINT_CPF_PROJECTION)
 
         if output[strings.KEY_STATUSCODE] != {}:
             status_code = output[strings.KEY_STATUSCODE]
-            response = { strings.KEY_ERROR : output[strings.KEY_ERROR] }
+            response = {strings.KEY_ERROR: output[strings.KEY_ERROR]}
         else:
             status_code = http.HTTPCODE_OK
             params = output[strings.KEY_PARAMS]
@@ -109,7 +109,7 @@ class CpfProjection(Resource):
                 params['ma_topups'],
                 params['ma_withdrawals']
             )
-            response = { strings.KEY_RESULTS: results }
+            response = {strings.KEY_RESULTS: results}
 
         return response, status_code
 
