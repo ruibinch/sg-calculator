@@ -9,6 +9,8 @@ KEY_PATH = 'path'
 KEY_RESULTS = 'results'
 KEY_STATUSCODE = 'statusCode'
 
+KEY_VALUES = 'values'
+KEY_RATES = 'rates'
 KEY_CONT_EMPLOYEE = 'cont_employee'
 KEY_CONT_EMPLOYER = 'cont_employer'
 KEY_OA_ALLOC = 'oa_alloc'

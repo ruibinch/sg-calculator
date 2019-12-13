@@ -41,12 +41,17 @@ def calculate_cpf_contribution(salary, bonus, dob, bonus_month, age=None):
     for i in range(1, 13):
         bonus_annual = bonus if i == bonus_month else 0
 
-        cont_total += _get_monthly_contribution_amount(salary / 12, bonus_annual, age, dob, entity=constants.STR_COMBINED)
-        cont_employee += _get_monthly_contribution_amount(salary / 12, bonus_annual, age, dob, entity=constants.STR_EMPLOYEE)
+        cont_total_monthly, rates = _get_monthly_contribution_amount(salary / 12, bonus_annual, age, dob, entity=constants.STR_COMBINED)
+        cont_employee_monthly, rates = _get_monthly_contribution_amount(salary / 12, bonus_annual, age, dob, entity=constants.STR_EMPLOYEE)
+        cont_total += cont_total_monthly
+        cont_employee += cont_employee_monthly
 
     return {
-        strings.KEY_CONT_EMPLOYEE: round(cont_employee, 2), 
-        strings.KEY_CONT_EMPLOYER: round(cont_total - cont_employee, 2)
+        strings.KEY_VALUES: {
+            strings.KEY_CONT_EMPLOYEE: round(cont_employee, 2), 
+            strings.KEY_CONT_EMPLOYER: round(cont_total - cont_employee, 2)
+        },
+        strings.KEY_RATES: rates
     }
 
 def calculate_cpf_allocation(salary, bonus, dob, age=None):
@@ -72,8 +77,8 @@ def calculate_cpf_allocation(salary, bonus, dob, age=None):
     
     logger.debug('/cpf/allocation')
 
-    cont_monthly = _get_monthly_contribution_amount(salary / 12, bonus, age, dob, entity=constants.STR_COMBINED)
-    logger.debug(f'Monthly contribution is {cont_monthly}')
+    cont_monthly, rates = _get_monthly_contribution_amount(salary / 12, bonus, age, dob, entity=constants.STR_COMBINED)
+    logger.debug(f'Total CPF monthly contribution is {cont_monthly}')
     sa_alloc = _get_allocation_amount(age, dob, cont_monthly, account=constants.STR_SA)
     ma_alloc = _get_allocation_amount(age, dob, cont_monthly, account=constants.STR_MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
@@ -216,30 +221,33 @@ def _get_monthly_contribution_amount(salary, bonus, age, dob, entity):
         dob (str): Date of birth of employee in YYYYMM format
         entity (str): Either 'combined' or 'employee'
     
-    Returns the CPF contribution amount for the month.
+    Returns the CPF contribution amount for the month and corresponding rates.
     """
 
     if age is None:
         age = _get_age(dob)
 
     age_bracket = _get_age_bracket(age, constants.STR_CONTRIBUTION)
-    rates = constants.rates_cont
+    rates = {}
     amount_tw = salary + bonus # only needed if income is in income brackets 2 or 3
 
     if salary <= constants.INCOME_BRACKET_1:
         cont = 0
         logger.debug('Salary <=$50/month, contribution from OW is zero')
     elif salary <= constants.INCOME_BRACKET_2:
-        cont = rates[age_bracket][1][entity] * amount_tw
+        rates = constants.rates_cont[age_bracket][1]
+        cont = constants.rates_cont[age_bracket][1][entity] * amount_tw
         logger.debug(f'Salary >$50 to <=$500/month, contribution from OW is {cont}')
     elif salary <= constants.INCOME_BRACKET_3:
-        cont_from_tw = rates[age_bracket][2][entity] * amount_tw
-        cont_misc = rates[age_bracket][2][constants.STR_MISC] * (amount_tw - 500)
+        rates = constants.rates_cont[age_bracket][2]
+        cont_from_tw = constants.rates_cont[age_bracket][2][entity] * amount_tw
+        cont_misc = constants.rates_cont[age_bracket][2][constants.STR_MISC] * (amount_tw - 500)
         cont = cont_from_tw + cont_misc
         logger.debug(f'Salary >$500 to <=$749/month, contribution from OW is {cont}')
     else:
+        rates = constants.rates_cont[age_bracket][3]
         amount_ow_eligible_for_cpf = min(salary, constants.CEILING_OW)
-        cont_from_ow = rates[age_bracket][3][entity] * amount_ow_eligible_for_cpf
+        cont_from_ow = constants.rates_cont[age_bracket][3][entity] * amount_ow_eligible_for_cpf
         logger.debug(f'Salary >=$750/month, contribution from OW is {cont_from_ow}')
 
         cont_from_aw = 0
@@ -247,7 +255,7 @@ def _get_monthly_contribution_amount(salary, bonus, age, dob, entity):
             # need to consider AW
             ceiling_aw = constants.CEILING_AW - (amount_ow_eligible_for_cpf * 12)
             amount_aw_eligible_for_cpf = min(bonus, ceiling_aw)
-            cont_from_aw = rates[age_bracket][3][entity] * amount_aw_eligible_for_cpf
+            cont_from_aw = constants.rates_cont[age_bracket][3][entity] * amount_aw_eligible_for_cpf
             logger.debug(f'Salary >=$750/month with bonus, contribution from AW is {cont_from_aw}')
 
         cont_total = cont_from_ow + cont_from_aw
@@ -256,7 +264,7 @@ def _get_monthly_contribution_amount(salary, bonus, age, dob, entity):
         elif entity == constants.STR_EMPLOYEE:
             cont = math.floor(cont_total)
 
-    return cont
+    return cont, rates
 
 def _get_allocation_amount(age, dob, cont, account):
     """Gets the amount allocated into the specified CPF account in a month.
@@ -277,7 +285,6 @@ def _get_allocation_amount(age, dob, cont, account):
 
     age_bracket = _get_age_bracket(age, constants.STR_ALLOCATION)
     alloc = _truncate(constants.rates_alloc[age_bracket][f'{account}_ratio'] * cont)
-    logger.debug(f'age = {age}, cont = {cont}; allocation amount to {account} is {alloc}')
     return alloc
 
 def _calculate_monthly_interest_oa(oa_accumulated):

@@ -2,7 +2,7 @@ import json
 
 from logic import cpf
 from utils import endpoints
-from utils import parser
+from utils import argparser
 from utils import http_codes as http
 from utils import strings
 
@@ -20,7 +20,7 @@ def handler(event, context):
     """
 
     body = json.loads(event[strings.KEY_BODY])
-    output = parser.parse_args(body, event[strings.KEY_PATH])
+    output = argparser.parse_args(body, event[strings.KEY_PATH])
 
     if type(output[strings.KEY_STATUSCODE]) is int:
         # there is a status code denoting an error

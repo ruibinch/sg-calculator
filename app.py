@@ -6,7 +6,7 @@ from logic.cpf import calculate_cpf_contribution
 from logic.cpf import calculate_cpf_allocation
 from logic.cpf import calculate_cpf_projection
 from utils import endpoints
-from utils import parser
+from utils import argparser
 from utils import http_codes as http
 from utils import strings
 
@@ -41,7 +41,7 @@ class CpfContribution(Resource):
     def post(self):
         args = parser.parse_args()
         args = {k:v for k,v in args.items() if v is not None}
-        output = parser.parse_args(args, endpoints.ENDPOINT_CPF_CONTRIBUTION)
+        output = argparser.parse_args(args, endpoints.ENDPOINT_CPF_CONTRIBUTION)
 
         if output[strings.KEY_STATUSCODE] != {}:
             status_code = output[strings.KEY_STATUSCODE]
@@ -63,7 +63,7 @@ class CpfAllocation(Resource):
     def post(self):
         args = parser.parse_args()
         args = {k:v for k,v in args.items() if v is not None}
-        output = parser.parse_args(args, endpoints.ENDPOINT_CPF_ALLOCATION)
+        output = argparser.parse_args(args, endpoints.ENDPOINT_CPF_ALLOCATION)
 
         if output[strings.KEY_STATUSCODE] != {}:
             status_code = output[strings.KEY_STATUSCODE]
@@ -84,7 +84,7 @@ class CpfProjection(Resource):
     def post(self):
         args = parser.parse_args()
         args = {k:v for k,v in args.items() if v is not None}
-        output = parser.parse_args(args, endpoints.ENDPOINT_CPF_PROJECTION)
+        output = argparser.parse_args(args, endpoints.ENDPOINT_CPF_PROJECTION)
 
         if output[strings.KEY_STATUSCODE] != {}:
             status_code = output[strings.KEY_STATUSCODE]
@@ -119,4 +119,4 @@ api.add_resource(CpfProjection, endpoints.ENDPOINT_CPF_PROJECTION)
 
 if (__name__ == '__main__'):
     app.debug = True
-    app.run(host='127.0.0.1', port=5000)
+    app.run(host='127.0.0.1', port=5100)
