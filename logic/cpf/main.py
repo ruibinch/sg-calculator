@@ -50,8 +50,8 @@ def calculate_cpf_contribution(salary, bonus, dob, bonus_month, age=None):
 
     return {
         strings.KEY_VALUES: {
-            strings.KEY_CONT_EMPLOYEE: round(cont_employee, 2), 
-            strings.KEY_CONT_EMPLOYER: round(cont_total - cont_employee, 2)
+            strings.KEY_CONT_EMPLOYEE: str(round(cont_employee, 2)), 
+            strings.KEY_CONT_EMPLOYER: str(round(cont_total - cont_employee, 2))
         },
         strings.KEY_RATES: cont_rates
     }
@@ -78,20 +78,29 @@ def calculate_cpf_allocation(salary, bonus, dob, age=None):
     """
     
     logger.debug('/cpf/allocation')
+    if age is None:
+        age = genhelpers._get_age(dob)
 
-    cont_monthly = _get_monthly_contribution_amount(salary / 12, bonus, age, dob, entity=constants.STR_COMBINED)
+    # get contribution amount for the month first
+    cont_monthly = cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus, age, entity=constants.STR_COMBINED)
     logger.debug(f'Total CPF monthly contribution is {cont_monthly}')
-    sa_alloc = _get_allocation_amount(age, dob, cont_monthly, account=constants.STR_SA)
-    ma_alloc = _get_allocation_amount(age, dob, cont_monthly, account=constants.STR_MA)
+
+    # then, get the individual amounts allocated to each account
+    sa_alloc = cpfhelpers._get_allocation_amount(age, cont_monthly, account=constants.STR_SA)
+    ma_alloc = cpfhelpers._get_allocation_amount(age, cont_monthly, account=constants.STR_MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
     logger.debug(f'Allocation amounts: OA = {oa_alloc}, MA = {ma_alloc}, SA = {sa_alloc}')
 
+    # get the allocation rates
+    alloc_rates = cpfhelpers._get_allocation_rates(age)
+
     return {
         strings.KEY_VALUES: {
-            strings.KEY_OA_ALLOC: round(oa_alloc, 2), 
-            strings.KEY_SA_ALLOC: sa_alloc,
-            strings.KEY_MA_ALLOC: ma_alloc
-        }
+            strings.KEY_OA: str(round(oa_alloc, 2)), 
+            strings.KEY_SA: str(sa_alloc),
+            strings.KEY_MA: str(ma_alloc)
+        },
+        strings.KEY_RATES: alloc_rates
     }
 
 def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bonus,

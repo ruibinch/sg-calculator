@@ -94,28 +94,28 @@ def _get_contribution_rates(salary, age):
         cont_rates = {
             strings.KEY_CONT_EMPLOYEE: {},
             strings.KEY_CONT_EMPLOYER: {
-                'TW': rates[1][constants.STR_COMBINED]
+                'TW': str(rates[1][constants.STR_COMBINED])
             }
         }
     elif salary <= constants.INCOME_BRACKET_3:
         cont_rates = {
             strings.KEY_CONT_EMPLOYEE: {
-                'TW - $500': rates[2][constants.STR_MISC]
+                'TW - $500': str(rates[2][constants.STR_MISC])
             },
             strings.KEY_CONT_EMPLOYER: {
-                'TW': rates[2][constants.STR_COMBINED]
+                'TW': str(rates[2][constants.STR_COMBINED])
             } 
         }
     else:
-        cont_employer_rate = rates[3][constants.STR_COMBINED] - rates[3][constants.STR_EMPLOYEE]
+        cont_employer_rate = round(rates[3][constants.STR_COMBINED] - rates[3][constants.STR_EMPLOYEE], 2)
         cont_rates = {
             strings.KEY_CONT_EMPLOYEE: {
-                'OW': rates[3][constants.STR_EMPLOYEE],
-                'AW': rates[3][constants.STR_EMPLOYEE]
+                'OW': str(rates[3][constants.STR_EMPLOYEE]),
+                'AW': str(rates[3][constants.STR_EMPLOYEE])
             },
             strings.KEY_CONT_EMPLOYER: {
-                'OW': round(cont_employer_rate, 2),
-                'AW': round(cont_employer_rate, 2)
+                'OW': str(cont_employer_rate),
+                'AW': str(cont_employer_rate)
             },
         }
 
@@ -125,26 +125,51 @@ def _get_contribution_rates(salary, age):
 #                                 CPF ALLOCATIONS                             #
 ###############################################################################
 
-def _get_allocation_amount(age, dob, cont, account):
+def _get_allocation_amount(age, cont, account):
     """Gets the amount allocated into the specified CPF account in a month.
     
     Returned amount is truncated to 2 decimal places.
 
     Args:
         age (int): Age of employee
-        dob (str): Date of birth of employee in YYYYMM format
         cont (int): Total CPF contribution for the month
         account (str): Either "SA" or "MA"
 
     Returns the amount allocated into the specified account.
     """
 
-    if age is None:
-        age = genhelpers._get_age(dob)
-
     age_bracket = genhelpers._get_age_bracket(age, constants.STR_ALLOCATION)
     alloc = genhelpers._truncate(constants.rates_alloc[age_bracket][f'{account}_ratio'] * cont)
     return alloc
+
+def _get_allocation_rates(age):
+    """Returns the allocation rates into the 3 CPF accounts.
+
+    2 representations:
+    1. `pct_of_salary` - percentage of salary
+    2. `ratio` - ratio of contribution amount in the month (for greater precision)
+    
+    Args:
+        age (int): Age of employee
+    """
+
+    age_bracket = genhelpers._get_age_bracket(age, constants.STR_ALLOCATION)
+    rates = constants.rates_alloc[age_bracket]
+
+    alloc_rates = {
+        'pct_of_salary': {
+            strings.KEY_OA: str(rates[constants.STR_OA]),
+            strings.KEY_SA: str(rates[constants.STR_SA]),
+            strings.KEY_MA: str(rates[constants.STR_MA])
+        },
+        'ratio': {
+            strings.KEY_OA: str(rates[f'{constants.STR_OA}_ratio']),
+            strings.KEY_SA: str(rates[f'{constants.STR_SA}_ratio']),
+            strings.KEY_MA: str(rates[f'{constants.STR_MA}_ratio'])
+        }
+    }
+
+    return alloc_rates
 
 ###############################################################################
 #                                 CPF INTEREST                                #
