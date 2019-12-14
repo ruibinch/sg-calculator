@@ -39,6 +39,7 @@ def calculate_cpf_contribution(salary, bonus, dob, bonus_month, age=None):
     if age is None:
         age = genhelpers._get_age(dob)
 
+    cont_rates = cpfhelpers._get_contribution_rates(salary / 12, age)
     cont_total, cont_employee = (0, 0)
     for i in range(1, 13):
         # `bonus_in_month` is only applicable during the bonus month
@@ -46,8 +47,6 @@ def calculate_cpf_contribution(salary, bonus, dob, bonus_month, age=None):
 
         cont_total += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus_in_month, age, entity=constants.STR_COMBINED)
         cont_employee += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus_in_month, age, entity=constants.STR_EMPLOYEE)
-
-    cont_rates = cpfhelpers._get_contribution_rates(salary, age)
 
     return {
         strings.KEY_VALUES: {

@@ -77,6 +77,7 @@ def _get_contribution_rates(salary, age):
         age (int): Age of employee
     """
 
+    logger.debug(f'Monthly salary = {salary}, age = {age}')
     cont_rates = {}
 
     # get age bracket
@@ -86,24 +87,36 @@ def _get_contribution_rates(salary, age):
     # get income bracket
     if salary <= constants.INCOME_BRACKET_1:
         cont_rates = {
-            strings.KEY_CONT_EMPLOYEE: 0,
-            strings.KEY_CONT_EMPLOYER: 0
+            strings.KEY_CONT_EMPLOYEE: {},
+            strings.KEY_CONT_EMPLOYER: {}
         }
     elif salary <= constants.INCOME_BRACKET_2:
         cont_rates = {
-            strings.KEY_CONT_EMPLOYEE: 0,
-            strings.KEY_CONT_EMPLOYER: f'{rates[1][constants.STR_COMBINED]} * TW'
+            strings.KEY_CONT_EMPLOYEE: {},
+            strings.KEY_CONT_EMPLOYER: {
+                'TW': rates[1][constants.STR_COMBINED]
+            }
         }
     elif salary <= constants.INCOME_BRACKET_3:
         cont_rates = {
-            strings.KEY_CONT_EMPLOYEE: f'{rates[2][constants.STR_MISC]} * (TW - $500)',
-            strings.KEY_CONT_EMPLOYER: f'({rates[2][constants.STR_COMBINED]} * TW)'
+            strings.KEY_CONT_EMPLOYEE: {
+                'TW - $500': rates[2][constants.STR_MISC]
+            },
+            strings.KEY_CONT_EMPLOYER: {
+                'TW': rates[2][constants.STR_COMBINED]
+            } 
         }
     else:
         cont_employer_rate = rates[3][constants.STR_COMBINED] - rates[3][constants.STR_EMPLOYEE]
         cont_rates = {
-            strings.KEY_CONT_EMPLOYEE: f'({rates[3][constants.STR_EMPLOYEE]} * OW) + ({rates[3][constants.STR_EMPLOYEE]} * AW)',
-            strings.KEY_CONT_EMPLOYER: f'({cont_employer_rate} * OW) + ({cont_employer_rate} * AW)'
+            strings.KEY_CONT_EMPLOYEE: {
+                'OW': rates[3][constants.STR_EMPLOYEE],
+                'AW': rates[3][constants.STR_EMPLOYEE]
+            },
+            strings.KEY_CONT_EMPLOYER: {
+                'OW': round(cont_employer_rate, 2),
+                'AW': round(cont_employer_rate, 2)
+            },
         }
 
     return cont_rates

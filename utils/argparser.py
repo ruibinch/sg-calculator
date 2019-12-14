@@ -57,7 +57,6 @@ def extract_param(body, output, param, mould, required=True, default_value=None)
     If there is an error, output[strings.KEY_STATUSCODE] will be populated as well.
     """
 
-    logger.debug(f'Extracting parameter "{param}"')
     try:
         if type(body[param]) is str and type(mould) is dict:
             # special handling for str->dict conversions is required
