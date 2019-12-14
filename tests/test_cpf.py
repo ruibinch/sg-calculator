@@ -1,7 +1,12 @@
 import datetime as dt
-from logic import cpf
-from logic import cpf_constants as constants
 
+from logic.cpf.main import calculate_cpf_contribution
+from logic.cpf.main import calculate_cpf_allocation
+from logic.cpf.main import calculate_cpf_projection
+from logic.cpf import constants
+from logic.cpf import cpfhelpers
+from logic.cpf import genhelpers
+from utils import strings
 
 class TestCalculateCpfContribution(object):
     """Tests the `calculate_cpf_contribution()` method in cpf.py.
@@ -18,9 +23,9 @@ class TestCalculateCpfContribution(object):
     """
 
     def _perform_assertion(self, salary, bonus, age, cont_employee, cont_employer):
-        contributions = cpf.calculate_cpf_contribution(salary, bonus, None, 12, age=age)
-        assert round(cont_employee, 2) == round(contributions['cont_employee'], 2)
-        assert round(cont_employer, 2) == round(contributions['cont_employer'], 2)
+        contributions = calculate_cpf_contribution(salary, bonus, None, 12, age=age)
+        assert round(cont_employee, 2) == float(contributions[strings.KEY_VALUES][strings.KEY_CONT_EMPLOYEE])
+        assert round(cont_employer, 2) == float(contributions[strings.KEY_VALUES][strings.KEY_CONT_EMPLOYER])
 
     def test_scenario_1a(self):
         salary, bonus, age = (50 * 12, 0, 30)
@@ -92,16 +97,12 @@ class TestCalculateCpfAllocation(object):
 
     def _get_contribution_amount_by_age(self, age, with_bonus):
         bonus_annual = self.bonus if with_bonus is True else 0
-        cont = cpf._get_monthly_contribution_amount(self.salary, bonus_annual, age=age, dob=None, entity=constants.STR_COMBINED)
+        cont = cpfhelpers._get_monthly_contribution_amount(self.salary, bonus_annual, age=age, entity=constants.STR_COMBINED)
         return cont
 
-    def _truncate(self, n, decimals=2):
-        before_dec, after_dec = str(n).split('.')
-        return float('.'.join((before_dec, after_dec[0:2])))
-
     def _get_alloc_amount(self, cont, sa_ratio, ma_ratio):
-        sa_alloc = self._truncate(sa_ratio * cont)
-        ma_alloc = self._truncate(ma_ratio * cont)
+        sa_alloc = genhelpers._truncate(sa_ratio * cont)
+        ma_alloc = genhelpers._truncate(ma_ratio * cont)
         oa_alloc = cont - sa_alloc - ma_alloc
         return oa_alloc, sa_alloc, ma_alloc
 
@@ -117,10 +118,10 @@ class TestCalculateCpfAllocation(object):
             alloc_exp (array): Expected amount to be allocated into the CPF accounts [OA, SA, MA]
         """
         
-        allocations = cpf.calculate_cpf_allocation(self.salary * 12, bonus, None, age=age)
-        assert round(alloc_exp[0], 2) == round(allocations['oa_alloc'], 2)
-        assert round(alloc_exp[1], 2) == round(allocations['sa_alloc'], 2)
-        assert round(alloc_exp[2], 2) == round(allocations['ma_alloc'], 2)
+        allocations = calculate_cpf_allocation(self.salary * 12, bonus, None, age=age)
+        assert round(alloc_exp[0], 2) == float(allocations[strings.KEY_VALUES][strings.KEY_OA])
+        assert round(alloc_exp[1], 2) == float(allocations[strings.KEY_VALUES][strings.KEY_SA])
+        assert round(alloc_exp[2], 2) == float(allocations[strings.KEY_VALUES][strings.KEY_MA])
 
     def test_scenario_1(self):
         age = 35
@@ -236,17 +237,18 @@ class TestCpfCalculateAnnualChange1(object):
         Helper class to perform assertion checks.
 
         Args:
-            balance_orig (array): Original balance in CPF accounts [OA, SA, MA]
-            balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
+            balance_orig (list): Original balance in CPF accounts [OA, SA, MA]
+            balance_exp (list): Expected balance in CPF accounts [OA, SA, MA]
         """
 
-        oa_test, sa_test, ma_test = cpf.calculate_annual_change(self.salary * 12, self.bonus,
-                                        balance_orig[0], balance_orig[1], balance_orig[2], age=self.age)
+        results_annual = cpfhelpers.calculate_annual_change(
+                            self.salary * 12, self.bonus,
+                            balance_orig[0], balance_orig[1], balance_orig[2], 
+                            age=self.age)
 
-        assert balance_exp[0] == oa_test
-        assert balance_exp[1] == sa_test
-        assert balance_exp[2] == ma_test
-
+        assert str(round(balance_exp[0], 2)) == results_annual[strings.KEY_OA]
+        assert str(round(balance_exp[1], 2)) == results_annual[strings.KEY_SA]
+        assert str(round(balance_exp[2], 2)) == results_annual[strings.KEY_MA]
 
     def test_scenario_1(self):
         print('Test scenario 1: OA < $20k, OA+SA+MA < $60k')
@@ -464,13 +466,14 @@ class TestCpfCalculateAnnualChange2(object):
             balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
         """
 
-        oa_test, sa_test, ma_test = cpf.calculate_annual_change(self.salary * 12, self.bonus,
-                                        balance_orig[0], balance_orig[1], balance_orig[2],
-                                        date_start=self.date_start, dob=dob)
+        results_annual = cpfhelpers.calculate_annual_change(
+                            self.salary * 12, self.bonus,
+                            balance_orig[0], balance_orig[1], balance_orig[2],
+                            date_start=self.date_start, dob=dob)
 
-        assert balance_exp[0] == oa_test
-        assert balance_exp[1] == sa_test
-        assert balance_exp[2] == ma_test
+        assert str(round(balance_exp[0], 2)) == results_annual[strings.KEY_OA]
+        assert str(round(balance_exp[1], 2)) == results_annual[strings.KEY_SA]
+        assert str(round(balance_exp[2], 2)) == results_annual[strings.KEY_MA]
 
     def test_scenario_1(self):
         print('Test scenario 1: Age 35 -> 36')
@@ -618,14 +621,15 @@ class TestCpfCalculateAnnualChange3(object):
             balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
         """
 
-        oa_test, sa_test, ma_test = cpf.calculate_annual_change(self.salary * 12, self.bonus,
+        results_annual = cpfhelpers.calculate_annual_change(
+                                        self.salary * 12, self.bonus,
                                         balance_orig[0], balance_orig[1], balance_orig[2],
                                         account_deltas=account_deltas,
                                         date_start=self.date_start, age=self.age)
 
-        assert round(balance_exp[0], 3) == round(oa_test, 3)
-        assert round(balance_exp[1], 3) == round(sa_test, 3)
-        assert round(balance_exp[2], 3) == round(ma_test, 3)
+        assert str(round(balance_exp[0], 2)) == results_annual[strings.KEY_OA]
+        assert str(round(balance_exp[1], 2)) == results_annual[strings.KEY_SA]
+        assert str(round(balance_exp[2], 2)) == results_annual[strings.KEY_MA]
 
     def test_scenario_1(self):
         print('Test scenario 1: Topup OA')
