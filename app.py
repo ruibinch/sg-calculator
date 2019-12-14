@@ -2,9 +2,9 @@ from flask import Flask
 from flask_restful import Resource, Api, reqparse
 import json
 
-from logic.cpf import calculate_cpf_contribution
-from logic.cpf import calculate_cpf_allocation
-from logic.cpf import calculate_cpf_projection
+from logic.cpf.main import calculate_cpf_contribution
+from logic.cpf.main import calculate_cpf_allocation
+from logic.cpf.main import calculate_cpf_projection
 from utils import endpoints
 from utils import argparser
 from utils import http_codes as http
