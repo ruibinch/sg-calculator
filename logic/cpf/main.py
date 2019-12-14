@@ -1,3 +1,4 @@
+import datetime as dt
 import logging
 
 from logic.cpf import constants
@@ -154,23 +155,26 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
     """
     
     logger.debug('/cpf/projection')
+    values = {}
+    if age is None:
+        age = genhelpers._get_age(dob)
     
-    # getting some variables
+    # getting base amounts in OA, SA, MA and number of years to project for
     oa, sa, ma = float(base_cpf['oa']), float(base_cpf['sa']), float(base_cpf['ma'])
-    n_years = _get_num_projection_years(target_year) if n_years is None else n_years
+    n_years = genhelpers._get_num_projection_years(target_year) if n_years is None else n_years
 
-    # convert all topup/withdrawal dicts to zero-indexing of year
-    oa_topups = _convert_year_to_zero_indexing(oa_topups)
-    oa_withdrawals = _convert_year_to_zero_indexing(oa_withdrawals)
-    sa_topups = _convert_year_to_zero_indexing(sa_topups)
-    sa_withdrawals = _convert_year_to_zero_indexing(sa_withdrawals)
-    ma_topups = _convert_year_to_zero_indexing(ma_topups)
-    ma_withdrawals = _convert_year_to_zero_indexing(ma_withdrawals)
+    # convert topup/withdrawal dicts to zero-indexed years as keys
+    oa_topups = genhelpers._convert_year_to_zero_indexing(oa_topups)
+    oa_withdrawals = genhelpers._convert_year_to_zero_indexing(oa_withdrawals)
+    sa_topups = genhelpers._convert_year_to_zero_indexing(sa_topups)
+    sa_withdrawals = genhelpers._convert_year_to_zero_indexing(sa_withdrawals)
+    ma_topups = genhelpers._convert_year_to_zero_indexing(ma_topups)
+    ma_withdrawals = genhelpers._convert_year_to_zero_indexing(ma_withdrawals)
 
     for i in range(n_years):
-        # default day to 1 as it is not used
         if i == 0:
             # it is the first year, so the starting month would be different
+            # default day to 1 as it is not used
             if proj_start_date is not None:
                 date_start = dt.date(proj_start_date.year, proj_start_date.month, 1)
             else:
@@ -181,22 +185,16 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
 
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
         bonus_proj = bonus * pow(1 + yoy_increase_bonus, i)
-        # get OA/SA/MA topup/withdrawal details in this year
-        oa_topups_year = _get_account_deltas_year(oa_topups, i)
-        oa_withdrawals_year = _get_account_deltas_year(oa_withdrawals, i)
-        sa_topups_year = _get_account_deltas_year(sa_topups, i)
-        sa_withdrawals_year = _get_account_deltas_year(sa_withdrawals, i)
-        ma_topups_year = _get_account_deltas_year(ma_topups, i)
-        ma_withdrawals_year = _get_account_deltas_year(ma_withdrawals, i)
 
-        # package all into an account_deltas dict
+        # get OA/SA/MA topup/withdrawal details in this year
+        # package all into an `account_deltas` dict
         account_deltas = {
-            strings.KEY_OA_TOPUPS: oa_topups_year,
-            strings.KEY_OA_WITHDRAWALS: oa_withdrawals_year,
-            strings.KEY_SA_TOPUPS: sa_topups_year,
-            strings.KEY_SA_WITHDRAWALS: sa_withdrawals_year,
-            strings.KEY_MA_TOPUPS: ma_topups_year,
-            strings.KEY_MA_WITHDRAWALS: ma_withdrawals_year
+            strings.KEY_OA_TOPUPS: genhelpers._get_account_deltas_year(oa_topups, i),
+            strings.KEY_OA_WITHDRAWALS: genhelpers._get_account_deltas_year(oa_withdrawals, i),
+            strings.KEY_SA_TOPUPS: genhelpers._get_account_deltas_year(sa_topups, i),
+            strings.KEY_SA_WITHDRAWALS: genhelpers._get_account_deltas_year(sa_withdrawals, i),
+            strings.KEY_MA_TOPUPS: genhelpers._get_account_deltas_year(ma_topups, i),
+            strings.KEY_MA_WITHDRAWALS: genhelpers._get_account_deltas_year(ma_withdrawals, i)
         }
 
         # get SA topup/OA withdrawal details
@@ -205,13 +203,14 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         # sa_topup = sa_topup_details[0] if sa_topup_details != [] else 0
         # sa_topup_from_oa = sa_topup_details[1] if sa_topup_details != [] else None
 
-        oa, sa, ma = calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma,
-                                             account_deltas, bonus_month, 
-                                             date_start=date_start, age=age, dob=dob)
-        logger.debug(f'Year {i}: OA = {oa}, SA = {sa}, MA = {ma}')
+        results_annual = cpfhelpers.calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma,
+                                                            account_deltas, bonus_month, 
+                                                            date_start=date_start, age=age)
+
+        # set key to `final` if it is the last year
+        key = 'final' if i == (n_years - 1) else str(i+1)
+        values[key] = results_annual
 
     return {
-        strings.KEY_OA: round(oa, 2),
-        strings.KEY_SA: round(sa, 2),
-        strings.KEY_MA: round(ma, 2)
+        strings.KEY_VALUES: values
     }

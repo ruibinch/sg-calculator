@@ -5,6 +5,7 @@ import math
 from logic.cpf import constants
 from logic.cpf import cpfhelpers
 from logic.cpf import genhelpers
+from logic.cpf import main
 from utils import strings
 
 logger = logging.getLogger(__name__)
@@ -276,10 +277,10 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
         
         # add the CPF allocation for this month
         # this is actually the contribution for the previous month's salary
-        allocations = cpfhelpers.calculate_cpf_allocation(salary, bonus_annual, None, age=age)
-        oa_accumulated += allocations[strings.KEY_OA_ALLOC]
-        sa_accumulated += allocations[strings.KEY_SA_ALLOC]
-        ma_accumulated += allocations[strings.KEY_MA_ALLOC]
+        allocations = main.calculate_cpf_allocation(salary, bonus_annual, None, age=age)
+        oa_accumulated += float(allocations[strings.KEY_VALUES][strings.KEY_OA])
+        sa_accumulated += float(allocations[strings.KEY_VALUES][strings.KEY_SA])
+        ma_accumulated += float(allocations[strings.KEY_VALUES][strings.KEY_MA])
 
         if account_deltas is not None and len(account_deltas.keys()) != 0:
             # if there have been topups/withdrawals in the accounts this month
@@ -321,11 +322,17 @@ def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
 
         # print(i, oa_interest, sa_interest, ma_interest)
 
-    # print(oa_interest_total, sa_interest_total, ma_interest_total)
-
     # interest added at the end of the year
+    logger.debug(f'Interest in year: OA = {oa_interest_total}, SA = {sa_interest_total}, MA = {ma_interest_total}')
     oa_new = oa_accumulated + oa_interest_total
     sa_new = sa_accumulated + sa_interest_total
     ma_new = ma_accumulated + ma_interest_total
 
-    return oa_new, sa_new, ma_new
+    return {
+        strings.KEY_OA: str(round(oa_new, 2)),
+        strings.KEY_SA: str(round(sa_new, 2)),
+        strings.KEY_MA: str(round(ma_new, 2)),
+        strings.KEY_OA_INTEREST: str(round(oa_interest_total, 2)),
+        strings.KEY_SA_INTEREST: str(round(sa_interest_total, 2)),
+        strings.KEY_MA_INTEREST: str(round(ma_interest_total, 2)),
+    }

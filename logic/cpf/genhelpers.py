@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 Stores all generic helper methods for the CPF module.
 """
 
-
 def _get_age(dob, date_curr=None):
     """Returns the user's age given the user's date of birth.
 
@@ -70,9 +69,7 @@ def _convert_year_to_zero_indexing(dict_orig):
     """Converts the year values in the list from the actual year to zero indexing based on the current year.
 
     Args:
-        dict_orig (dict): Original dict of topups/withdrawals
-        - key: date in YYYYMM format
-        - value: amount
+        dict_orig (dict): Original dict of topups/withdrawals, where key is date in YYYYMM format
 
     Returns a dict with the format:
         {
@@ -107,24 +104,21 @@ def _convert_year_to_zero_indexing(dict_orig):
                 strings.KEY_IS_SA_TOPUP_FROM_OA: dict_orig[key][strings.KEY_IS_SA_TOPUP_FROM_OA]
             }
         else:
-            dict_new[year_zero_index][month] = {strings.KEY_AMOUNT: amount}
+            dict_new[year_zero_index][month] = {
+                strings.KEY_AMOUNT: amount
+            }
 
     return dict_new
 
-def _get_account_deltas_year(dict_entries, year):
+def _get_account_deltas_year(deltas, year):
     """Returns the topup/withdrawal entries in the list that correspond to the current year. \\
 
         Args:
-            dict_entries (dict): Topup/withdrawal entries
+            deltas (dict): Topup/withdrawal entries
             year (int): Zero-indexed year
-
-        Returns a dict:
-            - `{month}`: month value (1-12)
-                - `amount`: topup/withdrawal amount
-                - `is_sa_topup_from_oa`: only applicable if `dict_entries == 'sa_topup'`
     """
     
-    return dict_entries[year] if year in dict_entries.keys() else {}
+    return deltas[year] if year in deltas.keys() else {}
 
 def _get_account_deltas_month(account_deltas, month_curr):
     """Returns the amount deltas in the respective OA, SA and MA accounts.
