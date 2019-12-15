@@ -1,8 +1,8 @@
 import json
 
 from logic import cpf
-from utils import endpoints
 from utils import argparser
+from utils import endpoints
 from utils import http_codes as http
 from utils import strings
 
@@ -30,20 +30,20 @@ def handler(event, context):
         status_code = http.HTTPCODE_OK
         params = output[strings.KEY_PARAMS]
         if event[strings.KEY_PATH] == endpoints.ENDPOINT_CPF_CONTRIBUTION:
-            results = cpf.calculate_cpf_contribution(
+            results = cpf.main.calculate_cpf_contribution(
                 params['salary'],
                 params['bonus'],
                 params['dob'],
                 params['bonus_month']
             )
         elif event[strings.KEY_PATH] == endpoints.ENDPOINT_CPF_ALLOCATION:
-            results = cpf.calculate_cpf_allocation(
+            results = cpf.main.calculate_cpf_allocation(
                 params['salary'],
                 params['bonus'],
                 params['dob']
             )
         elif event[strings.KEY_PATH] == endpoints.ENDPOINT_CPF_PROJECTION:
-            results = cpf.calculate_cpf_projection(
+            results = cpf.main.calculate_cpf_projection(
                 params['salary'],
                 params['bonus'],
                 params['yoy_increase_salary'],
