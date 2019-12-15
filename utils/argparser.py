@@ -34,7 +34,7 @@ def parse_into_json_format(str_raw):
     logger.debug(f'Parsed {str_raw} into {s}')
     return s
 
-def extract_param(body, output, param, mould, required=True, default_value=None):
+def extract_param(body, output, param, mould, required=True, allowed_values=None, default_value=None):
     """Extracts parameters from the request body and converts it to the appropriate type.
        
     Checks for 2 potential errors:
@@ -48,6 +48,7 @@ def extract_param(body, output, param, mould, required=True, default_value=None)
         param (str): Name of desired parameter
         mould (*): Serves as a mould for typecasting
         required (bool): Denote whether this parameter is required
+        allowed_values (list): List of allowed values for this parameter
         default_value (*): Denotes the default value if the desired parameter is not found
             in the body; mandatory if `required` is set to False
 
@@ -68,8 +69,22 @@ def extract_param(body, output, param, mould, required=True, default_value=None)
         else:
             param_value = type(mould)(body[param])
 
-        logger.info(f'Setting "{param}" to {param_value}')
-        output[strings.KEY_PARAMS][param] = param_value
+        # check if extracted param value is allowed
+        is_param_value_ok = False
+        if allowed_values is not None:
+            if param_value in allowed_values:
+                is_param_value_ok = True
+            else:
+                logger.error(f'"{param_value}" is an invalid value for parameter "{param}"')
+                output[strings.KEY_ERROR][param] = f'"{param_value}" is an invalid value'
+                output[strings.KEY_STATUSCODE] = http.HTTPCODE_INFO_INVALID
+        else:
+            is_param_value_ok = True
+
+        if is_param_value_ok:
+            logger.info(f'Setting "{param}" to {param_value}')
+            output[strings.KEY_PARAMS][param] = param_value
+
     except KeyError:
         # param not found
         if required:
@@ -159,7 +174,8 @@ def parse_args(body, path):
         output = extract_param(body, output, 'salary', MOULD_FLOAT)
         output = extract_param(body, output, 'bonus', MOULD_FLOAT)
         output = extract_param(body, output, 'dob', MOULD_STR)
-        output = extract_param(body, output, 'bonus_month', MOULD_INT, required=False, default_value=12)
+        output = extract_param(body, output, 'period', MOULD_STR,
+                    allowed_values=[strings.STR_YEAR, strings.STR_MONTH])
 
     elif path == endpoints.ENDPOINT_CPF_ALLOCATION:
         output = extract_param(body, output, 'salary', MOULD_FLOAT)
@@ -174,15 +190,26 @@ def parse_args(body, path):
         output = extract_param(body, output, 'yoy_increase_bonus', MOULD_FLOAT)
         output = extract_param(body, output, 'dob', MOULD_STR)
         output = extract_param(body, output, 'base_cpf', MOULD_DICT)
-        output = extract_param(body, output, 'bonus_month', MOULD_INT, required=False, default_value=12)
-        output = extract_param(body, output, 'n_years', MOULD_INT, required=False, default_value=None)
-        output = extract_param(body, output, 'target_year', MOULD_INT, required=False, default_value=None)
-        output = extract_param(body, output, 'oa_topups', MOULD_DICT, required=False, default_value={})
-        output = extract_param(body, output, 'oa_withdrawals', MOULD_DICT, required=False, default_value={})
-        output = extract_param(body, output, 'sa_topups', MOULD_DICT, required=False, default_value={})
-        output = extract_param(body, output, 'sa_withdrawals', MOULD_DICT, required=False, default_value={})
-        output = extract_param(body, output, 'ma_topups', MOULD_DICT, required=False, default_value={})
-        output = extract_param(body, output, 'ma_withdrawals', MOULD_DICT, required=False, default_value={})
+        output = extract_param(body, output, 'bonus_month', MOULD_INT,
+                    required=False, default_value=12,
+                    allowed_values=range(1, 13))
+        output = extract_param(body, output, 'n_years', MOULD_INT,
+                    required=False, default_value=None)
+        output = extract_param(body, output, 'target_year', MOULD_INT,
+                    required=False, default_value=None)
+        output = extract_param(body, output, 'oa_topups', MOULD_DICT,
+                    required=False, default_value={})
+        output = extract_param(body, output, 'oa_withdrawals', MOULD_DICT,
+                    required=False, default_value={})
+        output = extract_param(body, output, 'sa_topups', MOULD_DICT,
+                    required=False, default_value={})
+        output = extract_param(body, output, 'sa_withdrawals', MOULD_DICT,
+                    required=False, default_value={})
+        output = extract_param(body, output, 'ma_topups', MOULD_DICT,
+                    required=False, default_value={})
+        output = extract_param(body, output, 'ma_withdrawals', MOULD_DICT,
+                    required=False, default_value={})
+
         output = check_conditional_params(body, output, ['n_years', 'target_year'])
 
     return output

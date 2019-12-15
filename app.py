@@ -2,9 +2,7 @@ from flask import Flask
 from flask_restful import Resource, Api, reqparse
 import json
 
-from logic.cpf.main import calculate_cpf_contribution
-from logic.cpf.main import calculate_cpf_allocation
-from logic.cpf.main import calculate_cpf_projection
+from logic.cpf import main as cpf_main
 from utils import endpoints
 from utils import argparser
 from utils import http_codes as http
@@ -18,10 +16,11 @@ parser = reqparse.RequestParser()
 # General
 parser.add_argument('salary', help='Annual salary')
 parser.add_argument('bonus', help='Bonus/commission received in the year')
-parser.add_argument('bonus_month', help='Month where bonus is received')
 parser.add_argument('age', help='Age')
 parser.add_argument('dob', help='Date of birth in YYYYMM format')
+parser.add_argument('period', help='Time period; either year or month')
 # Projection-specific
+parser.add_argument('bonus_month', help='Month where bonus is received')
 parser.add_argument('yoy_increase_salary', help='Projected YoY increase of salary')
 parser.add_argument('yoy_increase_bonus', help='Projected YoY increase of bonus')
 parser.add_argument('base_cpf', help='Base amount in CPF accounts')
@@ -49,11 +48,11 @@ class CpfContribution(Resource):
         else:
             status_code = http.HTTPCODE_OK
             params = output[strings.KEY_PARAMS]
-            results = calculate_cpf_contribution(
+            results = cpf_main.calculate_cpf_contribution(
                 params['salary'],
                 params['bonus'],
                 params['dob'],
-                params['bonus_month']
+                params['period']
             )
             response = {strings.KEY_RESULTS: results}
 
@@ -71,7 +70,7 @@ class CpfAllocation(Resource):
         else:
             status_code = http.HTTPCODE_OK
             params = output[strings.KEY_PARAMS]
-            results = calculate_cpf_allocation(
+            results = cpf_main.calculate_cpf_allocation(
                 params['salary'],
                 params['bonus'],
                 params['dob']
@@ -92,7 +91,7 @@ class CpfProjection(Resource):
         else:
             status_code = http.HTTPCODE_OK
             params = output[strings.KEY_PARAMS]
-            results = calculate_cpf_projection(
+            results = cpf_main.calculate_cpf_projection(
                 params['salary'],
                 params['bonus'],
                 params['yoy_increase_salary'],

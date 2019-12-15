@@ -23,7 +23,7 @@ class TestCalculateCpfContribution(object):
     """
 
     def _perform_assertion(self, salary, bonus, age, cont_employee, cont_employer):
-        contributions = calculate_cpf_contribution(salary, bonus, None, 12, age=age)
+        contributions = calculate_cpf_contribution(salary, bonus, None, strings.STR_YEAR, age=age)
         assert round(cont_employee, 2) == float(contributions[strings.KEY_VALUES][strings.KEY_CONT_EMPLOYEE])
         assert round(cont_employer, 2) == float(contributions[strings.KEY_VALUES][strings.KEY_CONT_EMPLOYER])
 

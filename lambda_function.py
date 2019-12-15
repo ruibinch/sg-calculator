@@ -34,7 +34,7 @@ def handler(event, context):
                 params['salary'],
                 params['bonus'],
                 params['dob'],
-                params['bonus_month']
+                params['period']
             )
         elif event[strings.KEY_PATH] == endpoints.ENDPOINT_CPF_ALLOCATION:
             results = cpf_main.calculate_cpf_allocation(

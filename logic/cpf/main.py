@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 Main file serving as the entry point to the CPF module.
 """
 
-def calculate_cpf_contribution(salary, bonus, dob, bonus_month, age=None):
-    """Calculates the CPF contribution for the year.
+def calculate_cpf_contribution(salary, bonus, dob, period, age=None):
+    """Calculates the CPF contribution for the year/month.
     
     Takes into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling.
 
@@ -28,7 +28,7 @@ def calculate_cpf_contribution(salary, bonus, dob, bonus_month, age=None):
         salary (str): Annual salary of employee
         bonus (str): Bonus/commission received in the year; assume to be credited in December
         dob (str): Date of birth of employee in YYYYMM format
-        bonus_month (str): Month where bonus is received (1-12)
+        period (str): Time period of contribution; either "year" or "month"
         age (int): Age of employee (*only used for testing purposes*)
 
     Returns a dict:
@@ -42,12 +42,17 @@ def calculate_cpf_contribution(salary, bonus, dob, bonus_month, age=None):
 
     cont_rates = cpfhelpers._get_contribution_rates(salary / 12, age)
     cont_total, cont_employee = (0, 0)
-    for i in range(1, 13):
-        # `bonus_in_month` is only applicable during the bonus month
-        bonus_in_month = bonus if i == bonus_month else 0
 
-        cont_total += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus_in_month, age, entity=constants.STR_COMBINED)
-        cont_employee += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus_in_month, age, entity=constants.STR_EMPLOYEE)
+    if period == strings.STR_MONTH:
+        cont_total += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus, age, entity=constants.STR_COMBINED)
+        cont_employee += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus, age, entity=constants.STR_EMPLOYEE)
+    elif period == strings.STR_YEAR:
+        for i in range(1, 13):
+            # default `bonus_in_month` to only be applicable in Dec
+            bonus_in_month = bonus if i == 12 else 0
+
+            cont_total += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus_in_month, age, entity=constants.STR_COMBINED)
+            cont_employee += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus_in_month, age, entity=constants.STR_EMPLOYEE)
 
     return {
         strings.KEY_VALUES: {
