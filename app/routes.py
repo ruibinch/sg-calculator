@@ -1,15 +1,10 @@
-from flask import Flask
-from flask_restful import Resource, Api, reqparse
-import json
+from flask import request
+from flask_restful import Resource, reqparse
+from http import HTTPStatus
 
-from logic.cpf import main as cpf_main
-from utils import endpoints
-from utils import argparser
-from utils import http_codes as http
-from utils import strings
-
-app = Flask(__name__)
-api = Api(app)
+from . import argparser
+from .logic.cpf import main as cpf_main
+from .utils import endpoints, strings
 
 # For data validation
 parser = reqparse.RequestParser()
@@ -35,18 +30,17 @@ parser.add_argument('ma_withdrawals', help='Withdrawals from the MA')
 # For future authentication methods
 # parser.add_argument('Authentication', location='headers')
 
-
 class CpfContribution(Resource):
     def post(self):
         args = parser.parse_args()
         args = {k:v for k,v in args.items() if v is not None}
-        output = argparser.parse_args(args, endpoints.ENDPOINT_CPF_CONTRIBUTION)
+        output = argparser.parse_args(args, endpoints.CPF_CONTRIBUTION)
 
         if output[strings.KEY_STATUSCODE] != {}:
             status_code = output[strings.KEY_STATUSCODE]
             response = {strings.KEY_ERROR: output[strings.KEY_ERROR]}
         else:
-            status_code = http.HTTPCODE_OK
+            status_code = HTTPStatus.OK
             params = output[strings.KEY_PARAMS]
             results = cpf_main.calculate_cpf_contribution(
                 params['salary'],
@@ -62,13 +56,13 @@ class CpfAllocation(Resource):
     def post(self):
         args = parser.parse_args()
         args = {k:v for k,v in args.items() if v is not None}
-        output = argparser.parse_args(args, endpoints.ENDPOINT_CPF_ALLOCATION)
+        output = argparser.parse_args(args, endpoints.CPF_ALLOCATION)
 
         if output[strings.KEY_STATUSCODE] != {}:
             status_code = output[strings.KEY_STATUSCODE]
             response = {strings.KEY_ERROR: output[strings.KEY_ERROR]}
         else:
-            status_code = http.HTTPCODE_OK
+            status_code = HTTPStatus.OK
             params = output[strings.KEY_PARAMS]
             results = cpf_main.calculate_cpf_allocation(
                 params['salary'],
@@ -83,13 +77,13 @@ class CpfProjection(Resource):
     def post(self):
         args = parser.parse_args()
         args = {k:v for k,v in args.items() if v is not None}
-        output = argparser.parse_args(args, endpoints.ENDPOINT_CPF_PROJECTION)
+        output = argparser.parse_args(args, endpoints.CPF_PROJECTION)
 
         if output[strings.KEY_STATUSCODE] != {}:
             status_code = output[strings.KEY_STATUSCODE]
             response = {strings.KEY_ERROR: output[strings.KEY_ERROR]}
         else:
-            status_code = http.HTTPCODE_OK
+            status_code = HTTPStatus.OK
             params = output[strings.KEY_PARAMS]
             results = cpf_main.calculate_cpf_projection(
                 params['salary'],
@@ -111,11 +105,3 @@ class CpfProjection(Resource):
             response = {strings.KEY_RESULTS: results}
 
         return response, status_code
-
-api.add_resource(CpfContribution, endpoints.ENDPOINT_CPF_CONTRIBUTION)
-api.add_resource(CpfAllocation, endpoints.ENDPOINT_CPF_ALLOCATION)
-api.add_resource(CpfProjection, endpoints.ENDPOINT_CPF_PROJECTION)
-
-if (__name__ == '__main__'):
-    app.debug = True
-    app.run(host='127.0.0.1', port=5100)

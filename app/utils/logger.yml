@@ -45,11 +45,7 @@ root:
   handlers: [console]
 
 loggers:
-  utils:
-    level: DEBUG
-    handlers: [console, file_debug, file_info, file_error]
-    propagate: no
-  logic:
+  app:
     level: DEBUG
     handlers: [console, file_debug, file_info, file_error]
     propagate: no

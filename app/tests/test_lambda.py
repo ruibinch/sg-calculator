@@ -1,14 +1,14 @@
+from http import HTTPStatus
 import json
 import requests
 
-from config import aws_settings as aws
-from utils import http_codes
-from utils import endpoints
+from app.config import Config
+from app.utils import endpoints
 
 # API Gateway URLs
-URL_CPF_CONTRIBUTION = f'https://{aws.RESTAPI_ID}.execute-api.{aws.REGION}.amazonaws.com/{aws.STAGE_NAME}{endpoints.ENDPOINT_CPF_CONTRIBUTION}'
-URL_CPF_ALLOCATION = f'https://{aws.RESTAPI_ID}.execute-api.{aws.REGION}.amazonaws.com/{aws.STAGE_NAME}{endpoints.ENDPOINT_CPF_ALLOCATION}'
-URL_CPF_PROJECTION = f'https://{aws.RESTAPI_ID}.execute-api.{aws.REGION}.amazonaws.com/{aws.STAGE_NAME}{endpoints.ENDPOINT_CPF_PROJECTION}'
+URL_CPF_CONTRIBUTION = f'https://{Config.RESTAPI_ID}.execute-api.{Config.REGION}.amazonaws.com/{Config.STAGE_NAME}{endpoints.CPF_CONTRIBUTION}'
+URL_CPF_ALLOCATION = f'https://{Config.RESTAPI_ID}.execute-api.{Config.REGION}.amazonaws.com/{Config.STAGE_NAME}{endpoints.CPF_ALLOCATION}'
+URL_CPF_PROJECTION = f'https://{Config.RESTAPI_ID}.execute-api.{Config.REGION}.amazonaws.com/{Config.STAGE_NAME}{endpoints.CPF_PROJECTION}'
 
 # class TestLambdaFunction(object):
 #     """Tests the Lambda functions via the exposed endpoints on API Gateway.
@@ -19,62 +19,62 @@ URL_CPF_PROJECTION = f'https://{aws.RESTAPI_ID}.execute-api.{aws.REGION}.amazona
 #     def test_contribution_1(self):
 #         request = { "salary": "6000", "bonus": "0", "dob": "199001" }
 #         response = requests.post(URL_CPF_CONTRIBUTION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_OK
+#         assert response.status_code == HTTPStatus.OK
 
 #     def test_contribution_2(self):
 #         request = { "bonus": "0", "dob": "199001" }
 #         response = requests.post(URL_CPF_CONTRIBUTION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INCOMPLETE
+#         assert response.status_code == HTTPStatus.BAD_REQUEST
 
 #     def test_contribution_3(self):
 #         request = { "salary": "6000", "dob": "199001" }
 #         response = requests.post(URL_CPF_CONTRIBUTION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INCOMPLETE
+#         assert response.status_code == HTTPStatus.BAD_REQUEST
 
 #     def test_contribution_4(self):
 #         request = { "salary": "6000", "bonus": "0" }
 #         response = requests.post(URL_CPF_CONTRIBUTION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INCOMPLETE
+#         assert response.status_code == HTTPStatus.BAD_REQUEST
     
 #     def test_contribution_5(self):
 #         request = { "salary": "(6000)", "bonus": "0", "dob": "199001" }
 #         response = requests.post(URL_CPF_CONTRIBUTION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INVALID
+#         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     
 #     def test_contribution_6(self):
 #         request = { "salary": "6000", "bonus": "('0')", "dob": "199001" }
 #         response = requests.post(URL_CPF_CONTRIBUTION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INVALID
+#         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     
 #     def test_allocation_1(self):
 #         request = { "salary": "6000", "bonus": "0", "dob": "199001" }
 #         response = requests.post(URL_CPF_ALLOCATION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_OK
+#         assert response.status_code == HTTPStatus.OK
 
 #     def test_allocation_2(self):
 #         request = { "bonus": "0", "dob": "199001" }
 #         response = requests.post(URL_CPF_ALLOCATION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INCOMPLETE
+#         assert response.status_code == HTTPStatus.BAD_REQUEST
 
 #     def test_allocation_3(self):
 #         request = { "salary": "6000", "dob": "199001" }
 #         response = requests.post(URL_CPF_ALLOCATION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INCOMPLETE
+#         assert response.status_code == HTTPStatus.BAD_REQUEST
 
 #     def test_allocation_4(self):
 #         request = { "salary": "6000", "bonus": "0" }
 #         response = requests.post(URL_CPF_ALLOCATION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INCOMPLETE
+#         assert response.status_code == HTTPStatus.BAD_REQUEST
 
 #     def test_allocation_5(self):
 #         request = { "salary": "(6000)", "bonus": "0", "dob": "199001" }
 #         response = requests.post(URL_CPF_ALLOCATION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INVALID
+#         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 #     def test_allocation_6(self):
 #         request = { "salary": "6000", "bonus": "('0')", "dob": "199001" }
 #         response = requests.post(URL_CPF_ALLOCATION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INVALID
+#         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 #     def test_projection_1(self):
 #         request = {
@@ -107,7 +107,7 @@ URL_CPF_PROJECTION = f'https://{aws.RESTAPI_ID}.execute-api.{aws.REGION}.amazona
 #             }
 #         }
 #         response = requests.post(URL_CPF_PROJECTION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_OK
+#         assert response.status_code == HTTPStatus.OK
 
 #     def test_projection_2(self):
 #         # `base_cpf` in wrong structure
@@ -121,7 +121,7 @@ URL_CPF_PROJECTION = f'https://{aws.RESTAPI_ID}.execute-api.{aws.REGION}.amazona
 #             "n_years": "5"
 #         }
 #         response = requests.post(URL_CPF_PROJECTION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INVALID
+#         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 #     def test_projection_3(self):
 #         # both `n_years` and `target_year` missing
@@ -138,4 +138,4 @@ URL_CPF_PROJECTION = f'https://{aws.RESTAPI_ID}.execute-api.{aws.REGION}.amazona
 #             "dob": "198403"
 #         }
 #         response = requests.post(URL_CPF_PROJECTION, json.dumps(request))
-#         assert response.status_code == http_codes.HTTPCODE_INFO_INCOMPLETE
+#         assert response.status_code == HTTPStatus.BAD_REQUEST

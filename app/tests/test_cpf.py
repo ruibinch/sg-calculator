@@ -1,12 +1,8 @@
 import datetime as dt
 
-from logic.cpf.main import calculate_cpf_contribution
-from logic.cpf.main import calculate_cpf_allocation
-from logic.cpf.main import calculate_cpf_projection
-from logic.cpf import constants
-from logic.cpf import cpfhelpers
-from logic.cpf import genhelpers
-from utils import strings
+from app.logic.cpf.main import calculate_cpf_contribution, calculate_cpf_allocation, calculate_cpf_projection
+from app.logic.cpf import constants, cpfhelpers, genhelpers
+from app.utils import strings
 
 class TestCalculateCpfContribution(object):
     """Tests the `calculate_cpf_contribution()` method in cpf.py.

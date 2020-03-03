@@ -1,9 +1,8 @@
+from http import HTTPStatus
 import json
 import logging
 
-from utils import endpoints
-from utils import http_codes as http
-from utils import strings
+from .utils import endpoints, strings
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +76,7 @@ def extract_param(body, output, param, mould, required=True, allowed_values=None
             else:
                 logger.error(f'"{param_value}" is an invalid value for parameter "{param}"')
                 output[strings.KEY_ERROR][param] = f'"{param_value}" is an invalid value'
-                output[strings.KEY_STATUSCODE] = http.HTTPCODE_INFO_INVALID
+                output[strings.KEY_STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY
         else:
             is_param_value_ok = True
 
@@ -90,7 +89,7 @@ def extract_param(body, output, param, mould, required=True, allowed_values=None
         if required:
             logger.error(f'"{param}" parameter not found')
             output[strings.KEY_ERROR][param] = 'Parameter not found'
-            output[strings.KEY_STATUSCODE] = http.HTTPCODE_INFO_INCOMPLETE
+            output[strings.KEY_STATUSCODE] = HTTPStatus.BAD_REQUEST
         else:
             logger.info(f'Setting "{param}" to the default value of {default_value}')
             output[strings.KEY_PARAMS][param] = default_value
@@ -98,17 +97,17 @@ def extract_param(body, output, param, mould, required=True, allowed_values=None
         # param found but unable to do type conversion
         logger.error(f'"{param}" is \'{type(body[param]).__name__}\', unable to convert to \'{type(mould).__name__}\'', exc_info=True)
         output[strings.KEY_ERROR][param] = f'Unable to convert \'{type(body[param]).__name__}\' to \'{type(mould).__name__}\''
-        output[strings.KEY_STATUSCODE] = http.HTTPCODE_INFO_INVALID
+        output[strings.KEY_STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY
     except TypeError:
         # mould is of dict type, but input is not of a JSON-appropriate format
         logger.error(f'"{param}" should be of dict/object structure but it is not JSON-serialisable', exc_info=True)
         output[strings.KEY_ERROR][param] = f'Should be of dict structure but it is not JSON-serialisable'
-        output[strings.KEY_STATUSCODE] = http.HTTPCODE_INFO_INVALID
+        output[strings.KEY_STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY
     except Exception:
         # catch all other general exceptions
         logger.exception('No idea what happened here, gotta take a look at the stack trace')
         output[strings.KEY_ERROR][param] = 'No idea what happened here'
-        output[strings.KEY_STATUSCODE] = http.HTTPCODE_ERROR
+        output[strings.KEY_STATUSCODE] = HTTPStatus.INTERNAL_SERVER_ERROR
 
     return output
 
@@ -129,7 +128,7 @@ def check_conditional_params(body, output, params):
     params_present = [param for param in params if param in body_params]
 
     if len(params_present) == 0:
-        output[strings.KEY_STATUSCODE] = http.HTTPCODE_INFO_INCOMPLETE
+        output[strings.KEY_STATUSCODE] = HTTPStatus.BAD_REQUEST
         params_str = ', '.join(params)
         logger.debug(f'None of ({params_str}) are present')
 
@@ -170,19 +169,19 @@ def parse_args(body, path):
     keys = [strings.KEY_PARAMS, strings.KEY_ERROR, strings.KEY_STATUSCODE]
     output = {key: {} for key in keys}
 
-    if path == endpoints.ENDPOINT_CPF_CONTRIBUTION:
+    if path == endpoints.CPF_CONTRIBUTION:
         output = extract_param(body, output, 'salary', MOULD_FLOAT)
         output = extract_param(body, output, 'bonus', MOULD_FLOAT)
         output = extract_param(body, output, 'dob', MOULD_STR)
         output = extract_param(body, output, 'period', MOULD_STR,
                     allowed_values=[strings.STR_YEAR, strings.STR_MONTH])
 
-    elif path == endpoints.ENDPOINT_CPF_ALLOCATION:
+    elif path == endpoints.CPF_ALLOCATION:
         output = extract_param(body, output, 'salary', MOULD_FLOAT)
         output = extract_param(body, output, 'bonus', MOULD_FLOAT)
         output = extract_param(body, output, 'dob', MOULD_STR)
 
-    elif path == endpoints.ENDPOINT_CPF_PROJECTION:
+    elif path == endpoints.CPF_PROJECTION:
         logger.debug(f'Calling endpoint {path}')
         output = extract_param(body, output, 'salary', MOULD_FLOAT)
         output = extract_param(body, output, 'bonus', MOULD_FLOAT)

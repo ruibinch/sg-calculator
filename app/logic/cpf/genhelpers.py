@@ -2,8 +2,8 @@ import datetime as dt
 import logging
 import math
 
-from logic.cpf import constants
-from utils import strings
+from . import constants
+from app.utils import strings
 
 logger = logging.getLogger(__name__)
 

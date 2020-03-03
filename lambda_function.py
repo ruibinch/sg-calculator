@@ -1,11 +1,9 @@
+from http import HTTPStatus
 import json
 
-from logic.cpf import main as cpf_main
-from utils import argparser
-from utils import endpoints
-from utils import http_codes as http
-from utils import strings
-
+from app import argparser
+from app.logic.cpf import main as cpf_main
+from app.utils import endpoints, strings
 
 def handler(event, context):
     """Handler for AWS Lambda function calls.
@@ -27,22 +25,22 @@ def handler(event, context):
         status_code = output[strings.KEY_STATUSCODE]
         response = {strings.KEY_ERROR: output[strings.KEY_ERROR]}
     else:
-        status_code = http.HTTPCODE_OK
+        status_code = HTTPStatus.OK
         params = output[strings.KEY_PARAMS]
-        if event[strings.KEY_PATH] == endpoints.ENDPOINT_CPF_CONTRIBUTION:
+        if event[strings.KEY_PATH] == endpoints.CPF_CONTRIBUTION:
             results = cpf_main.calculate_cpf_contribution(
                 params['salary'],
                 params['bonus'],
                 params['dob'],
                 params['period']
             )
-        elif event[strings.KEY_PATH] == endpoints.ENDPOINT_CPF_ALLOCATION:
+        elif event[strings.KEY_PATH] == endpoints.CPF_ALLOCATION:
             results = cpf_main.calculate_cpf_allocation(
                 params['salary'],
                 params['bonus'],
                 params['dob']
             )
-        elif event[strings.KEY_PATH] == endpoints.ENDPOINT_CPF_PROJECTION:
+        elif event[strings.KEY_PATH] == endpoints.CPF_PROJECTION:
             results = cpf_main.calculate_cpf_projection(
                 params['salary'],
                 params['bonus'],

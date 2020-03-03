@@ -14,17 +14,21 @@ cache:
 
 unit_test:
   stage: test
-  script:
+  allow_failure: false
+  before_script:
     - pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
+  script:
     - pip install -r requirements-dev.txt
     - mkdir logs
     - pytest
 
 update_lambda_function:
   stage: deploy
-  script:
+  only:
+    - master
+  before_script:
     - apt-get update
     - apt-get install -y zip
     # install external dependencies
@@ -34,9 +38,8 @@ update_lambda_function:
     - cd $OLDPWD
     # add files and update Lambda functions
     - zip -g calculator-bff.zip lambda_function.py -r logic utils -i '*.py'
+  script:
     - pip install awscli
     - aws lambda update-function-code --function-name calcCpfContribution --zip-file fileb://calculator-bff.zip
     - aws lambda update-function-code --function-name calcCpfAllocation --zip-file fileb://calculator-bff.zip
     - aws lambda update-function-code --function-name calcCpfProjection --zip-file fileb://calculator-bff.zip
-  only:
-    - master

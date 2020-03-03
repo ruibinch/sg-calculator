@@ -1,10 +1,8 @@
 import datetime as dt
 import logging
 
-from logic.cpf import constants
-from logic.cpf import cpfhelpers
-from logic.cpf import genhelpers
-from utils import strings
+from . import constants, cpfhelpers, genhelpers
+from app.utils import strings
 
 logger = logging.getLogger(__name__)
 
