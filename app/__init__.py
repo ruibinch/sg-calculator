@@ -5,7 +5,7 @@ import os
 from . import config
 from app.utils import endpoints
 
-def create_app():
+def create_app() -> Flask:
     """Application factory.
 
     Returns the Flask application object.

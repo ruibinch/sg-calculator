@@ -15,7 +15,10 @@ Stores all CPF module helper methods that contain some element of CPF-related lo
 #                               CPF CONTRIBUTIONS                             #
 ###############################################################################
 
-def _get_monthly_contribution_amount(salary, bonus, age, entity):
+def _get_monthly_contribution_amount(salary: float,
+                                     bonus: float,
+                                     age: int,
+                                     entity: str) -> float:
     """Gets the monthly CPF contribution amount for the specified entity corresponding to the 
     correct age and income bracket.
 
@@ -67,7 +70,8 @@ def _get_monthly_contribution_amount(salary, bonus, age, entity):
 
     return cont
 
-def _get_contribution_rates(salary, age):
+def _get_contribution_rates(salary: float,
+                            age: int) -> dict:
     """Returns the contribution rates of the employee and employer.
     
     Args:
@@ -123,7 +127,9 @@ def _get_contribution_rates(salary, age):
 #                                 CPF ALLOCATIONS                             #
 ###############################################################################
 
-def _get_allocation_amount(age, cont, account):
+def _get_allocation_amount(age: int,
+                           cont: int,
+                           account: str) -> float:
     """Gets the amount allocated into the specified CPF account in a month.
     
     Returned amount is truncated to 2 decimal places.
@@ -140,7 +146,7 @@ def _get_allocation_amount(age, cont, account):
     alloc = genhelpers._truncate(constants.rates_alloc[age_bracket][f'{account}_ratio'] * cont)
     return alloc
 
-def _get_allocation_rates(age):
+def _get_allocation_rates(age: int) -> dict:
     """Returns the allocation rates into the 3 CPF accounts.
 
     2 representations:
@@ -173,7 +179,7 @@ def _get_allocation_rates(age):
 #                                 CPF INTEREST                                #
 ###############################################################################
 
-def _calculate_monthly_interest_oa(oa_accumulated):
+def _calculate_monthly_interest_oa(oa_accumulated: float) -> float:
     """Calculates the interest to be added to the OA in a month period.
 
     Args:
@@ -183,7 +189,9 @@ def _calculate_monthly_interest_oa(oa_accumulated):
     oa_interest = oa_accumulated * (constants.INT_RATE_OA / 12)
     return oa_interest
 
-def _calculate_monthly_interest_sa(oa_accumulated, sa_accumulated, rem_amount_for_extra_int_sa_ma):
+def _calculate_monthly_interest_sa(oa_accumulated: float,
+                                   sa_accumulated: float,
+                                   rem_amount_for_extra_int_sa_ma: float) -> float:
     """Calculates the interest to be added to the SA in a month period.
     
     Extra 1% interest earned on OA, if any, is credited to the SA.
@@ -208,7 +216,8 @@ def _calculate_monthly_interest_sa(oa_accumulated, sa_accumulated, rem_amount_fo
 
     return sa_interest
 
-def _calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma):
+def _calculate_monthly_interest_ma(ma_accumulated: float,
+                                   rem_amount_for_extra_int_ma: float) -> float:
     """Calculates the interest to be added to the MA in a month period.
 
     Args:
@@ -225,9 +234,16 @@ def _calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma):
     
     return ma_interest
 
-def calculate_annual_change(salary, bonus, oa_curr, sa_curr, ma_curr,
-                            account_deltas=None, bonus_month=12, 
-                            date_start=None, age=None, dob=None):
+def calculate_annual_change(salary: float,
+                            bonus: float,
+                            oa_curr: float,
+                            sa_curr: float,
+                            ma_curr: float,
+                            account_deltas: dict=None,
+                            bonus_month: int=12,
+                            date_start: dt=None,
+                            age: int=None,
+                            dob: str=None) -> dict:
     """Calculates the total contributions and interest earned for the current year.
 
     Adds the interest, along with the contributions in the year, to the CPF account balances. \\

@@ -5,7 +5,7 @@ from app import argparser
 from app.logic.cpf import main as cpf_main
 from app.utils import endpoints, strings
 
-def handler(event, context):
+def handler(event: dict, context: dict) -> dict:
     """Handler for AWS Lambda function calls.
 
     Args:

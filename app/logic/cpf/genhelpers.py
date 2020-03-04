@@ -1,6 +1,7 @@
 import datetime as dt
 import logging
 import math
+from typing import Tuple
 
 from . import constants
 from app.utils import strings
@@ -11,7 +12,8 @@ logger = logging.getLogger(__name__)
 Stores all generic helper methods for the CPF module.
 """
 
-def _get_age(dob, date_curr=None):
+def _get_age(dob: str,
+             date_curr: dt=None) -> int:
     """Returns the user's age given the user's date of birth.
 
     If a date is explicitly specified, calculate the user's age from the specified date. 
@@ -37,8 +39,9 @@ def _get_age(dob, date_curr=None):
     age = year_diff if month_diff <= 0 else year_diff + 1
     return age
 
-def _get_age_bracket(age, purpose):
-    """ Gets the age bracket for the specified purpose and age.
+def _get_age_bracket(age: int,
+                     purpose: str) -> str:
+    """Gets the age bracket for the specified purpose and age.
 
     Args:
         age (int): Age of employee
@@ -56,7 +59,7 @@ def _get_age_bracket(age, purpose):
     
     return '150' # return max by default
 
-def _get_num_projection_years(target_year):
+def _get_num_projection_years(target_year: int) -> int:
     """Returns the number of years between this year and the target year (inclusive).
 
     Args:
@@ -65,7 +68,7 @@ def _get_num_projection_years(target_year):
 
     return target_year - dt.date.today().year + 1
 
-def _convert_year_to_zero_indexing(dict_orig):
+def _convert_year_to_zero_indexing(dict_orig: dict) -> dict:
     """Converts the year values in the list from the actual year to zero indexing based on the current year.
 
     Args:
@@ -110,7 +113,8 @@ def _convert_year_to_zero_indexing(dict_orig):
 
     return dict_new
 
-def _get_account_deltas_year(deltas, year):
+def _get_account_deltas_year(deltas: dict,
+                             year: int) -> dict:
     """Returns the topup/withdrawal entries in the list that correspond to the current year. \\
 
         Args:
@@ -120,7 +124,8 @@ def _get_account_deltas_year(deltas, year):
     
     return deltas[year] if year in deltas.keys() else {}
 
-def _get_account_deltas_month(account_deltas, month_curr):
+def _get_account_deltas_month(account_deltas: dict,
+                              month_curr: int) -> Tuple[int, int, int]:
     """Returns the amount deltas in the respective OA, SA and MA accounts.
 
         Args:
@@ -165,7 +170,8 @@ def _get_account_deltas_month(account_deltas, month_curr):
 
     return (delta_oa, delta_sa, delta_ma)
 
-def _round_half_up(n, decimals=0):
+def _round_half_up(n: float,
+                   decimals: int=0) -> int:
     """Rounds the given monetary amount to the nearest dollar.
     
     An amount of 50 cents will be regarded as an additional dollar.
@@ -177,7 +183,8 @@ def _round_half_up(n, decimals=0):
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
 
-def _truncate(n, decimals=2):
+def _truncate(n: float,
+              decimals: int=2) -> float:
     """Truncates the given monetary amount to the specified number of decimal places.
 
     Args:

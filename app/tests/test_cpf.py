@@ -1,4 +1,5 @@
 import datetime as dt
+from typing import Tuple
 
 from app.logic.cpf.main import calculate_cpf_contribution, calculate_cpf_allocation, calculate_cpf_projection
 from app.logic.cpf import constants, cpfhelpers, genhelpers
@@ -18,7 +19,12 @@ class TestCalculateCpfContribution(object):
         g. Salary above $750/month and above OW Ceiling, bonus above AW Ceiling
     """
 
-    def _perform_assertion(self, salary, bonus, age, cont_employee, cont_employer):
+    def _perform_assertion(self,
+                           salary: float,
+                           bonus: float,
+                           age: int,
+                           cont_employee: float,
+                           cont_employer: float):
         contributions = calculate_cpf_contribution(salary, bonus, None, strings.STR_YEAR, age=age)
         assert round(cont_employee, 2) == float(contributions[strings.KEY_VALUES][strings.KEY_CONT_EMPLOYEE])
         assert round(cont_employer, 2) == float(contributions[strings.KEY_VALUES][strings.KEY_CONT_EMPLOYER])
@@ -91,26 +97,33 @@ class TestCalculateCpfAllocation(object):
     salary = 4000
     bonus = 10000
 
-    def _get_contribution_amount_by_age(self, age, with_bonus):
+    def _get_contribution_amount_by_age(self,
+                                        age: int,
+                                        with_bonus: bool) -> float:
         bonus_annual = self.bonus if with_bonus is True else 0
         cont = cpfhelpers._get_monthly_contribution_amount(self.salary, bonus_annual, age=age, entity=constants.STR_COMBINED)
         return cont
 
-    def _get_alloc_amount(self, cont, sa_ratio, ma_ratio):
+    def _get_alloc_amount(self,
+                          cont: float,
+                          sa_ratio: float,
+                          ma_ratio: float) -> Tuple[float, float, float]:
         sa_alloc = genhelpers._truncate(sa_ratio * cont)
         ma_alloc = genhelpers._truncate(ma_ratio * cont)
         oa_alloc = cont - sa_alloc - ma_alloc
         return oa_alloc, sa_alloc, ma_alloc
 
-    def _perform_assertion(self, bonus, age, alloc_exp):
+    def _perform_assertion(self,
+                           bonus: float,
+                           age: int,
+                           alloc_exp: float):
         """
         Helper class to perform assertion checks.
         Round the values to 2 decimal places when checking for equality.
 
         Args:
-            age (int): Age of employee
-            salary (float): Monthly salary of employee
             bonus (float): Bonus/commission received in the year
+            age (int): Age of employee
             alloc_exp (array): Expected amount to be allocated into the CPF accounts [OA, SA, MA]
         """
         
@@ -212,7 +225,11 @@ class TestCpfCalculateAnnualChange1(object):
     bonus = 10000
 
     # helper function
-    def _add_monthly_contribution(self, oa, sa, ma, month):
+    def _add_monthly_contribution(self,
+                                  oa: float,
+                                  sa: float,
+                                  ma: float,
+                                  month: int) -> Tuple[float, float, float]:
         # 0.6217, 0.1621. 0.2162 of contribution (approx. 23%, 6%, 8% of $4000/$14000)
         cont_oa, cont_sa, cont_ma = (920.13, 239.9, 319.97)
         cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (3220.42, 839.67, 1119.91)
@@ -228,7 +245,9 @@ class TestCpfCalculateAnnualChange1(object):
 
         return oa, sa, ma
     
-    def _perform_assertion(self, balance_orig, balance_exp):
+    def _perform_assertion(self,
+                           balance_orig: list,
+                           balance_exp: list):
         """
         Helper class to perform assertion checks.
 
@@ -238,8 +257,11 @@ class TestCpfCalculateAnnualChange1(object):
         """
 
         results_annual = cpfhelpers.calculate_annual_change(
-                            self.salary * 12, self.bonus,
-                            balance_orig[0], balance_orig[1], balance_orig[2], 
+                            self.salary * 12,
+                            self.bonus,
+                            balance_orig[0],
+                            balance_orig[1],
+                            balance_orig[2], 
                             age=self.age)
 
         assert str(round(balance_exp[0], 2)) == results_annual[strings.KEY_OA]
@@ -438,14 +460,26 @@ class TestCpfCalculateAnnualChange2(object):
     bonus = 10000
     date_start = dt.date(dt.date.today().year, 1, 1)
     
-    def _add_monthly_contribution(self, oa, sa, ma, cont_oa, cont_sa, cont_ma):
+    def _add_monthly_contribution(self,
+                                  oa: float,
+                                  sa: float,
+                                  ma: float,
+                                  cont_oa: float,
+                                  cont_sa: float,
+                                  cont_ma: float) -> Tuple[float, float, float]:
         oa += cont_oa
         sa += cont_sa
         ma += cont_ma
 
         return oa, sa, ma
 
-    def _add_monthly_interest(self, oa, sa, ma, int_oa, int_sa, int_ma):
+    def _add_monthly_interest(self,
+                              oa: float,
+                              sa: float,
+                              ma: float,
+                              int_oa: float,
+                              int_sa: float,
+                              int_ma: float) -> Tuple[float, float, float]:
         int_oa += oa * (0.025 / 12)
         int_sa += min(oa, 20000) * (0.01 / 12)
         int_sa += sa * (0.05 / 12)
@@ -453,13 +487,16 @@ class TestCpfCalculateAnnualChange2(object):
 
         return int_oa, int_sa, int_ma
 
-    def _perform_assertion(self, balance_orig, balance_exp, dob):
+    def _perform_assertion(self,
+                           balance_orig: list,
+                           balance_exp: list,
+                           dob: str):
         """
         Helper class to perform assertion checks.
 
         Args:
-            balance_orig (array): Original balance in CPF accounts [OA, SA, MA]
-            balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
+            balance_orig (list): Original balance in CPF accounts [OA, SA, MA]
+            balance_exp (list): Expected balance in CPF accounts [OA, SA, MA]
         """
 
         results_annual = cpfhelpers.calculate_annual_change(
@@ -583,7 +620,11 @@ class TestCpfCalculateAnnualChange3(object):
     # standardise the topup/withdrawal amount too
     delta_amount = 1000
 
-    def _add_monthly_contribution(self, oa, sa, ma, month):
+    def _add_monthly_contribution(self,
+                                  oa: float,
+                                  sa: float,
+                                  ma: float,
+                                  month: int) -> Tuple[float, float, float]:
         # 0.6217, 0.1621. 0.2162 of contribution (approx. 23%, 6%, 8% of $4000/$14000)
         cont_oa, cont_sa, cont_ma = (920.13, 239.9, 319.97)
         cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (3220.42, 839.67, 1119.91)
@@ -599,8 +640,13 @@ class TestCpfCalculateAnnualChange3(object):
 
         return oa, sa, ma
     
-
-    def _add_monthly_interest(self, oa, sa, ma, int_oa, int_sa, int_ma):
+    def _add_monthly_interest(self,
+                              oa: float,
+                              sa: float,
+                              ma: float,
+                              int_oa: float,
+                              int_sa: float,
+                              int_ma: float) -> Tuple[float, float, float]:
         int_oa += oa * (0.025 / 12)
         int_sa += min(oa, 20000) * (0.01 / 12)
         int_sa += sa * (0.05 / 12)
@@ -608,7 +654,10 @@ class TestCpfCalculateAnnualChange3(object):
 
         return int_oa, int_sa, int_ma
 
-    def _perform_assertion(self, balance_orig, balance_exp, account_deltas):
+    def _perform_assertion(self,
+                           balance_orig: list,
+                           balance_exp: list,
+                           account_deltas: dict):
         """
         Helper class to perform assertion checks.
 

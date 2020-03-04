@@ -1,6 +1,7 @@
 from http import HTTPStatus
 import json
 import logging
+from typing import Any
 
 from .utils import endpoints, strings
 
@@ -14,7 +15,7 @@ Handles parsing and conversion into the appropriate types of request arguments.
 #                                 HELPER METHODS                              #
 ###############################################################################
 
-def parse_into_json_format(str_raw):
+def parse_into_json_format(str_raw: str) -> str:
     """Parses the input string into a valid string for JSON serialisation.
 
     Args:
@@ -33,7 +34,13 @@ def parse_into_json_format(str_raw):
     logger.debug(f'Parsed {str_raw} into {s}')
     return s
 
-def extract_param(body, output, param, mould, required=True, allowed_values=None, default_value=None):
+def extract_param(body: dict,
+                  output: dict,
+                  param: str,
+                  mould: Any,
+                  required: bool=True,
+                  allowed_values: list=None,
+                  default_value: Any=None) -> dict:
     """Extracts parameters from the request body and converts it to the appropriate type.
        
     Checks for 2 potential errors:
@@ -111,7 +118,9 @@ def extract_param(body, output, param, mould, required=True, allowed_values=None
 
     return output
 
-def check_conditional_params(body, output, params):
+def check_conditional_params(body: dict,
+                             output: dict,
+                             params: list) -> dict:
     """Checks that at least one of the specified parameters is present in the request body. 
         
     If none of them are present, then throw an error.
@@ -141,7 +150,8 @@ def check_conditional_params(body, output, params):
 #                                   MAIN METHOD                               #
 ###############################################################################
 
-def parse_args(body, path):
+def parse_args(body: dict,
+               path: str) -> dict:
     """Extracts and parses the arguments passed in the request body to their appropriate types.
 
     Args:

@@ -10,7 +10,11 @@ logger = logging.getLogger(__name__)
 Main file serving as the entry point to the CPF module.
 """
 
-def calculate_cpf_contribution(salary, bonus, dob, period, age=None):
+def calculate_cpf_contribution(salary: str,
+                               bonus: str,
+                               dob: str,
+                               period: str,
+                               age: int=None) -> dict:
     """Calculates the CPF contribution for the year/month.
     
     Takes into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling.
@@ -42,15 +46,27 @@ def calculate_cpf_contribution(salary, bonus, dob, period, age=None):
     cont_total, cont_employee = (0, 0)
 
     if period == strings.STR_MONTH:
-        cont_total += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus, age, entity=constants.STR_COMBINED)
-        cont_employee += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus, age, entity=constants.STR_EMPLOYEE)
+        cont_total += cpfhelpers._get_monthly_contribution_amount(salary / 12,
+                                                                  bonus,
+                                                                  age,
+                                                                  entity=constants.STR_COMBINED)
+        cont_employee += cpfhelpers._get_monthly_contribution_amount(salary / 12,
+                                                                     bonus,
+                                                                     age,
+                                                                     entity=constants.STR_EMPLOYEE)
     elif period == strings.STR_YEAR:
         for i in range(1, 13):
             # default `bonus_in_month` to only be applicable in Dec
             bonus_in_month = bonus if i == 12 else 0
 
-            cont_total += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus_in_month, age, entity=constants.STR_COMBINED)
-            cont_employee += cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus_in_month, age, entity=constants.STR_EMPLOYEE)
+            cont_total += cpfhelpers._get_monthly_contribution_amount(salary / 12,
+                                                                      bonus_in_month,
+                                                                      age,
+                                                                      entity=constants.STR_COMBINED)
+            cont_employee += cpfhelpers._get_monthly_contribution_amount(salary / 12,
+                                                                         bonus_in_month,
+                                                                         age,
+                                                                         entity=constants.STR_EMPLOYEE)
 
     return {
         strings.KEY_VALUES: {
@@ -60,7 +76,10 @@ def calculate_cpf_contribution(salary, bonus, dob, period, age=None):
         strings.KEY_RATES: cont_rates
     }
 
-def calculate_cpf_allocation(salary, bonus, dob, age=None):
+def calculate_cpf_allocation(salary: str,
+                             bonus: str,
+                             dob: str,
+                             age: int=None) -> dict:
     """Calculates the monthly allocation into the 3 CPF accounts.
 
     Reference <https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf/>`
@@ -86,12 +105,19 @@ def calculate_cpf_allocation(salary, bonus, dob, age=None):
         age = genhelpers._get_age(dob)
 
     # get contribution amount for the month first
-    cont_monthly = cpfhelpers._get_monthly_contribution_amount(salary / 12, bonus, age, entity=constants.STR_COMBINED)
+    cont_monthly = cpfhelpers._get_monthly_contribution_amount(salary / 12,
+                                                               bonus,
+                                                               age,
+                                                               entity=constants.STR_COMBINED)
     logger.debug(f'Total CPF monthly contribution is {cont_monthly}')
 
     # then, get the individual amounts allocated to each account
-    sa_alloc = cpfhelpers._get_allocation_amount(age, cont_monthly, account=constants.STR_SA)
-    ma_alloc = cpfhelpers._get_allocation_amount(age, cont_monthly, account=constants.STR_MA)
+    sa_alloc = cpfhelpers._get_allocation_amount(age,
+                                                 cont_monthly,
+                                                 account=constants.STR_SA)
+    ma_alloc = cpfhelpers._get_allocation_amount(age,
+                                                 cont_monthly,
+                                                 account=constants.STR_MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
     logger.debug(f'Allocation amounts: OA = {oa_alloc}, MA = {ma_alloc}, SA = {sa_alloc}')
 
@@ -107,11 +133,23 @@ def calculate_cpf_allocation(salary, bonus, dob, age=None):
         strings.KEY_RATES: alloc_rates
     }
 
-def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bonus,
-                             dob, base_cpf, bonus_month, n_years, target_year, 
-                             oa_topups, oa_withdrawals, sa_topups, 
-                             sa_withdrawals, ma_topups, ma_withdrawals,
-                             age=None, proj_start_date=None): 
+def calculate_cpf_projection(salary: str,
+                             bonus: str,
+                             yoy_increase_salary: str,
+                             yoy_increase_bonus: str,
+                             dob: str,
+                             base_cpf: dict,
+                             bonus_month: str,
+                             n_years: str,
+                             target_year: str, 
+                             oa_topups: dict,
+                             oa_withdrawals: dict,
+                             sa_topups: dict, 
+                             sa_withdrawals: dict,
+                             ma_topups: dict,
+                             ma_withdrawals: dict,
+                             age: int=None,
+                             proj_start_date: dt=None) -> dict: 
     """Calculates the projected account balance in the CPF accounts after `n_years` or in `target_year`.
 
     Reference <https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/>
@@ -206,9 +244,15 @@ def calculate_cpf_projection(salary, bonus, yoy_increase_salary, yoy_increase_bo
         # sa_topup = sa_topup_details[0] if sa_topup_details != [] else 0
         # sa_topup_from_oa = sa_topup_details[1] if sa_topup_details != [] else None
 
-        results_annual = cpfhelpers.calculate_annual_change(salary_proj, bonus_proj, oa, sa, ma,
-                                                            account_deltas, bonus_month, 
-                                                            date_start=date_start, age=age)
+        results_annual = cpfhelpers.calculate_annual_change(salary_proj,
+                                                            bonus_proj,
+                                                            oa,
+                                                            sa,
+                                                            ma,
+                                                            account_deltas,
+                                                            bonus_month, 
+                                                            date_start=date_start,
+                                                            age=age)
 
         # set key to `final` if it is the last year
         key = 'final' if i == (n_years - 1) else str(i+1)
