@@ -4,17 +4,6 @@ CEILING_AW = 102000
 INCOME_BRACKET_1 = 50
 INCOME_BRACKET_2 = 500
 INCOME_BRACKET_3 = 749
-STR_COMBINED = 'combined'
-STR_EMPLOYEE = 'employee'
-STR_MISC = 'misc'
-STR_CONTRIBUTION = 'contribution'
-
-# For CPF allocation
-STR_ALLOCATION = 'allocation'
-STR_OA = 'OA'
-STR_SA = 'SA'
-STR_MA = 'MA'
-STR_RA = 'RA'
 
 # CPF interest rates
 # these are only base rates, include the other rates in the future
@@ -59,59 +48,59 @@ rates_cont = {
 # CPF allocation rates
 rates_alloc = {
     '35': {
-        'OA': 0.23,
-        'SA': 0.06,
-        'MA': 0.08,
-        'OA_ratio': 0.6217,
-        'SA_ratio': 0.1621,
-        'MA_ratio': 0.2162
+        'oa': 0.23,
+        'sa': 0.06,
+        'ma': 0.08,
+        'oa_ratio': 0.6217,
+        'sa_ratio': 0.1621,
+        'ma_ratio': 0.2162
     },
     '45': {
-        'OA': 0.21,
-        'SA': 0.07,
-        'MA': 0.09,
-        'OA_ratio': 0.5677,
-        'SA_ratio': 0.1891,
-        'MA_ratio': 0.2432
+        'oa': 0.21,
+        'sa': 0.07,
+        'ma': 0.09,
+        'oa_ratio': 0.5677,
+        'sa_ratio': 0.1891,
+        'ma_ratio': 0.2432
     },
     '50': {
-        'OA': 0.19,
-        'SA': 0.08,
-        'MA': 0.1,
-        'OA_ratio': 0.5136,
-        'SA_ratio': 0.2162,
-        'MA_ratio': 0.2702
+        'oa': 0.19,
+        'sa': 0.08,
+        'ma': 0.1,
+        'oa_ratio': 0.5136,
+        'sa_ratio': 0.2162,
+        'ma_ratio': 0.2702
     },
     '55': {
-        'OA': 0.15,
-        'SA': 0.115,
-        'MA': 0.105,
-        'OA_ratio': 0.4055,
-        'SA_ratio': 0.3108,
-        'MA_ratio': 0.2837
+        'oa': 0.15,
+        'sa': 0.115,
+        'ma': 0.105,
+        'oa_ratio': 0.4055,
+        'sa_ratio': 0.3108,
+        'ma_ratio': 0.2837
     },
     '60': {
-        'OA': 0.12,
-        'SA': 0.035,
-        'MA': 0.105,
-        'OA_ratio': 0.4616,
-        'SA_ratio': 0.1346,
-        'MA_ratio': 0.4038
+        'oa': 0.12,
+        'sa': 0.035,
+        'ma': 0.105,
+        'oa_ratio': 0.4616,
+        'sa_ratio': 0.1346,
+        'ma_ratio': 0.4038
     },
     '65': {
-        'OA': 0.035,
-        'SA': 0.025,
-        'MA': 0.105,
-        'OA_ratio': 0.2122,
-        'SA_ratio': 0.1515,
-        'MA_ratio': 0.6363
+        'oa': 0.035,
+        'sa': 0.025,
+        'ma': 0.105,
+        'oa_ratio': 0.2122,
+        'sa_ratio': 0.1515,
+        'ma_ratio': 0.6363
     },
     '150': {
-        'OA': 0.01,
-        'SA': 0.01,
-        'MA': 0.105,
-        'OA_ratio': 0.08,
-        'SA_ratio': 0.08,
-        'MA_ratio': 0.84
+        'oa': 0.01,
+        'sa': 0.01,
+        'ma': 0.105,
+        'oa_ratio': 0.08,
+        'sa_ratio': 0.08,
+        'ma_ratio': 0.84
     }
 }

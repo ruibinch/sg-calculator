@@ -34,7 +34,7 @@ def _get_monthly_contribution_amount(salary: float,
     Returns the CPF contribution amount for the month.
     """
 
-    age_bracket = genhelpers._get_age_bracket(age, constants.STR_CONTRIBUTION)
+    age_bracket = genhelpers._get_age_bracket(age, strings.CONTRIBUTION)
     rates = constants.rates_cont
     amount_tw = salary + bonus # only needed if income is in income brackets 2 or 3
 
@@ -46,7 +46,7 @@ def _get_monthly_contribution_amount(salary: float,
         # logger.debug(f'Salary >$50 to <=$500/month, contribution from TW is {cont}')
     elif salary <= constants.INCOME_BRACKET_3:
         cont_from_tw = rates[age_bracket][2][entity] * amount_tw
-        cont_misc = rates[age_bracket][2][constants.STR_MISC] * (amount_tw - 500)
+        cont_misc = rates[age_bracket][2][strings.MISC] * (amount_tw - 500)
         cont = cont_from_tw + cont_misc
         # logger.debug(f'Salary >$500 to <=$749/month, contribution from OW is {cont}')
     else:
@@ -63,9 +63,9 @@ def _get_monthly_contribution_amount(salary: float,
             # logger.debug(f'Salary >=$750/month with bonus, contribution from AW is {cont_from_aw}')
 
         cont_total = cont_from_ow + cont_from_aw
-        if entity == constants.STR_COMBINED:
+        if entity == strings.COMBINED:
             cont = genhelpers._round_half_up(cont_total)
-        elif entity == constants.STR_EMPLOYEE:
+        elif entity == strings.EMPLOYEE:
             cont = math.floor(cont_total)
 
     return cont
@@ -83,39 +83,39 @@ def _get_contribution_rates(salary: float,
     cont_rates = {}
 
     # get age bracket
-    age_bracket = genhelpers._get_age_bracket(age, constants.STR_CONTRIBUTION)
+    age_bracket = genhelpers._get_age_bracket(age, strings.CONTRIBUTION)
     rates = constants.rates_cont[age_bracket]
 
     # get income bracket
     if salary <= constants.INCOME_BRACKET_1:
         cont_rates = {
-            strings.KEY_CONT_EMPLOYEE: {},
-            strings.KEY_CONT_EMPLOYER: {}
+            strings.CONT_EMPLOYEE: {},
+            strings.CONT_EMPLOYER: {}
         }
     elif salary <= constants.INCOME_BRACKET_2:
         cont_rates = {
-            strings.KEY_CONT_EMPLOYEE: {},
-            strings.KEY_CONT_EMPLOYER: {
-                'TW': str(rates[1][constants.STR_COMBINED])
+            strings.CONT_EMPLOYEE: {},
+            strings.CONT_EMPLOYER: {
+                'TW': str(rates[1][strings.COMBINED])
             }
         }
     elif salary <= constants.INCOME_BRACKET_3:
         cont_rates = {
-            strings.KEY_CONT_EMPLOYEE: {
-                'TW - $500': str(rates[2][constants.STR_MISC])
+            strings.CONT_EMPLOYEE: {
+                'TW - $500': str(rates[2][strings.MISC])
             },
-            strings.KEY_CONT_EMPLOYER: {
-                'TW': str(rates[2][constants.STR_COMBINED])
+            strings.CONT_EMPLOYER: {
+                'TW': str(rates[2][strings.COMBINED])
             } 
         }
     else:
-        cont_employer_rate = round(rates[3][constants.STR_COMBINED] - rates[3][constants.STR_EMPLOYEE], 2)
+        cont_employer_rate = round(rates[3][strings.COMBINED] - rates[3][strings.EMPLOYEE], 2)
         cont_rates = {
-            strings.KEY_CONT_EMPLOYEE: {
-                'OW': str(rates[3][constants.STR_EMPLOYEE]),
-                'AW': str(rates[3][constants.STR_EMPLOYEE])
+            strings.CONT_EMPLOYEE: {
+                'OW': str(rates[3][strings.EMPLOYEE]),
+                'AW': str(rates[3][strings.EMPLOYEE])
             },
-            strings.KEY_CONT_EMPLOYER: {
+            strings.CONT_EMPLOYER: {
                 'OW': str(cont_employer_rate),
                 'AW': str(cont_employer_rate)
             },
@@ -142,7 +142,7 @@ def _get_allocation_amount(age: int,
     Returns the amount allocated into the specified account.
     """
 
-    age_bracket = genhelpers._get_age_bracket(age, constants.STR_ALLOCATION)
+    age_bracket = genhelpers._get_age_bracket(age, strings.ALLOCATION)
     alloc = genhelpers._truncate(constants.rates_alloc[age_bracket][f'{account}_ratio'] * cont)
     return alloc
 
@@ -157,19 +157,19 @@ def _get_allocation_rates(age: int) -> dict:
         age (int): Age of employee
     """
 
-    age_bracket = genhelpers._get_age_bracket(age, constants.STR_ALLOCATION)
+    age_bracket = genhelpers._get_age_bracket(age, strings.ALLOCATION)
     rates = constants.rates_alloc[age_bracket]
 
     alloc_rates = {
         'pct_of_salary': {
-            strings.KEY_OA: str(rates[constants.STR_OA]),
-            strings.KEY_SA: str(rates[constants.STR_SA]),
-            strings.KEY_MA: str(rates[constants.STR_MA])
+            strings.OA: str(rates[strings.OA]),
+            strings.SA: str(rates[strings.SA]),
+            strings.MA: str(rates[strings.MA])
         },
         'ratio': {
-            strings.KEY_OA: str(rates[f'{constants.STR_OA}_ratio']),
-            strings.KEY_SA: str(rates[f'{constants.STR_SA}_ratio']),
-            strings.KEY_MA: str(rates[f'{constants.STR_MA}_ratio'])
+            strings.OA: str(rates[f'{strings.OA}_ratio']),
+            strings.SA: str(rates[f'{strings.SA}_ratio']),
+            strings.MA: str(rates[f'{strings.MA}_ratio'])
         }
     }
 
@@ -291,9 +291,9 @@ def calculate_annual_change(salary: float,
         # add the CPF allocation for this month
         # this is actually the contribution for the previous month's salary
         allocations = main.calculate_cpf_allocation(salary, bonus_annual, None, age=age)
-        oa_accumulated += float(allocations[strings.KEY_VALUES][strings.KEY_OA])
-        sa_accumulated += float(allocations[strings.KEY_VALUES][strings.KEY_SA])
-        ma_accumulated += float(allocations[strings.KEY_VALUES][strings.KEY_MA])
+        oa_accumulated += float(allocations[strings.VALUES][strings.OA])
+        sa_accumulated += float(allocations[strings.VALUES][strings.SA])
+        ma_accumulated += float(allocations[strings.VALUES][strings.MA])
 
         if account_deltas is not None and len(account_deltas.keys()) != 0:
             # if there have been topups/withdrawals in the accounts this month
@@ -342,10 +342,10 @@ def calculate_annual_change(salary: float,
     ma_new = ma_accumulated + ma_interest_total
 
     return {
-        strings.KEY_OA: str(round(oa_new, 2)),
-        strings.KEY_SA: str(round(sa_new, 2)),
-        strings.KEY_MA: str(round(ma_new, 2)),
-        strings.KEY_OA_INTEREST: str(round(oa_interest_total, 2)),
-        strings.KEY_SA_INTEREST: str(round(sa_interest_total, 2)),
-        strings.KEY_MA_INTEREST: str(round(ma_interest_total, 2)),
+        strings.OA: str(round(oa_new, 2)),
+        strings.SA: str(round(sa_new, 2)),
+        strings.MA: str(round(ma_new, 2)),
+        strings.OA_INTEREST: str(round(oa_interest_total, 2)),
+        strings.SA_INTEREST: str(round(sa_interest_total, 2)),
+        strings.MA_INTEREST: str(round(ma_interest_total, 2)),
     }

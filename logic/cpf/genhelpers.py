@@ -48,9 +48,9 @@ def _get_age_bracket(age: int,
         purpose (str): Either "contribution" or "allocation"
     """
 
-    if purpose == constants.STR_CONTRIBUTION:
+    if purpose == strings.CONTRIBUTION:
         keys = constants.rates_cont.keys()
-    elif purpose == constants.STR_ALLOCATION:
+    elif purpose == strings.ALLOCATION:
         keys = constants.rates_alloc.keys()
 
     for key in keys:
@@ -89,7 +89,7 @@ def _convert_year_to_zero_indexing(dict_orig: dict) -> dict:
 
     for key in dict_orig.keys():
         date = key # in YYYY or YYYYMM format
-        amount = dict_orig[key][strings.KEY_AMOUNT]
+        amount = dict_orig[key][strings.AMOUNT]
 
         # extract year and month (if applicable) from the date
         year = int(date[0:4])
@@ -100,15 +100,15 @@ def _convert_year_to_zero_indexing(dict_orig: dict) -> dict:
             # create an empty object if this year is not in the new dict yet
             dict_new[year_zero_index] = {}
 
-        if strings.KEY_IS_SA_TOPUP_FROM_OA in dict_orig[key]:
+        if strings.IS_SA_TOPUP_FROM_OA in dict_orig[key]:
             # this will be used only if it is a SA topup
             dict_new[year_zero_index][month] = {
-                strings.KEY_AMOUNT: amount,
-                strings.KEY_IS_SA_TOPUP_FROM_OA: dict_orig[key][strings.KEY_IS_SA_TOPUP_FROM_OA]
+                strings.AMOUNT: amount,
+                strings.IS_SA_TOPUP_FROM_OA: dict_orig[key][strings.IS_SA_TOPUP_FROM_OA]
             }
         else:
             dict_new[year_zero_index][month] = {
-                strings.KEY_AMOUNT: amount
+                strings.AMOUNT: amount
             }
 
     return dict_new
@@ -146,27 +146,27 @@ def _get_account_deltas_month(account_deltas: dict,
         months_search.append(0)
 
     for delta_type in account_deltas.keys():
-        if delta_type == strings.KEY_OA_TOPUPS:
+        if delta_type == strings.PARAM_OA_TOPUPS:
             for month in account_deltas[delta_type]:
-                delta_oa += float(account_deltas[delta_type][month][strings.KEY_AMOUNT]) if month in months_search else 0
-        elif delta_type == strings.KEY_OA_WITHDRAWALS:
+                delta_oa += float(account_deltas[delta_type][month][strings.AMOUNT]) if month in months_search else 0
+        elif delta_type == strings.PARAM_OA_WITHDRAWALS:
             for month in account_deltas[delta_type]:
-                delta_oa -= float(account_deltas[delta_type][month][strings.KEY_AMOUNT]) if month in months_search else 0
-        elif delta_type == strings.KEY_SA_TOPUPS:
+                delta_oa -= float(account_deltas[delta_type][month][strings.AMOUNT]) if month in months_search else 0
+        elif delta_type == strings.PARAM_SA_TOPUPS:
             for month in account_deltas[delta_type]:
                 if month in months_search:
                     month_delta = account_deltas[delta_type][month]
-                    delta_sa += float(month_delta[strings.KEY_AMOUNT])
-                    delta_oa -= float(month_delta[strings.KEY_AMOUNT]) if month_delta[strings.KEY_IS_SA_TOPUP_FROM_OA] else 0
-        elif delta_type == strings.KEY_SA_WITHDRAWALS:
+                    delta_sa += float(month_delta[strings.AMOUNT])
+                    delta_oa -= float(month_delta[strings.AMOUNT]) if month_delta[strings.IS_SA_TOPUP_FROM_OA] else 0
+        elif delta_type == strings.PARAM_SA_WITHDRAWALS:
             for month in account_deltas[delta_type]:
-                delta_sa -= float(account_deltas[delta_type][month][strings.KEY_AMOUNT]) if month in months_search else 0
-        elif delta_type == strings.KEY_MA_TOPUPS:
+                delta_sa -= float(account_deltas[delta_type][month][strings.AMOUNT]) if month in months_search else 0
+        elif delta_type == strings.PARAM_MA_TOPUPS:
             for month in account_deltas[delta_type]:
-                delta_ma += float(account_deltas[delta_type][month][strings.KEY_AMOUNT]) if month in months_search else 0
-        elif delta_type == strings.KEY_MA_WITHDRAWALS:
+                delta_ma += float(account_deltas[delta_type][month][strings.AMOUNT]) if month in months_search else 0
+        elif delta_type == strings.PARAM_MA_WITHDRAWALS:
             for month in account_deltas[delta_type]:
-                delta_ma -= float(account_deltas[delta_type][month][strings.KEY_AMOUNT]) if month in months_search else 0
+                delta_ma -= float(account_deltas[delta_type][month][strings.AMOUNT]) if month in months_search else 0
 
     return (delta_oa, delta_sa, delta_ma)
 

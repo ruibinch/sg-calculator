@@ -16,51 +16,52 @@ def handler(event: dict, context: dict) -> dict:
         - `body` - Response body
     """
 
-    body = json.loads(event[strings.KEY_BODY])
-    output = argparser.parse_args(body, event[strings.KEY_PATH])
+    body = json.loads(event[strings.BODY])
+    output = argparser.parse_args(body, event[strings.PATH])
 
-    if type(output[strings.KEY_STATUSCODE]) is int:
+    if type(output[strings.STATUSCODE]) is int:
         # there is a status code denoting an error
-        status_code = output[strings.KEY_STATUSCODE]
-        response = {strings.KEY_ERROR: output[strings.KEY_ERROR]}
+        status_code = output[strings.STATUSCODE]
+        response = {strings.ERROR: output[strings.ERROR]}
     else:
         status_code = HTTPStatus.OK
-        params = output[strings.KEY_PARAMS]
-        if event[strings.KEY_PATH] == endpoints.CPF_CONTRIBUTION:
+        params = output[strings.PARAMS]
+
+        if event[strings.PATH] == endpoints.CPF_CONTRIBUTION:
             results = cpf_main.calculate_cpf_contribution(
-                params['salary'],
-                params['bonus'],
-                params['dob'],
-                params['period']
+                params[strings.PARAM_SALARY],
+                params[strings.PARAM_BONUS],
+                params[strings.PARAM_DOB],
+                params[strings.PARAM_PERIOD],
             )
-        elif event[strings.KEY_PATH] == endpoints.CPF_ALLOCATION:
+        elif event[strings.PATH] == endpoints.CPF_ALLOCATION:
             results = cpf_main.calculate_cpf_allocation(
-                params['salary'],
-                params['bonus'],
-                params['dob']
+                params[strings.PARAM_SALARY],
+                params[strings.PARAM_BONUS],
+                params[strings.PARAM_DOB],
             )
-        elif event[strings.KEY_PATH] == endpoints.CPF_PROJECTION:
+        elif event[strings.PATH] == endpoints.CPF_PROJECTION:
             results = cpf_main.calculate_cpf_projection(
-                params['salary'],
-                params['bonus'],
-                params['yoy_increase_salary'],
-                params['yoy_increase_bonus'],
-                params['dob'],
-                params['base_cpf'],
-                params['bonus_month'],
-                params['n_years'],
-                params['target_year'],
-                params['oa_topups'],
-                params['oa_withdrawals'],
-                params['sa_topups'],
-                params['sa_withdrawals'],
-                params['ma_topups'],
-                params['ma_withdrawals']
+                params[strings.PARAM_SALARY],
+                params[strings.PARAM_BONUS],
+                params[strings.PARAM_YOY_INCREASE_SALARY],
+                params[strings.PARAM_YOY_INCREASE_BONUS],
+                params[strings.PARAM_DOB],
+                params[strings.PARAM_BASE_CPF],
+                params[strings.PARAM_BONUS_MONTH],
+                params[strings.PARAM_N_YEARS],
+                params[strings.PARAM_TARGET_YEAR],
+                params[strings.PARAM_OA_TOPUPS],
+                params[strings.PARAM_OA_WITHDRAWALS],
+                params[strings.PARAM_SA_TOPUPS],
+                params[strings.PARAM_SA_WITHDRAWALS],
+                params[strings.PARAM_MA_TOPUPS],
+                params[strings.PARAM_MA_WITHDRAWALS],
             )
 
-        response = {strings.KEY_RESULTS: results}
+        response = {strings.RESULTS: results}
 
     return {
-        strings.KEY_STATUSCODE: status_code,
-        strings.KEY_BODY: json.dumps(response)
+        strings.STATUSCODE: status_code,
+        strings.BODY: json.dumps(response)
     }

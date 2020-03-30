@@ -45,16 +45,16 @@ def calculate_cpf_contribution(salary: str,
     cont_rates = cpfhelpers._get_contribution_rates(salary / 12, age)
     cont_total, cont_employee = (0, 0)
 
-    if period == strings.STR_MONTH:
+    if period == strings.MONTH:
         cont_total += cpfhelpers._get_monthly_contribution_amount(salary / 12,
                                                                   bonus,
                                                                   age,
-                                                                  entity=constants.STR_COMBINED)
+                                                                  entity=strings.COMBINED)
         cont_employee += cpfhelpers._get_monthly_contribution_amount(salary / 12,
                                                                      bonus,
                                                                      age,
-                                                                     entity=constants.STR_EMPLOYEE)
-    elif period == strings.STR_YEAR:
+                                                                     entity=strings.EMPLOYEE)
+    elif period == strings.YEAR:
         for i in range(1, 13):
             # default `bonus_in_month` to only be applicable in Dec
             bonus_in_month = bonus if i == 12 else 0
@@ -62,18 +62,18 @@ def calculate_cpf_contribution(salary: str,
             cont_total += cpfhelpers._get_monthly_contribution_amount(salary / 12,
                                                                       bonus_in_month,
                                                                       age,
-                                                                      entity=constants.STR_COMBINED)
+                                                                      entity=strings.COMBINED)
             cont_employee += cpfhelpers._get_monthly_contribution_amount(salary / 12,
                                                                          bonus_in_month,
                                                                          age,
-                                                                         entity=constants.STR_EMPLOYEE)
+                                                                         entity=strings.EMPLOYEE)
 
     return {
-        strings.KEY_VALUES: {
-            strings.KEY_CONT_EMPLOYEE: str(round(cont_employee, 2)), 
-            strings.KEY_CONT_EMPLOYER: str(round(cont_total - cont_employee, 2))
+        strings.VALUES: {
+            strings.CONT_EMPLOYEE: str(round(cont_employee, 2)), 
+            strings.CONT_EMPLOYER: str(round(cont_total - cont_employee, 2)),
         },
-        strings.KEY_RATES: cont_rates
+        strings.RATES: cont_rates,
     }
 
 def calculate_cpf_allocation(salary: str,
@@ -108,16 +108,16 @@ def calculate_cpf_allocation(salary: str,
     cont_monthly = cpfhelpers._get_monthly_contribution_amount(salary / 12,
                                                                bonus,
                                                                age,
-                                                               entity=constants.STR_COMBINED)
+                                                               entity=strings.COMBINED)
     logger.debug(f'Total CPF monthly contribution is {cont_monthly}')
 
     # then, get the individual amounts allocated to each account
     sa_alloc = cpfhelpers._get_allocation_amount(age,
                                                  cont_monthly,
-                                                 account=constants.STR_SA)
+                                                 account=strings.SA)
     ma_alloc = cpfhelpers._get_allocation_amount(age,
                                                  cont_monthly,
-                                                 account=constants.STR_MA)
+                                                 account=strings.MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
     logger.debug(f'Allocation amounts: OA = {oa_alloc}, MA = {ma_alloc}, SA = {sa_alloc}')
 
@@ -125,12 +125,12 @@ def calculate_cpf_allocation(salary: str,
     alloc_rates = cpfhelpers._get_allocation_rates(age)
 
     return {
-        strings.KEY_VALUES: {
-            strings.KEY_OA: str(round(oa_alloc, 2)), 
-            strings.KEY_SA: str(sa_alloc),
-            strings.KEY_MA: str(ma_alloc)
+        strings.VALUES: {
+            strings.OA: str(round(oa_alloc, 2)), 
+            strings.SA: str(sa_alloc),
+            strings.MA: str(ma_alloc),
         },
-        strings.KEY_RATES: alloc_rates
+        strings.RATES: alloc_rates,
     }
 
 def calculate_cpf_projection(salary: str,
@@ -201,7 +201,7 @@ def calculate_cpf_projection(salary: str,
         age = genhelpers._get_age(dob)
     
     # getting base amounts in OA, SA, MA and number of years to project for
-    oa, sa, ma = float(base_cpf['oa']), float(base_cpf['sa']), float(base_cpf['ma'])
+    oa, sa, ma = float(base_cpf[strings.OA]), float(base_cpf[strings.SA]), float(base_cpf[strings.MA])
     n_years = genhelpers._get_num_projection_years(target_year) if n_years is None else n_years
 
     # convert topup/withdrawal dicts to zero-indexed years as keys
@@ -230,12 +230,12 @@ def calculate_cpf_projection(salary: str,
         # get OA/SA/MA topup/withdrawal details in this year
         # package all into an `account_deltas` dict
         account_deltas = {
-            strings.KEY_OA_TOPUPS: genhelpers._get_account_deltas_year(oa_topups, i),
-            strings.KEY_OA_WITHDRAWALS: genhelpers._get_account_deltas_year(oa_withdrawals, i),
-            strings.KEY_SA_TOPUPS: genhelpers._get_account_deltas_year(sa_topups, i),
-            strings.KEY_SA_WITHDRAWALS: genhelpers._get_account_deltas_year(sa_withdrawals, i),
-            strings.KEY_MA_TOPUPS: genhelpers._get_account_deltas_year(ma_topups, i),
-            strings.KEY_MA_WITHDRAWALS: genhelpers._get_account_deltas_year(ma_withdrawals, i)
+            strings.PARAM_OA_TOPUPS: genhelpers._get_account_deltas_year(oa_topups, i),
+            strings.PARAM_OA_WITHDRAWALS: genhelpers._get_account_deltas_year(oa_withdrawals, i),
+            strings.PARAM_SA_TOPUPS: genhelpers._get_account_deltas_year(sa_topups, i),
+            strings.PARAM_SA_WITHDRAWALS: genhelpers._get_account_deltas_year(sa_withdrawals, i),
+            strings.PARAM_MA_TOPUPS: genhelpers._get_account_deltas_year(ma_topups, i),
+            strings.PARAM_MA_WITHDRAWALS: genhelpers._get_account_deltas_year(ma_withdrawals, i)
         }
 
         # get SA topup/OA withdrawal details
@@ -259,5 +259,5 @@ def calculate_cpf_projection(salary: str,
         values[key] = results_annual
 
     return {
-        strings.KEY_VALUES: values
+        strings.VALUES: values
     }

@@ -25,9 +25,9 @@ class TestCalculateCpfContribution(object):
                            age: int,
                            cont_employee: float,
                            cont_employer: float):
-        contributions = calculate_cpf_contribution(salary, bonus, None, strings.STR_YEAR, age=age)
-        assert round(cont_employee, 2) == float(contributions[strings.KEY_VALUES][strings.KEY_CONT_EMPLOYEE])
-        assert round(cont_employer, 2) == float(contributions[strings.KEY_VALUES][strings.KEY_CONT_EMPLOYER])
+        contributions = calculate_cpf_contribution(salary, bonus, None, strings.YEAR, age=age)
+        assert round(cont_employee, 2) == float(contributions[strings.VALUES][strings.CONT_EMPLOYEE])
+        assert round(cont_employer, 2) == float(contributions[strings.VALUES][strings.CONT_EMPLOYER])
 
     def test_scenario_1a(self):
         salary, bonus, age = (50 * 12, 0, 30)
@@ -101,7 +101,7 @@ class TestCalculateCpfAllocation(object):
                                         age: int,
                                         with_bonus: bool) -> float:
         bonus_annual = self.bonus if with_bonus is True else 0
-        cont = cpfhelpers._get_monthly_contribution_amount(self.salary, bonus_annual, age=age, entity=constants.STR_COMBINED)
+        cont = cpfhelpers._get_monthly_contribution_amount(self.salary, bonus_annual, age=age, entity=strings.COMBINED)
         return cont
 
     def _get_alloc_amount(self,
@@ -128,9 +128,9 @@ class TestCalculateCpfAllocation(object):
         """
         
         allocations = calculate_cpf_allocation(self.salary * 12, bonus, None, age=age)
-        assert round(alloc_exp[0], 2) == float(allocations[strings.KEY_VALUES][strings.KEY_OA])
-        assert round(alloc_exp[1], 2) == float(allocations[strings.KEY_VALUES][strings.KEY_SA])
-        assert round(alloc_exp[2], 2) == float(allocations[strings.KEY_VALUES][strings.KEY_MA])
+        assert round(alloc_exp[0], 2) == float(allocations[strings.VALUES][strings.OA])
+        assert round(alloc_exp[1], 2) == float(allocations[strings.VALUES][strings.SA])
+        assert round(alloc_exp[2], 2) == float(allocations[strings.VALUES][strings.MA])
 
     def test_scenario_1(self):
         age = 35
@@ -264,9 +264,9 @@ class TestCpfCalculateAnnualChange1(object):
                             balance_orig[2], 
                             age=self.age)
 
-        assert str(round(balance_exp[0], 2)) == results_annual[strings.KEY_OA]
-        assert str(round(balance_exp[1], 2)) == results_annual[strings.KEY_SA]
-        assert str(round(balance_exp[2], 2)) == results_annual[strings.KEY_MA]
+        assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
+        assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
+        assert str(round(balance_exp[2], 2)) == results_annual[strings.MA]
 
     def test_scenario_1(self):
         print('Test scenario 1: OA < $20k, OA+SA+MA < $60k')
@@ -504,9 +504,9 @@ class TestCpfCalculateAnnualChange2(object):
                             balance_orig[0], balance_orig[1], balance_orig[2],
                             date_start=self.date_start, dob=dob)
 
-        assert str(round(balance_exp[0], 2)) == results_annual[strings.KEY_OA]
-        assert str(round(balance_exp[1], 2)) == results_annual[strings.KEY_SA]
-        assert str(round(balance_exp[2], 2)) == results_annual[strings.KEY_MA]
+        assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
+        assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
+        assert str(round(balance_exp[2], 2)) == results_annual[strings.MA]
 
     def test_scenario_1(self):
         print('Test scenario 1: Age 35 -> 36')
@@ -672,9 +672,9 @@ class TestCpfCalculateAnnualChange3(object):
                                         account_deltas=account_deltas,
                                         date_start=self.date_start, age=self.age)
 
-        assert str(round(balance_exp[0], 2)) == results_annual[strings.KEY_OA]
-        assert str(round(balance_exp[1], 2)) == results_annual[strings.KEY_SA]
-        assert str(round(balance_exp[2], 2)) == results_annual[strings.KEY_MA]
+        assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
+        assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
+        assert str(round(balance_exp[2], 2)) == results_annual[strings.MA]
 
     def test_scenario_1(self):
         print('Test scenario 1: Topup OA')
