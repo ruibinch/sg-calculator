@@ -37,7 +37,7 @@ update_lambda_function:
     - zip -r9 ${OLDPWD}/calculator-bff.zip .
     - cd $OLDPWD
     # add files from /app folder and update Lambda functions
-    - zip -g calculator-bff.zip lambda_function.py -r app -i '*.py'
+    - zip -g calculator-bff.zip lambda_function.py -r logic utils -i '*.py'
   script:
     - pip install awscli
     - aws lambda update-function-code --function-name calcCpfContribution --zip-file fileb://calculator-bff.zip
