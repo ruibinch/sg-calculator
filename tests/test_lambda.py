@@ -2,13 +2,12 @@ from http import HTTPStatus
 import json
 import requests
 
-from app.config import Config
-from app.utils import endpoints
+from utils import config, endpoints
 
 # API Gateway URLs
-URL_CPF_CONTRIBUTION = f'https://{Config.RESTAPI_ID}.execute-api.{Config.REGION}.amazonaws.com/{Config.STAGE_NAME}{endpoints.CPF_CONTRIBUTION}'
-URL_CPF_ALLOCATION = f'https://{Config.RESTAPI_ID}.execute-api.{Config.REGION}.amazonaws.com/{Config.STAGE_NAME}{endpoints.CPF_ALLOCATION}'
-URL_CPF_PROJECTION = f'https://{Config.RESTAPI_ID}.execute-api.{Config.REGION}.amazonaws.com/{Config.STAGE_NAME}{endpoints.CPF_PROJECTION}'
+URL_CPF_CONTRIBUTION = f'https://{config.RESTAPI_ID}.execute-api.{config.REGION}.amazonaws.com/{config.STAGE_NAME}{endpoints.CPF_CONTRIBUTION}'
+URL_CPF_ALLOCATION = f'https://{config.RESTAPI_ID}.execute-api.{config.REGION}.amazonaws.com/{config.STAGE_NAME}{endpoints.CPF_ALLOCATION}'
+URL_CPF_PROJECTION = f'https://{config.RESTAPI_ID}.execute-api.{config.REGION}.amazonaws.com/{config.STAGE_NAME}{endpoints.CPF_PROJECTION}'
 
 # class TestLambdaFunction(object):
 #     """Tests the Lambda functions via the exposed endpoints on API Gateway.

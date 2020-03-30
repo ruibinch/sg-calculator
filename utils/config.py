@@ -1,5 +1,4 @@
-class Config:
-    # AWS
-    RESTAPI_ID = '3myv824x89'
-    REGION = 'ap-southeast-1'
-    STAGE_NAME = 'alpha'
+# AWS settings
+RESTAPI_ID = '3myv824x89'
+REGION = 'ap-southeast-1'
+STAGE_NAME = 'alpha'

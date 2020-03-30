@@ -1,9 +1,9 @@
 import datetime as dt
 from typing import Tuple
 
-from app.logic.cpf.main import calculate_cpf_contribution, calculate_cpf_allocation, calculate_cpf_projection
-from app.logic.cpf import constants, cpfhelpers, genhelpers
-from app.utils import strings
+from logic.cpf.main import calculate_cpf_contribution, calculate_cpf_allocation, calculate_cpf_projection
+from logic.cpf import constants, cpfhelpers, genhelpers
+from utils import strings
 
 class TestCalculateCpfContribution(object):
     """Tests the `calculate_cpf_contribution()` method in cpf.py.
