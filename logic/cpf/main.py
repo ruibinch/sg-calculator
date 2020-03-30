@@ -2,7 +2,7 @@ import datetime as dt
 import logging
 
 from . import constants, cpfhelpers, genhelpers
-from app.utils import strings
+from utils import strings
 
 logger = logging.getLogger(__name__)
 

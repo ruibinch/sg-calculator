@@ -1,9 +1,8 @@
 from http import HTTPStatus
 import json
 
-from app import argparser
-from app.logic.cpf import main as cpf_main
-from app.utils import endpoints, strings
+from logic.cpf import main as cpf_main
+from utils import argparser, endpoints, strings
 
 def handler(event: dict, context: dict) -> dict:
     """Handler for AWS Lambda function calls.

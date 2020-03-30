@@ -1,10 +1,12 @@
-from flask import request
-from flask_restful import Resource, reqparse
+from flask import Flask
+from flask_restful import Api, Resource, reqparse
 from http import HTTPStatus
 
-from . import argparser
-from .logic.cpf import main as cpf_main
-from .utils import endpoints, strings
+from logic.cpf import main as cpf_main
+from utils import argparser, endpoints, strings
+
+app = Flask(__name__)
+api = Api(app)
 
 # For data validation
 parser = reqparse.RequestParser()
@@ -105,3 +107,10 @@ class CpfProjection(Resource):
             response = {strings.KEY_RESULTS: results}
 
         return response, status_code
+
+api.add_resource(CpfContribution, endpoints.CPF_CONTRIBUTION)
+api.add_resource(CpfAllocation, endpoints.CPF_ALLOCATION)
+api.add_resource(CpfProjection, endpoints.CPF_PROJECTION)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5100, debug=True)

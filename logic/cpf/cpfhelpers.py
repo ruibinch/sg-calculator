@@ -3,7 +3,7 @@ import logging
 import math
 
 from . import constants, genhelpers, main
-from app.utils import strings
+from utils import strings
 
 logger = logging.getLogger(__name__)
 

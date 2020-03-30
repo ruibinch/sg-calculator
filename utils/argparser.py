@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Any
 
-from .utils import endpoints, strings
+from . import endpoints, strings
 
 logger = logging.getLogger(__name__)
 

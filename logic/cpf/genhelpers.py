@@ -4,7 +4,7 @@ import math
 from typing import Tuple
 
 from . import constants
-from app.utils import strings
+from utils import strings
 
 logger = logging.getLogger(__name__)
 
