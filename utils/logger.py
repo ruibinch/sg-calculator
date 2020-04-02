@@ -7,7 +7,7 @@ def setup():
     """Sets up the logging module with the config specified in `config/logger.yaml`."""
 
     try:
-        with open(os.path.join(os.path.dirname(__file__), 'logger.yml'), 'r') as f:
+        with open(os.path.join(os.path.dirname(__file__), '..', 'dev', 'logger.yml'), 'r') as f:
             logger_config = yaml.safe_load(f.read())
             logging.config.dictConfig(logger_config)
     except FileNotFoundError:
