@@ -1,230 +1,9 @@
 import datetime as dt
 from typing import Tuple
 
-from logic.cpf.main import calculate_cpf_contribution, calculate_cpf_allocation, calculate_cpf_projection
+from logic.cpf.main import calculate_cpf_projection
 from logic.cpf import constants, cpfhelpers, genhelpers
 from utils import strings
-
-class TestCalculateCpfContribution(object):
-    """Tests the `calculate_cpf_contribution()` method in cpf/main.py.
-
-    Test scenarios: 
-    1. Age <=55
-        a. Salary <=$50/month
-        b. Salary >$50 to <=$500/month
-        c. Salary >$500 to <$750/month
-        d. Salary >=$750/month and below OW Ceiling, bonus below AW Ceiling
-        e. Salary >=$750/month and below OW Ceiling, bonus above AW Ceiling
-        f. Salary >=$750/month and above OW Ceiling, bonus below AW Ceiling
-        g. Salary >=$750/month and above OW Ceiling, bonus above AW Ceiling
-    """
-
-    def _perform_assertion(self,
-                           salary: float,
-                           bonus: float,
-                           age: int,
-                           cont_employee: float,
-                           cont_employer: float):
-        contributions = calculate_cpf_contribution(salary, bonus, None, strings.YEAR, age=age)
-        assert round(cont_employee, 2) == float(contributions[strings.VALUES][strings.CONT_EMPLOYEE])
-        assert round(cont_employer, 2) == float(contributions[strings.VALUES][strings.CONT_EMPLOYER])
-
-    def test_scenario_1a(self):
-        salary, bonus, age = (50 * 12, 0, 30)
-        cont_employee = 0
-        cont_employer = 0
-        self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
-
-    def test_scenario_1b(self):
-        salary, bonus, age = (500 * 12, 0, 30)
-        cont_employee = 0
-        cont_employer = 0.17 * salary
-        self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
-
-    def test_scenario_1c(self):
-        salary, bonus, age = (749 * 12, 0, 30)
-        cont_total = (0.17 * salary) + (0.6 * (salary - (500 * 12)))
-        cont_employee = 0.6 * (salary - (500 * 12))
-        cont_employer = cont_total - cont_employee
-        self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
-
-    def test_scenario_1d(self):
-        # salary: $48k; bonus: $20k
-        salary, bonus, age = (4000 * 12, 5, 30)
-        bonus_amount = 4000 * bonus
-        cont_total = (0.37 * salary) + (0.37 * bonus_amount)
-        cont_employee = (0.2 * salary) + (0.2 * bonus_amount)
-        cont_employer = cont_total - cont_employee
-        self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
-
-    def test_scenario_1e(self):
-        # salary: $48k; bonus: $100k
-        salary, bonus, age = (4000 * 12, 25, 30)
-        cont_total = (0.37 * salary) + (0.37 * (102000 - salary))
-        cont_employee = (0.2 * salary) + (0.2 * (102000 - salary))
-        cont_employer = cont_total - cont_employee
-        self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
-
-    def test_scenario_1f(self):
-        # salary: $96k; bonus: $20k
-        salary, bonus, age = (8000 * 12, 2.5, 30)
-        bonus_amount = 8000 * bonus
-        cont_total = (0.37 * 72000) + (0.37 * bonus_amount)
-        cont_employee = (0.2 * 72000) + (0.2 * bonus_amount)
-        cont_employer = cont_total - cont_employee
-        self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
-
-    def test_scenario_1g(self):
-        # salary: $96k; bonus: $100k
-        salary, bonus, age = (8000 * 12, 8.5, 30)
-        cont_total = (0.37 * 72000) + (0.37 * (102000 - 72000))
-        cont_employee = (0.2 * 72000) + (0.2 * (102000 - 72000))
-        cont_employer = cont_total - cont_employee
-        self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
-
-
-class TestCalculateCpfAllocation(object):
-    """Tests the `calculate_cpf_allocation()` method in cpf.py.
-   
-    Assumption: `calculate_cpf_contribution()` method is correct.
-
-    Age is the only variable here. \\
-    Each test scenario contains 2 assertions - one with bonus and one without bonus. \\
-    Test scenarios: 
-    1. Age <=35
-    2. Age >35 to <=45
-    3. Age >45 to <=50
-    4. Age >50 to <=55
-    5. Age >55 to <=60
-    6. Age >60 to <=65
-    7. Age >65
-    """
-
-    salary = 4000
-    bonus = 2.5     # i.e. $10k
-
-    def _get_contribution_amount_by_age(self, age: int) -> float:
-        """Returns the total contribution amount for both with-bonus and without-bonus scenarios."""
-
-        cont_with_bonus = cpfhelpers._get_monthly_contribution_amount(self.salary, self.bonus, age=age, entity=strings.COMBINED)
-        cont_wo_bonus = cpfhelpers._get_monthly_contribution_amount(self.salary, 0, age=age, entity=strings.COMBINED)
-        return cont_with_bonus, cont_wo_bonus
-
-    def _get_alloc_amount(self,
-                          cont: float,
-                          sa_ratio: float,
-                          ma_ratio: float) -> Tuple[float, float, float]:
-        """Given a total contribution amount and the MA/SA contribution ratios,
-        return the allocation amounts into all 3 accounts."""
-
-        sa_alloc = genhelpers._truncate(sa_ratio * cont)
-        ma_alloc = genhelpers._truncate(ma_ratio * cont)
-        oa_alloc = cont - sa_alloc - ma_alloc
-        return oa_alloc, sa_alloc, ma_alloc
-
-    def _perform_assertions(self,
-                           age: int,
-                           alloc_with_bonus_exp: list,
-                           alloc_wo_bonus_exp: list):
-        """
-        Helper class to perform assertion checks.
-        Round the values to 2 decimal places when checking for equality.
-
-        Args:
-            bonus (float): Bonus/commission received in the year
-            age (int): Age of employee
-            alloc_exp (list): Expected amount to be allocated into the CPF accounts [OA, SA, MA]
-        """
-        
-        # with bonus
-        allocations = calculate_cpf_allocation(self.salary * 12, self.bonus, None, age=age)
-        assert round(alloc_with_bonus_exp[0], 2) == float(allocations[strings.VALUES][strings.OA])
-        assert round(alloc_with_bonus_exp[1], 2) == float(allocations[strings.VALUES][strings.SA])
-        assert round(alloc_with_bonus_exp[2], 2) == float(allocations[strings.VALUES][strings.MA])
-
-        # without bonus
-        allocations = calculate_cpf_allocation(self.salary * 12, 0, None, age=age)
-        assert round(alloc_wo_bonus_exp[0], 2) == float(allocations[strings.VALUES][strings.OA])
-        assert round(alloc_wo_bonus_exp[1], 2) == float(allocations[strings.VALUES][strings.SA])
-        assert round(alloc_wo_bonus_exp[2], 2) == float(allocations[strings.VALUES][strings.MA])
-
-    def test_scenario_1(self):
-        age = 35
-        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
-        oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1621, 0.2162)
-        oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.1621, 0.2162)
-
-        self._perform_assertions(age,
-                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
-                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
-                                )
-    
-    def test_scenario_2(self):
-        age = 45
-        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
-        oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1891, 0.2432)
-        oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.1891, 0.2432)
-
-        self._perform_assertions(age,
-                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
-                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
-                                )
-
-    def test_scenario_3(self):
-        age = 50
-        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
-        oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.2162, 0.2702)
-        oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.2162, 0.2702)
-
-        self._perform_assertions(age,
-                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
-                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
-                                )
-
-    def test_scenario_4(self):
-        age = 55
-        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
-        oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.3108, 0.2837)
-        oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.3108, 0.2837)
-
-        self._perform_assertions(age,
-                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
-                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
-                                )
-    
-    def test_scenario_5(self):
-        age = 60
-        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
-        oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1346, 0.4038)
-        oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.1346, 0.4038)
-
-        self._perform_assertions(age,
-                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
-                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
-                                )
-
-    def test_scenario_6(self):
-        age = 65
-        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
-        oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1515, 0.6363)
-        oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.1515, 0.6363)
-
-        self._perform_assertions(age,
-                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
-                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
-                                )
-
-    def test_scenario_7(self):
-        age = 80
-        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
-        oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.08, 0.84)
-        oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.08, 0.84)
-
-        self._perform_assertions(age,
-                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
-                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
-                                )
-
 
 class TestCpfCalculateAnnualChange1(object):
     """Tests the `calculate_annual_change()` method in cpf.py.
@@ -713,14 +492,14 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        oa_topups = { self.delta_month: { 'amount': self.delta_amount } }
+        oa_topups = { self.delta_month: { strings.AMOUNT: self.delta_amount } }
         account_deltas = {
-            'oa_topups': oa_topups,
-            'oa_withdrawals': {},
-            'sa_topups': {},
-            'sa_withdrawals': {},
-            'ma_topups': {},
-            'ma_withdrawals': {}
+            strings.PARAM_OA_TOPUPS: oa_topups,
+            strings.PARAM_OA_WITHDRAWALS: {},
+            strings.PARAM_SA_TOPUPS: {},
+            strings.PARAM_SA_WITHDRAWALS: {},
+            strings.PARAM_MA_TOPUPS: {},
+            strings.PARAM_MA_WITHDRAWALS: {}
         }
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
@@ -738,14 +517,14 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        oa_withdrawals = { self.delta_month: { 'amount': self.delta_amount } }
+        oa_withdrawals = { self.delta_month: { strings.AMOUNT: self.delta_amount } }
         account_deltas = {
-            'oa_topups': {},
-            'oa_withdrawals': oa_withdrawals,
-            'sa_topups': {},
-            'sa_withdrawals': {},
-            'ma_topups': {},
-            'ma_withdrawals': {}
+            strings.PARAM_OA_TOPUPS: {},
+            strings.PARAM_OA_WITHDRAWALS: oa_withdrawals,
+            strings.PARAM_SA_TOPUPS: {},
+            strings.PARAM_SA_WITHDRAWALS: {},
+            strings.PARAM_MA_TOPUPS: {},
+            strings.PARAM_MA_WITHDRAWALS: {}
         }
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
@@ -763,14 +542,14 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        sa_topups = { self.delta_month: { 'amount': self.delta_amount, 'is_sa_topup_from_oa': False } }
+        sa_topups = { self.delta_month: { strings.AMOUNT: self.delta_amount, strings.IS_SA_TOPUP_FROM_OA: False } }
         account_deltas = {
-            'oa_topups': {},
-            'oa_withdrawals': {},
-            'sa_topups': sa_topups,
-            'sa_withdrawals': {},
-            'ma_topups': {},
-            'ma_withdrawals': {}
+            strings.PARAM_OA_TOPUPS: {},
+            strings.PARAM_OA_WITHDRAWALS: {},
+            strings.PARAM_SA_TOPUPS: sa_topups,
+            strings.PARAM_SA_WITHDRAWALS: {},
+            strings.PARAM_MA_TOPUPS: {},
+            strings.PARAM_MA_WITHDRAWALS: {}
         }
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
@@ -789,14 +568,14 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        sa_topups = { self.delta_month: { 'amount': self.delta_amount, 'is_sa_topup_from_oa': True } }
+        sa_topups = { self.delta_month: { strings.AMOUNT: self.delta_amount, strings.IS_SA_TOPUP_FROM_OA: True } }
         account_deltas = {
-            'oa_topups': {},
-            'oa_withdrawals': {},
-            'sa_topups': sa_topups,
-            'sa_withdrawals': {},
-            'ma_topups': {},
-            'ma_withdrawals': {}
+            strings.PARAM_OA_TOPUPS: {},
+            strings.PARAM_OA_WITHDRAWALS: {},
+            strings.PARAM_SA_TOPUPS: sa_topups,
+            strings.PARAM_SA_WITHDRAWALS: {},
+            strings.PARAM_MA_TOPUPS: {},
+            strings.PARAM_MA_WITHDRAWALS: {}
         }
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
@@ -814,14 +593,14 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        sa_withdrawals = { self.delta_month: { 'amount': self.delta_amount } }
-        account_deltas = {
-            'oa_topups': {},
-            'oa_withdrawals': {},
-            'sa_topups': {},
-            'sa_withdrawals': sa_withdrawals,
-            'ma_topups': {},
-            'ma_withdrawals': {}
+        sa_withdrawals = { self.delta_month: { strings.AMOUNT: self.delta_amount } }
+        account_deltas = {  
+            strings.PARAM_OA_TOPUPS: {},
+            strings.PARAM_OA_WITHDRAWALS: {},
+            strings.PARAM_SA_TOPUPS: {},
+            strings.PARAM_SA_WITHDRAWALS: sa_withdrawals,
+            strings.PARAM_MA_TOPUPS: {},
+            strings.PARAM_MA_WITHDRAWALS: {}
         }
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
@@ -839,14 +618,14 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        ma_topups = { self.delta_month: { 'amount': self.delta_amount } }
+        ma_topups = { self.delta_month: { strings.AMOUNT: self.delta_amount } }
         account_deltas = {
-            'oa_topups': {},
-            'oa_withdrawals': {},
-            'sa_topups': {},
-            'sa_withdrawals': {},
-            'ma_topups': ma_topups,
-            'ma_withdrawals': {}
+            strings.PARAM_OA_TOPUPS: {},
+            strings.PARAM_OA_WITHDRAWALS: {},
+            strings.PARAM_SA_TOPUPS: {},
+            strings.PARAM_SA_WITHDRAWALS: {},
+            strings.PARAM_MA_TOPUPS: ma_topups,
+            strings.PARAM_MA_WITHDRAWALS: {}
         }
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
@@ -864,13 +643,13 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        ma_withdrawals = { self.delta_month: { 'amount': self.delta_amount } }
+        ma_withdrawals = { self.delta_month: { strings.AMOUNT: self.delta_amount } }
         account_deltas = {
-            'oa_topups': {},
-            'oa_withdrawals': {},
-            'sa_topups': {},
-            'sa_withdrawals': {},
-            'ma_topups': {},
-            'ma_withdrawals': ma_withdrawals
+            strings.PARAM_OA_TOPUPS: {},
+            strings.PARAM_OA_WITHDRAWALS: {},
+            strings.PARAM_SA_TOPUPS: {},
+            strings.PARAM_SA_WITHDRAWALS: {},
+            strings.PARAM_MA_TOPUPS: {},
+            strings.PARAM_MA_WITHDRAWALS: ma_withdrawals
         }
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
