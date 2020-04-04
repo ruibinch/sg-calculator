@@ -6,17 +6,17 @@ from logic.cpf import constants, cpfhelpers, genhelpers
 from utils import strings
 
 class TestCalculateCpfContribution(object):
-    """Tests the `calculate_cpf_contribution()` method in cpf.py.
+    """Tests the `calculate_cpf_contribution()` method in cpf/main.py.
 
     Test scenarios: 
     1. Age <=55
         a. Salary <=$50/month
         b. Salary >$50 to <=$500/month
         c. Salary >$500 to <$750/month
-        d. Salary above $750/month and below OW Ceiling, bonus below AW Ceiling
-        e. Salary above $750/month and below OW Ceiling, bonus above AW Ceiling
-        f. Salary above $750/month and above OW Ceiling, bonus below AW Ceiling
-        g. Salary above $750/month and above OW Ceiling, bonus above AW Ceiling
+        d. Salary >=$750/month and below OW Ceiling, bonus below AW Ceiling
+        e. Salary >=$750/month and below OW Ceiling, bonus above AW Ceiling
+        f. Salary >=$750/month and above OW Ceiling, bonus below AW Ceiling
+        g. Salary >=$750/month and above OW Ceiling, bonus above AW Ceiling
     """
 
     def _perform_assertion(self,
@@ -49,28 +49,34 @@ class TestCalculateCpfContribution(object):
         self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
     def test_scenario_1d(self):
-        salary, bonus, age = (4000 * 12, 20000, 30)
-        cont_total = (0.37 * salary) + (0.37 * bonus)
-        cont_employee = (0.2 * salary) + (0.2 * bonus)
+        # salary: $48k; bonus: $20k
+        salary, bonus, age = (4000 * 12, 5, 30)
+        bonus_amount = 4000 * bonus
+        cont_total = (0.37 * salary) + (0.37 * bonus_amount)
+        cont_employee = (0.2 * salary) + (0.2 * bonus_amount)
         cont_employer = cont_total - cont_employee
         self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
     def test_scenario_1e(self):
-        salary, bonus, age = (4000 * 12, 100000, 30)
+        # salary: $48k; bonus: $100k
+        salary, bonus, age = (4000 * 12, 25, 30)
         cont_total = (0.37 * salary) + (0.37 * (102000 - salary))
         cont_employee = (0.2 * salary) + (0.2 * (102000 - salary))
         cont_employer = cont_total - cont_employee
         self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
     def test_scenario_1f(self):
-        salary, bonus, age = (8000 * 12, 20000, 30)
-        cont_total = (0.37 * 72000) + (0.37 * bonus)
-        cont_employee = (0.2 * 72000) + (0.2 * bonus)
+        # salary: $96k; bonus: $20k
+        salary, bonus, age = (8000 * 12, 2.5, 30)
+        bonus_amount = 8000 * bonus
+        cont_total = (0.37 * 72000) + (0.37 * bonus_amount)
+        cont_employee = (0.2 * 72000) + (0.2 * bonus_amount)
         cont_employer = cont_total - cont_employee
         self._perform_assertion(salary, bonus, age, cont_employee, cont_employer)
 
     def test_scenario_1g(self):
-        salary, bonus, age = (8000 * 12, 100000, 30)
+        # salary: $96k; bonus: $100k
+        salary, bonus, age = (8000 * 12, 8.5, 30)
         cont_total = (0.37 * 72000) + (0.37 * (102000 - 72000))
         cont_employee = (0.2 * 72000) + (0.2 * (102000 - 72000))
         cont_employer = cont_total - cont_employee
@@ -95,28 +101,31 @@ class TestCalculateCpfAllocation(object):
     """
 
     salary = 4000
-    bonus = 10000
+    bonus = 2.5     # i.e. $10k
 
-    def _get_contribution_amount_by_age(self,
-                                        age: int,
-                                        with_bonus: bool) -> float:
-        bonus_annual = self.bonus if with_bonus is True else 0
-        cont = cpfhelpers._get_monthly_contribution_amount(self.salary, bonus_annual, age=age, entity=strings.COMBINED)
-        return cont
+    def _get_contribution_amount_by_age(self, age: int) -> float:
+        """Returns the total contribution amount for both with-bonus and without-bonus scenarios."""
+
+        cont_with_bonus = cpfhelpers._get_monthly_contribution_amount(self.salary, self.bonus, age=age, entity=strings.COMBINED)
+        cont_wo_bonus = cpfhelpers._get_monthly_contribution_amount(self.salary, 0, age=age, entity=strings.COMBINED)
+        return cont_with_bonus, cont_wo_bonus
 
     def _get_alloc_amount(self,
                           cont: float,
                           sa_ratio: float,
                           ma_ratio: float) -> Tuple[float, float, float]:
+        """Given a total contribution amount and the MA/SA contribution ratios,
+        return the allocation amounts into all 3 accounts."""
+
         sa_alloc = genhelpers._truncate(sa_ratio * cont)
         ma_alloc = genhelpers._truncate(ma_ratio * cont)
         oa_alloc = cont - sa_alloc - ma_alloc
         return oa_alloc, sa_alloc, ma_alloc
 
-    def _perform_assertion(self,
-                           bonus: float,
+    def _perform_assertions(self,
                            age: int,
-                           alloc_exp: float):
+                           alloc_with_bonus_exp: list,
+                           alloc_wo_bonus_exp: list):
         """
         Helper class to perform assertion checks.
         Round the values to 2 decimal places when checking for equality.
@@ -124,83 +133,97 @@ class TestCalculateCpfAllocation(object):
         Args:
             bonus (float): Bonus/commission received in the year
             age (int): Age of employee
-            alloc_exp (array): Expected amount to be allocated into the CPF accounts [OA, SA, MA]
+            alloc_exp (list): Expected amount to be allocated into the CPF accounts [OA, SA, MA]
         """
         
-        allocations = calculate_cpf_allocation(self.salary * 12, bonus, None, age=age)
-        assert round(alloc_exp[0], 2) == float(allocations[strings.VALUES][strings.OA])
-        assert round(alloc_exp[1], 2) == float(allocations[strings.VALUES][strings.SA])
-        assert round(alloc_exp[2], 2) == float(allocations[strings.VALUES][strings.MA])
+        # with bonus
+        allocations = calculate_cpf_allocation(self.salary * 12, self.bonus, None, age=age)
+        assert round(alloc_with_bonus_exp[0], 2) == float(allocations[strings.VALUES][strings.OA])
+        assert round(alloc_with_bonus_exp[1], 2) == float(allocations[strings.VALUES][strings.SA])
+        assert round(alloc_with_bonus_exp[2], 2) == float(allocations[strings.VALUES][strings.MA])
+
+        # without bonus
+        allocations = calculate_cpf_allocation(self.salary * 12, 0, None, age=age)
+        assert round(alloc_wo_bonus_exp[0], 2) == float(allocations[strings.VALUES][strings.OA])
+        assert round(alloc_wo_bonus_exp[1], 2) == float(allocations[strings.VALUES][strings.SA])
+        assert round(alloc_wo_bonus_exp[2], 2) == float(allocations[strings.VALUES][strings.MA])
 
     def test_scenario_1(self):
         age = 35
-        cont_with_bonus = self._get_contribution_amount_by_age(age, True)
-        cont_wo_bonus = self._get_contribution_amount_by_age(age, False)
+        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1621, 0.2162)
         oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.1621, 0.2162)
 
-        self._perform_assertion(self.bonus, age, [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus])
-        self._perform_assertion(0, age, [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus])
+        self._perform_assertions(age,
+                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
+                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
+                                )
     
     def test_scenario_2(self):
         age = 45
-        cont_with_bonus = self._get_contribution_amount_by_age(age, True)
-        cont_wo_bonus = self._get_contribution_amount_by_age(age, False)
+        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1891, 0.2432)
         oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.1891, 0.2432)
 
-        self._perform_assertion(self.bonus, age, [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus])
-        self._perform_assertion(0, age, [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus])
+        self._perform_assertions(age,
+                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
+                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
+                                )
 
     def test_scenario_3(self):
         age = 50
-        cont_with_bonus = self._get_contribution_amount_by_age(age, True)
-        cont_wo_bonus = self._get_contribution_amount_by_age(age, False)
+        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.2162, 0.2702)
         oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.2162, 0.2702)
 
-        self._perform_assertion(self.bonus, age, [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus])
-        self._perform_assertion(0, age, [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus])
+        self._perform_assertions(age,
+                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
+                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
+                                )
 
     def test_scenario_4(self):
         age = 55
-        cont_with_bonus = self._get_contribution_amount_by_age(age, True)
-        cont_wo_bonus = self._get_contribution_amount_by_age(age, False)
+        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.3108, 0.2837)
         oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.3108, 0.2837)
 
-        self._perform_assertion(self.bonus, age, [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus])
-        self._perform_assertion(0, age, [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus])
+        self._perform_assertions(age,
+                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
+                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
+                                )
     
     def test_scenario_5(self):
         age = 60
-        cont_with_bonus = self._get_contribution_amount_by_age(age, True)
-        cont_wo_bonus = self._get_contribution_amount_by_age(age, False)
+        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1346, 0.4038)
         oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.1346, 0.4038)
 
-        self._perform_assertion(self.bonus, age, [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus])
-        self._perform_assertion(0, age, [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus])
+        self._perform_assertions(age,
+                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
+                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
+                                )
 
     def test_scenario_6(self):
         age = 65
-        cont_with_bonus = self._get_contribution_amount_by_age(age, True)
-        cont_wo_bonus = self._get_contribution_amount_by_age(age, False)
+        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1515, 0.6363)
         oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.1515, 0.6363)
 
-        self._perform_assertion(self.bonus, age, [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus])
-        self._perform_assertion(0, age, [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus])
+        self._perform_assertions(age,
+                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
+                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
+                                )
 
     def test_scenario_7(self):
         age = 80
-        cont_with_bonus = self._get_contribution_amount_by_age(age, True)
-        cont_wo_bonus = self._get_contribution_amount_by_age(age, False)
+        cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.08, 0.84)
         oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus = self._get_alloc_amount(cont_wo_bonus, 0.08, 0.84)
 
-        self._perform_assertion(self.bonus, age, [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus])
-        self._perform_assertion(0, age, [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus])
+        self._perform_assertions(age,
+                                 [oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus],
+                                 [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
+                                )
 
 
 class TestCpfCalculateAnnualChange1(object):
@@ -222,7 +245,7 @@ class TestCpfCalculateAnnualChange1(object):
 
     age = 25
     salary = 4000
-    bonus = 10000
+    bonus = 2.5
 
     # helper function
     def _add_monthly_contribution(self,
@@ -457,7 +480,7 @@ class TestCpfCalculateAnnualChange2(object):
     """
 
     salary = 4000
-    bonus = 10000
+    bonus = 2.5
     date_start = dt.date(dt.date.today().year, 1, 1)
     
     def _add_monthly_contribution(self,
@@ -611,7 +634,7 @@ class TestCpfCalculateAnnualChange3(object):
     7. Withdraw from MA
     """
 
-    salary, bonus = (4000, 10000)
+    salary, bonus = (4000, 2.5)
     age = 25
     base_cpf = [6000, 2000, 3000]
     date_start = dt.date(dt.date.today().year, 1, 1)

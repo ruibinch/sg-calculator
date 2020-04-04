@@ -170,6 +170,10 @@ def _get_account_deltas_month(account_deltas: dict,
 
     return (delta_oa, delta_sa, delta_ma)
 
+###############################################################################
+#                                  MATH METHODS                               #
+###############################################################################
+
 def _round_half_up(n: float,
                    decimals: int=0) -> int:
     """Rounds the given monetary amount to the nearest dollar.

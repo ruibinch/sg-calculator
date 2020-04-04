@@ -27,40 +27,42 @@ def _get_monthly_contribution_amount(salary: float,
 
     Args:
         salary (float): Monthly salary of employee
-        bonus (float): Bonus/commission received in the month
+        bonus (float): Bonus represented as a multiplier of monthly salary
         age (int): Age of employee
         entity (str): Either "combined" or "employee"
     
     Returns the CPF contribution amount for the month.
     """
+    
+    logger.debug(f'_get_monthly_contribution_amount() - salary {salary}; bonus {bonus}')
 
     age_bracket = genhelpers._get_age_bracket(age, strings.CONTRIBUTION)
     rates = constants.rates_cont
-    amount_tw = salary + bonus # only needed if income is in income brackets 2 or 3
+    amount_tw = salary + (bonus * salary) # only needed if income is in income brackets 2 or 3
 
     if salary <= constants.INCOME_BRACKET_1:
         cont = 0
-        # logger.debug('Salary <=$50/month, total contribution is zero')
+        logger.debug('Salary <=$50/month, total contribution is zero')
     elif salary <= constants.INCOME_BRACKET_2:
         cont = rates[age_bracket][1][entity] * amount_tw
-        # logger.debug(f'Salary >$50 to <=$500/month, contribution from TW is {cont}')
+        logger.debug(f'Salary >$50 to <=$500/month, contribution from TW is {cont}')
     elif salary <= constants.INCOME_BRACKET_3:
         cont_from_tw = rates[age_bracket][2][entity] * amount_tw
         cont_misc = rates[age_bracket][2][strings.MISC] * (amount_tw - 500)
         cont = cont_from_tw + cont_misc
-        # logger.debug(f'Salary >$500 to <=$749/month, contribution from OW is {cont}')
+        logger.debug(f'Salary >$500 to <=$749/month, contribution from OW is {cont}')
     else:
         amount_ow_eligible_for_cpf = min(salary, constants.CEILING_OW)
         cont_from_ow = rates[age_bracket][3][entity] * amount_ow_eligible_for_cpf
-        # logger.debug(f'Salary >=$750/month, contribution from OW is {cont_from_ow}')
+        logger.debug(f'Salary >=$750/month, contribution from OW is {cont_from_ow}')
 
         cont_from_aw = 0
         if bonus > 0:
             # need to consider AW
             ceiling_aw = constants.CEILING_AW - (amount_ow_eligible_for_cpf * 12)
-            amount_aw_eligible_for_cpf = min(bonus, ceiling_aw)
+            amount_aw_eligible_for_cpf = min(bonus * salary, ceiling_aw)
             cont_from_aw = rates[age_bracket][3][entity] * amount_aw_eligible_for_cpf
-            # logger.debug(f'Salary >=$750/month with bonus, contribution from AW is {cont_from_aw}')
+            logger.debug(f'Salary >=$750/month with bonus, contribution from AW is {cont_from_aw}')
 
         cont_total = cont_from_ow + cont_from_aw
         if entity == strings.COMBINED:

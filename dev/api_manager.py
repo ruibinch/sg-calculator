@@ -10,7 +10,7 @@ def add_arguments():
 
     # General
     parser.add_argument(strings.PARAM_SALARY, help='Annual salary')
-    parser.add_argument(strings.PARAM_BONUS, help='Bonus/commission received in the year')
+    parser.add_argument(strings.PARAM_BONUS, help='Bonus represented as a multiplier of monthly salary')
     parser.add_argument(strings.PARAM_AGE, help='Age')
     parser.add_argument(strings.PARAM_DOB, help='Date of birth in YYYYMM format')
     parser.add_argument(strings.PARAM_PERIOD, help='Time period; either year or month')

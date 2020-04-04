@@ -141,6 +141,7 @@ def check_conditional_params(body: dict,
         params_str = ', '.join(params)
         logger.debug(f'None of ({params_str}) are present')
 
+        # add an error message for each of the params
         for param in params:
             output[strings.ERROR][param] = f'At least one of ({params_str}) must be present'
 

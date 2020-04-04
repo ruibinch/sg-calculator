@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 Main file serving as the entry point to the CPF module.
 """
 
-def calculate_cpf_contribution(salary: str,
-                               bonus: str,
+def calculate_cpf_contribution(salary: float,
+                               bonus: float,
                                dob: str,
                                period: str,
                                age: int=None) -> dict:
@@ -27,8 +27,8 @@ def calculate_cpf_contribution(salary: str,
     3. Employers' share = Total contribution - employees' share.
 
     Args:
-        salary (str): Annual salary of employee
-        bonus (str): Bonus/commission received in the year; assume to be credited in December
+        salary (float): Annual salary of employee
+        bonus (float): Bonus represented as a multiplier of monthly salary
         dob (str): Date of birth of employee in YYYYMM format
         period (str): Time period of contribution; either "year" or "month"
         age (int): Age of employee (*only used for testing purposes*)
@@ -76,8 +76,8 @@ def calculate_cpf_contribution(salary: str,
         strings.RATES: cont_rates,
     }
 
-def calculate_cpf_allocation(salary: str,
-                             bonus: str,
+def calculate_cpf_allocation(salary: float,
+                             bonus: float,
                              dob: str,
                              age: int=None) -> dict:
     """Calculates the monthly allocation into the 3 CPF accounts.
@@ -89,8 +89,8 @@ def calculate_cpf_allocation(salary: str,
     2. OA allocation = Total contribution - SA allocation - MA allocation.
     
     Args:
-        salary (str): Annual salary of employee
-        bonus (str): Bonus/commission received in the year; only applicable in the month when bonus is disbursed
+        salary (float): Annual salary of employee
+        bonus (float): Bonus represented as a multiplier of monthly salary
         dob (str): Date of birth of employee in YYYYMM format
         age (int): Age of employee (*only used for testing purposes*)
 
@@ -133,8 +133,8 @@ def calculate_cpf_allocation(salary: str,
         strings.RATES: alloc_rates,
     }
 
-def calculate_cpf_projection(salary: str,
-                             bonus: str,
+def calculate_cpf_projection(salary: float,
+                             bonus: float,
                              yoy_increase_salary: str,
                              yoy_increase_bonus: str,
                              dob: str,
@@ -155,8 +155,8 @@ def calculate_cpf_projection(salary: str,
     Reference <https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/>
 
     Args:
-        salary (str): Annual salary of employee
-        bonus (str): Bonus/commission received in the year
+        salary (float): Annual salary of employee
+        bonus (float): Bonus represented as a multiplier of monthly salary
         yoy_increase_salary (str): Projected year-on-year percentage increase in salary
         yoy_increase_bonus (str): Projected year-on-year percentage increase in bonus
         dob (str): Date of birth of employee in YYYYMM format
@@ -225,7 +225,7 @@ def calculate_cpf_projection(salary: str,
             date_start = dt.date(dt.date.today().year + i, 1, 1)
 
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
-        bonus_proj = bonus * pow(1 + yoy_increase_bonus, i)
+        bonus_proj = (bonus * salary) * pow(1 + yoy_increase_bonus, i)
 
         # get OA/SA/MA topup/withdrawal details in this year
         # package all into an `account_deltas` dict

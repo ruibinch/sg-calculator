@@ -4,8 +4,8 @@ from utils import config
 
 # Flask application factory pattern is not used here as Flask is only used for
 # dev purposes on the local machine.
-# Only the necessary files are packaged to run as a set of serverless functions
-# on AWS Lambda in production.
+# Only the necessary files (i.e. /logic and /utils folders) are packaged to run
+# as a set of serverless functions on AWS Lambda in production.
 
 app = Flask(__name__)
 api_manager.init(app)
