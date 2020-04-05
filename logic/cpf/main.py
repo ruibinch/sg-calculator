@@ -136,7 +136,6 @@ def calculate_cpf_allocation(salary: float,
 def calculate_cpf_projection(salary: float,
                              bonus: float,
                              yoy_increase_salary: str,
-                             yoy_increase_bonus: str,
                              dob: str,
                              base_cpf: dict,
                              bonus_month: str,
@@ -158,7 +157,6 @@ def calculate_cpf_projection(salary: float,
         salary (float): Annual salary of employee
         bonus (float): Bonus represented as a multiplier of monthly salary
         yoy_increase_salary (str): Projected year-on-year percentage increase in salary
-        yoy_increase_bonus (str): Projected year-on-year percentage increase in bonus
         dob (str): Date of birth of employee in YYYYMM format
         base_cpf (dict): Contains the current balance in the CPF accounts
             - `oa`: current amount in OA
@@ -225,7 +223,7 @@ def calculate_cpf_projection(salary: float,
             date_start = dt.date(dt.date.today().year + i, 1, 1)
 
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
-        bonus_proj = (bonus * salary) * pow(1 + yoy_increase_bonus, i)
+        bonus_proj = bonus * salary_proj
 
         # get OA/SA/MA topup/withdrawal details in this year
         # package all into an `account_deltas` dict

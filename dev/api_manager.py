@@ -17,7 +17,6 @@ def add_arguments():
     # Projection-specific
     parser.add_argument(strings.PARAM_BONUS_MONTH, help='Month where bonus is received')
     parser.add_argument(strings.PARAM_YOY_INCREASE_SALARY, help='Projected YoY increase of salary')
-    parser.add_argument(strings.PARAM_YOY_INCREASE_BONUS, help='Projected YoY increase of bonus')
     parser.add_argument(strings.PARAM_BASE_CPF, help='Base amount in CPF accounts')
     parser.add_argument(strings.PARAM_N_YEARS, help='Number of years into the future')
     parser.add_argument(strings.PARAM_TARGET_YEAR, help='Target year in the future to project for')

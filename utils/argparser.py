@@ -197,7 +197,6 @@ def parse_args(body: dict,
         output = extract_param(body, output, strings.PARAM_SALARY, MOULD_FLOAT)
         output = extract_param(body, output, strings.PARAM_BONUS, MOULD_FLOAT)
         output = extract_param(body, output, strings.PARAM_YOY_INCREASE_SALARY, MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_YOY_INCREASE_BONUS, MOULD_FLOAT)
         output = extract_param(body, output, strings.PARAM_DOB, MOULD_STR)
         output = extract_param(body, output, strings.PARAM_BASE_CPF, MOULD_DICT)
         output = extract_param(body, output, strings.PARAM_BONUS_MONTH, MOULD_INT,

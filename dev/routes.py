@@ -43,7 +43,6 @@ class CpfProjection(Resource):
                 params[strings.PARAM_SALARY],
                 params[strings.PARAM_BONUS],
                 params[strings.PARAM_YOY_INCREASE_SALARY],
-                params[strings.PARAM_YOY_INCREASE_BONUS],
                 params[strings.PARAM_DOB],
                 params[strings.PARAM_BASE_CPF],
                 params[strings.PARAM_BONUS_MONTH],
