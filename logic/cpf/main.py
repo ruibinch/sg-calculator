@@ -126,9 +126,9 @@ def calculate_cpf_allocation(salary: float,
 
     return {
         strings.VALUES: {
-            strings.OA: str(round(oa_alloc, 2) * 12),
-            strings.SA: str(sa_alloc * 12),
-            strings.MA: str(ma_alloc * 12),
+            strings.OA: str(round(oa_alloc * 12, 2)),
+            strings.SA: str(round(sa_alloc * 12, 2)),
+            strings.MA: str(round(ma_alloc * 12, 2)),
         },
         strings.RATES: alloc_rates,
     }

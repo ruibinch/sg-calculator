@@ -36,7 +36,6 @@ update_lambda_function:
     - cd package
     - zip -r9 ${OLDPWD}/calculator-bff.zip .
     - cd $OLDPWD
-    # add files from /app folder and update Lambda functions
     - zip -g calculator-bff.zip lambda_function.py -r logic utils -i '*.py'
   script:
     - pip install awscli

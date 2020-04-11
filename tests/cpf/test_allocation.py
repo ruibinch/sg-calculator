@@ -41,7 +41,7 @@ class TestCalculateCpfAllocation(object):
         sa_alloc = genhelpers._truncate(sa_ratio * cont)
         ma_alloc = genhelpers._truncate(ma_ratio * cont)
         oa_alloc = cont - sa_alloc - ma_alloc
-        return round(oa_alloc, 2) * 12, sa_alloc * 12, ma_alloc * 12
+        return round(oa_alloc * 12, 2), round(sa_alloc * 12, 2), round(ma_alloc * 12, 2)
 
     def _perform_assertions(self,
                            age: int,

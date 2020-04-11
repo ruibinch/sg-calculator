@@ -40,11 +40,12 @@ def handle_api_request(endpoint: str) -> Tuple[dict, int, dict]:
         - `status_code` - HTTP status code representation
     """
     
+    response, params = None, None
     args = parser.parse_args()
     args = {k:v for k,v in args.items() if v is not None}
     output = argparser.parse_args(args, endpoint)
-
-    if not output[strings.STATUSCODE]:
+    
+    if output[strings.STATUSCODE]:
         status_code = output[strings.STATUSCODE]
         response = {strings.ERROR: output[strings.ERROR]}
     else:
