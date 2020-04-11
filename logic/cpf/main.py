@@ -119,7 +119,7 @@ def calculate_cpf_allocation(salary: float,
                                                  cont_monthly,
                                                  account=strings.MA)
     oa_alloc = cont_monthly - sa_alloc - ma_alloc
-    logger.debug(f'Allocation amounts: OA = {oa_alloc}, MA = {ma_alloc}, SA = {sa_alloc}')
+    logger.debug(f'Allocation amounts: OA = {round(oa_alloc, 2)}, SA = {sa_alloc}, MA = {ma_alloc}')
 
     # get the allocation rates
     alloc_rates = cpfhelpers._get_allocation_rates(age)
@@ -188,9 +188,10 @@ def calculate_cpf_projection(salary: float,
         proj_start_date (date): Starting date of projection (*only used for testing purposes*)
 
     Returns a dict:
-        - `oa`: OA balance after number of projected years
-        - `sa`: SA balance after number of projected years
-        - `ma`: MA balance after number of projected years
+        - `values`: a dict containing keys (1, 2, ..., "final") corresponding 
+                    to n projected years, where each child object contains the
+                    OA, SA, MA balances at the end of that year as well as the
+                    interest accumulated in OA, SA, MA in that year  
     """
     
     logger.debug('/cpf/projection')
@@ -222,8 +223,8 @@ def calculate_cpf_projection(salary: float,
             # for the subsequent years, start the count from January
             date_start = dt.date(dt.date.today().year + i, 1, 1)
 
+        # calculated projected salary for this year
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
-        bonus_proj = bonus * salary_proj
 
         # get OA/SA/MA topup/withdrawal details in this year
         # package all into an `account_deltas` dict
@@ -242,8 +243,9 @@ def calculate_cpf_projection(salary: float,
         # sa_topup = sa_topup_details[0] if sa_topup_details != [] else 0
         # sa_topup_from_oa = sa_topup_details[1] if sa_topup_details != [] else None
 
+        logger.debug(f'Year {i + 1} projection')
         results_annual = cpfhelpers.calculate_annual_change(salary_proj,
-                                                            bonus_proj,
+                                                            bonus,
                                                             oa,
                                                             sa,
                                                             ma,
@@ -252,10 +254,15 @@ def calculate_cpf_projection(salary: float,
                                                             date_start=date_start,
                                                             age=age)
 
+        # update with the new CPF account balances
+        oa = float(results_annual[strings.OA])
+        sa = float(results_annual[strings.SA])
+        ma = float(results_annual[strings.MA])
+
         # set key to `final` if it is the last year
         key = strings.FINAL if i == (n_years - 1) else str(i + 1)
         values[key] = results_annual
 
     return {
-        strings.VALUES: values
+        strings.VALUES: values,
     }

@@ -255,7 +255,7 @@ def calculate_annual_change(salary: float,
 
     Args:
         salary (float): Annual salary of employee
-        bonus (float): Bonus/commission received in the year
+        bonus (float): Bonus represented as a multiplier of monthly salary
         oa_curr (float): Current amount in OA
         sa_curr (float): Current amount in SA
         ma_curr (float): Current amount in MA
@@ -266,16 +266,24 @@ def calculate_annual_change(salary: float,
         age (int): Age of employee
         dob (str): Date of birth of employee in YYYYMM format
 
-    Returns a tuple containing:
-        - New amount in OA, after contributions and interest for this year
-        - New amount in SA, after contributions and interest for this year
-        - New amount in MA, after contributions and interest for this year
+    Returns a dict:
+        - `oa`: OA balance at the end of the year
+        - `sa`: SA balance at the end of the year
+        - `ma`: MA balance at the end of the year
+        - `oa_interest`: Interest earned in OA in the year
+        - `sa_interest`: Interest earned in SA in the year
+        - `ma_interest`: Interest earned in MA in the year
     """
 
     oa_accumulated, sa_accumulated, ma_accumulated = oa_curr, sa_curr, ma_curr
     oa_interest_total, sa_interest_total, ma_interest_total = (0, 0, 0)
+
+    # get the monthly allocations for this year
+    allocations_with_bonus = main.calculate_cpf_allocation(salary, bonus, None, age=age)
+    allocations_wo_bonus = main.calculate_cpf_allocation(salary, 0, None, age=age)
     
     # iterate through the months in the year
+    logger.debug(f'calculate_annual_change()')
     month_start = date_start.month if date_start is not None else 1
     for month in range(month_start, 13):
         if dob is not None:
@@ -287,15 +295,16 @@ def calculate_annual_change(salary: float,
         #     # else-condition only applies for unit testing of class TestCpfCalculateAnnualChange1
         #     bonus_annual = bonus if month == bonus_month else 0
         
-        # check if this month is the month where bonus is disbursed
-        bonus_annual = bonus if month == bonus_month else 0
-        
         # add the CPF allocation for this month
         # this is actually the contribution for the previous month's salary
-        allocations = main.calculate_cpf_allocation(salary, bonus_annual, None, age=age)
-        oa_accumulated += float(allocations[strings.VALUES][strings.OA]) / 12
-        sa_accumulated += float(allocations[strings.VALUES][strings.SA]) / 12
-        ma_accumulated += float(allocations[strings.VALUES][strings.MA]) / 12
+        if month == bonus_month:
+            oa_accumulated += float(allocations_with_bonus[strings.VALUES][strings.OA]) / 12
+            sa_accumulated += float(allocations_with_bonus[strings.VALUES][strings.SA]) / 12
+            ma_accumulated += float(allocations_with_bonus[strings.VALUES][strings.MA]) / 12
+        else:
+            oa_accumulated += float(allocations_wo_bonus[strings.VALUES][strings.OA]) / 12
+            sa_accumulated += float(allocations_wo_bonus[strings.VALUES][strings.SA]) / 12
+            ma_accumulated += float(allocations_wo_bonus[strings.VALUES][strings.MA]) / 12
 
         # amend the accumulated values if there are any topups/withdrawals in this month
         if account_deltas is not None and len(account_deltas.keys()) != 0:
@@ -335,10 +344,15 @@ def calculate_annual_change(salary: float,
         ma_interest = _calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma)
         ma_interest_total += ma_interest
 
-        # print(i, oa_interest, sa_interest, ma_interest)
+        if month == bonus_month:
+            logger.debug(f'Month = {month} (bonus); OA = {round(oa_accumulated, 2)}, SA = {round(sa_accumulated, 2)}, MA = {round(ma_accumulated, 2)}')
+            logger.debug(f'Month = {month} (bonus); OA int = {round(oa_interest, 2)}, SA int = {round(sa_interest, 2)}, MA int = {round(ma_interest, 2)}')
+        else:
+            logger.debug(f'Month = {month}; OA = {round(oa_accumulated, 2)}, SA = {round(sa_accumulated, 2)}, MA = {round(ma_accumulated, 2)}')
+            logger.debug(f'Month = {month}; OA int = {round(oa_interest, 2)}, SA int = {round(sa_interest, 2)}, MA int = {round(ma_interest, 2)}')
 
     # interest added at the end of the year
-    logger.debug(f'Interest in year: OA = {oa_interest_total}, SA = {sa_interest_total}, MA = {ma_interest_total}')
+    logger.debug(f'Interest in year: OA = {round(oa_interest_total, 2)}, SA = {round(sa_interest_total, 2)}, MA = {round(ma_interest_total, 2)}')
     oa_new = oa_accumulated + oa_interest_total
     sa_new = sa_accumulated + sa_interest_total
     ma_new = ma_accumulated + ma_interest_total
