@@ -253,7 +253,7 @@ def calculate_cpf_projection(salary: float,
                                                             age=age)
 
         # set key to `final` if it is the last year
-        key = 'final' if i == (n_years - 1) else str(i+1)
+        key = strings.FINAL if i == (n_years - 1) else str(i + 1)
         values[key] = results_annual
 
     return {
