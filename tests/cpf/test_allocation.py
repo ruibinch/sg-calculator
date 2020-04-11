@@ -36,12 +36,12 @@ class TestCalculateCpfAllocation(object):
                           sa_ratio: float,
                           ma_ratio: float) -> Tuple[float, float, float]:
         """Given a total contribution amount and the MA/SA contribution ratios,
-        return the allocation amounts into all 3 accounts."""
+        return the annual allocation amounts into all 3 accounts."""
 
         sa_alloc = genhelpers._truncate(sa_ratio * cont)
         ma_alloc = genhelpers._truncate(ma_ratio * cont)
         oa_alloc = cont - sa_alloc - ma_alloc
-        return oa_alloc, sa_alloc, ma_alloc
+        return round(oa_alloc, 2) * 12, sa_alloc * 12, ma_alloc * 12
 
     def _perform_assertions(self,
                            age: int,
@@ -59,15 +59,15 @@ class TestCalculateCpfAllocation(object):
         
         # with bonus
         allocations = calculate_cpf_allocation(self.salary * 12, self.bonus, None, age=age)
-        assert round(alloc_with_bonus_exp[0], 2) == float(allocations[strings.VALUES][strings.OA])
-        assert round(alloc_with_bonus_exp[1], 2) == float(allocations[strings.VALUES][strings.SA])
-        assert round(alloc_with_bonus_exp[2], 2) == float(allocations[strings.VALUES][strings.MA])
+        assert alloc_with_bonus_exp[0] == float(allocations[strings.VALUES][strings.OA])
+        assert alloc_with_bonus_exp[1] == float(allocations[strings.VALUES][strings.SA])
+        assert alloc_with_bonus_exp[2] == float(allocations[strings.VALUES][strings.MA])
 
         # without bonus
         allocations = calculate_cpf_allocation(self.salary * 12, 0, None, age=age)
-        assert round(alloc_wo_bonus_exp[0], 2) == float(allocations[strings.VALUES][strings.OA])
-        assert round(alloc_wo_bonus_exp[1], 2) == float(allocations[strings.VALUES][strings.SA])
-        assert round(alloc_wo_bonus_exp[2], 2) == float(allocations[strings.VALUES][strings.MA])
+        assert alloc_wo_bonus_exp[0] == float(allocations[strings.VALUES][strings.OA])
+        assert alloc_wo_bonus_exp[1] == float(allocations[strings.VALUES][strings.SA])
+        assert alloc_wo_bonus_exp[2] == float(allocations[strings.VALUES][strings.MA])
 
     def test_scenario_1(self):
         age = 35

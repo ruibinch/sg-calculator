@@ -80,7 +80,7 @@ def calculate_cpf_allocation(salary: float,
                              bonus: float,
                              dob: str,
                              age: int=None) -> dict:
-    """Calculates the monthly allocation into the 3 CPF accounts.
+    """Calculates the annual allocation into the 3 CPF accounts.
 
     Reference <https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf/>`
 
@@ -126,21 +126,21 @@ def calculate_cpf_allocation(salary: float,
 
     return {
         strings.VALUES: {
-            strings.OA: str(round(oa_alloc, 2)), 
-            strings.SA: str(sa_alloc),
-            strings.MA: str(ma_alloc),
+            strings.OA: str(round(oa_alloc, 2) * 12),
+            strings.SA: str(sa_alloc * 12),
+            strings.MA: str(ma_alloc * 12),
         },
         strings.RATES: alloc_rates,
     }
 
 def calculate_cpf_projection(salary: float,
                              bonus: float,
-                             yoy_increase_salary: str,
+                             yoy_increase_salary: float,
                              dob: str,
                              base_cpf: dict,
-                             bonus_month: str,
-                             n_years: str,
-                             target_year: str, 
+                             bonus_month: int,
+                             n_years: int,
+                             target_year: int, 
                              oa_topups: dict,
                              oa_withdrawals: dict,
                              sa_topups: dict, 
@@ -156,15 +156,15 @@ def calculate_cpf_projection(salary: float,
     Args:
         salary (float): Annual salary of employee
         bonus (float): Bonus represented as a multiplier of monthly salary
-        yoy_increase_salary (str): Projected year-on-year percentage increase in salary
+        yoy_increase_salary (float): Projected year-on-year percentage increase in salary
         dob (str): Date of birth of employee in YYYYMM format
         base_cpf (dict): Contains the current balance in the CPF accounts
             - `oa`: current amount in OA
             - `sa`: current amount in SA
             - `ma`: current amount in MA
-        bonus_month (str): Month where bonus is received (1-12)
-        n_years (str): Number of years into the future to project
-        target_year (str): Target end year of projection
+        bonus_month (int): Month where bonus is received (1-12)
+        n_years (int): Number of years into the future to project
+        target_year (int): Target end year of projection
         oa_topups (dict): Cash top-ups to the OA
             - `{date}`: date of cash topup in YYYYMM format
                 - `amount`: Topup amount to OA

@@ -293,12 +293,12 @@ def calculate_annual_change(salary: float,
         # add the CPF allocation for this month
         # this is actually the contribution for the previous month's salary
         allocations = main.calculate_cpf_allocation(salary, bonus_annual, None, age=age)
-        oa_accumulated += float(allocations[strings.VALUES][strings.OA])
-        sa_accumulated += float(allocations[strings.VALUES][strings.SA])
-        ma_accumulated += float(allocations[strings.VALUES][strings.MA])
+        oa_accumulated += float(allocations[strings.VALUES][strings.OA]) / 12
+        sa_accumulated += float(allocations[strings.VALUES][strings.SA]) / 12
+        ma_accumulated += float(allocations[strings.VALUES][strings.MA]) / 12
 
+        # amend the accumulated values if there are any topups/withdrawals in this month
         if account_deltas is not None and len(account_deltas.keys()) != 0:
-            # if there have been topups/withdrawals in the accounts this month
             (delta_oa, delta_sa, delta_ma) = genhelpers._get_account_deltas_month(account_deltas, month)
             oa_accumulated += delta_oa
             sa_accumulated += delta_sa
