@@ -17,7 +17,6 @@ def handler(event: dict, context: dict) -> dict:
     """
 
     body = json.loads(event[strings.BODY])
-    print(body) # FIXME: for debugging
     output = argparser.parse_args(body, event[strings.PATH])
 
     if type(output[strings.STATUSCODE]) is int:

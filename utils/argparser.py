@@ -15,29 +15,10 @@ Handles parsing and conversion into the appropriate types of request arguments.
 #                                 HELPER METHODS                              #
 ###############################################################################
 
-# def parse_into_json_format(str_raw: str) -> str:
-#     """Parses the input string into a JSON-serialisable format and returns it as a JSON object.
-
-#     Args:
-#         str_raw (str): Input raw string
-#     """
-
-#     s = str_raw
-#     try:
-#         s = s.replace('\'', '"')
-#         s = s.replace('True', 'true')
-#         s = s.replace('False', 'false')
-#     except AttributeError:
-#         # `str_raw` is not a string
-#         pass
-
-#     logger.debug(f'Parsed {str_raw} into {s}')
-#     return json.loads(s)
-
 def extract_param(body: dict,
                   output: dict,
                   param: str,
-                  mould: Any,
+                  mould: Any=None,
                   required: bool=True,
                   allowed_values: list=None,
                   default_value: Any=None) -> dict:
@@ -65,19 +46,10 @@ def extract_param(body: dict,
     """
 
     try:
-        # if type(mould) is list:
-        #     # special handling for str->list conversions is required
-        #     # all lists are assumed to be a list of dicts
-        #     param_value = []
-
-        # # elif type(mould) is dict:
-        # #     # special handling for str->dict conversions is required
-        # #     # i.e. parse string into a JSON-appropriate format before converting to dict type
-        # #     param_json = parse_into_json_format(body[param])
-        # #     logger.error(param_json)
-        # #     param_value = type(mould)(param_json)
-        # else:
-        param_value = type(mould)(body[param])
+        if mould is not None and (type(mould) is int or type(mould) is float):
+            param_value = type(mould)(body[param])
+        else:
+            param_value = body[param]
 
         # check if extracted param value is allowed
         is_param_value_ok = False
@@ -174,44 +146,48 @@ def parse_args(body: dict,
             else it will be empty
     """
 
-    # moulds for typecasting
+    # moulds for typecasting of numbers
     MOULD_INT = 0
     MOULD_FLOAT = 0.0
-    MOULD_STR = '0'
-    MOULD_DICT = {'a': 1}
-    MOULD_LIST = [] # assumed to be a list of dicts
 
     logger.debug(f'Calling endpoint {path}')
     keys = [strings.PARAMS, strings.ERROR, strings.STATUSCODE]
     output = {key: {} for key in keys}
 
     if path == endpoints.CPF_CONTRIBUTION:
-        output = extract_param(body, output, strings.PARAM_SALARY, MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_BONUS, MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_DOB, MOULD_STR)
-        output = extract_param(body, output, strings.PARAM_PERIOD, MOULD_STR,
+        output = extract_param(body, output, strings.PARAM_SALARY, mould=MOULD_FLOAT)
+        output = extract_param(body, output, strings.PARAM_BONUS, mould=MOULD_FLOAT)
+        output = extract_param(body, output, strings.PARAM_DOB)
+        output = extract_param(body, output, strings.PARAM_PERIOD,
                                allowed_values=[strings.YEAR, strings.MONTH])
 
     elif path == endpoints.CPF_ALLOCATION:
-        output = extract_param(body, output, strings.PARAM_SALARY, MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_BONUS, MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_DOB, MOULD_STR)
+        output = extract_param(body, output, strings.PARAM_SALARY, mould=MOULD_FLOAT)
+        output = extract_param(body, output, strings.PARAM_BONUS, mould=MOULD_FLOAT)
+        output = extract_param(body, output, strings.PARAM_DOB)
 
     elif path == endpoints.CPF_PROJECTION:
-        output = extract_param(body, output, strings.PARAM_SALARY, MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_BONUS, MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_YOY_INCREASE_SALARY, MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_DOB, MOULD_STR)
-        output = extract_param(body, output, strings.PARAM_BASE_CPF, MOULD_DICT)
-        output = extract_param(body, output, strings.PARAM_BONUS_MONTH, MOULD_INT,
-                               required=False, default_value=12,
+        output = extract_param(body, output, strings.PARAM_SALARY, mould=MOULD_FLOAT)
+        output = extract_param(body, output, strings.PARAM_BONUS, mould=MOULD_FLOAT)
+        output = extract_param(body, output, strings.PARAM_YOY_INCREASE_SALARY, mould=MOULD_FLOAT)
+        output = extract_param(body, output, strings.PARAM_DOB)
+        output = extract_param(body, output, strings.PARAM_BASE_CPF)
+        output = extract_param(body, output, strings.PARAM_BONUS_MONTH,
+                               mould=MOULD_INT,
+                               required=False,
+                               default_value=12,
                                allowed_values=range(1, 13))
-        output = extract_param(body, output, strings.PARAM_N_YEARS, MOULD_INT,
-                               required=False, default_value=None)
-        output = extract_param(body, output, strings.PARAM_TARGET_YEAR, MOULD_INT,
-                               required=False, default_value=None)
-        output = extract_param(body, output, strings.PARAM_ACCOUNT_DELTAS, MOULD_LIST,
-                               required=False, default_value=[])
+        output = extract_param(body, output, strings.PARAM_N_YEARS,
+                               mould=MOULD_INT,
+                               required=False,
+                               default_value=None)
+        output = extract_param(body, output, strings.PARAM_TARGET_YEAR,
+                               mould=MOULD_INT,
+                               required=False,
+                               default_value=None)
+        output = extract_param(body, output, strings.PARAM_ACCOUNT_DELTAS,
+                               required=False,
+                               default_value=[])
 
         output = check_conditional_params(body, 
                                           output, 
