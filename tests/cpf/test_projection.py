@@ -22,9 +22,10 @@ class TestCpfCalculateAnnualChange1(object):
     8. OA > $20k after a few months, OA+SA+MA > $60k after a few months
     """
 
-    age = 25
     salary = 4000
     bonus = 2.5
+    date_start = dt.date(2020, 1, 1)
+    dob = '199501' # fix age at 25
 
     # helper function
     def _add_monthly_contribution(self,
@@ -63,8 +64,10 @@ class TestCpfCalculateAnnualChange1(object):
                             self.bonus,
                             balance_orig[0],
                             balance_orig[1],
-                            balance_orig[2], 
-                            age=self.age)
+                            balance_orig[2],
+                            account_deltas={},
+                            date_start=self.date_start,
+                            dob=self.dob)
 
         assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
         assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
@@ -302,9 +305,14 @@ class TestCpfCalculateAnnualChange2(object):
         """
 
         results_annual = cpfhelpers.calculate_annual_change(
-                            self.salary * 12, self.bonus,
-                            balance_orig[0], balance_orig[1], balance_orig[2],
-                            date_start=self.date_start, dob=dob)
+                            self.salary * 12,
+                            self.bonus,
+                            balance_orig[0],
+                            balance_orig[1],
+                            balance_orig[2],
+                            account_deltas={},
+                            date_start=self.date_start,
+                            dob=dob)
 
         assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
         assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
@@ -414,9 +422,9 @@ class TestCpfCalculateAnnualChange3(object):
     """
 
     salary, bonus = (4000, 2.5)
-    age = 25
     base_cpf = [6000, 2000, 3000]
-    date_start = dt.date(dt.date.today().year, 1, 1)
+    date_start = dt.date(2020, 1, 1)
+    dob = '199501'
     # standardise the month where the topup/withdrawal occurs
     delta_month = 5
     # standardise the topup/withdrawal amount too
@@ -469,10 +477,14 @@ class TestCpfCalculateAnnualChange3(object):
         """
 
         results_annual = cpfhelpers.calculate_annual_change(
-                                        self.salary * 12, self.bonus,
-                                        balance_orig[0], balance_orig[1], balance_orig[2],
+                                        self.salary * 12,
+                                        self.bonus,
+                                        balance_orig[0],
+                                        balance_orig[1],
+                                        balance_orig[2],
                                         account_deltas=account_deltas,
-                                        date_start=self.date_start, age=self.age)
+                                        date_start=self.date_start,
+                                        dob=self.dob)
 
         assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
         assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
