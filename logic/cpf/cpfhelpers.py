@@ -34,7 +34,7 @@ def _get_monthly_contribution_amount(salary: float,
     Returns the CPF contribution amount for the month.
     """
     
-    logger.debug(f'_get_monthly_contribution_amount() - salary {salary}; bonus {bonus}')
+    logger.info(f'_get_monthly_contribution_amount() - salary {round(salary, 2)}; bonus {round(bonus, 2)}')
 
     age_bracket = genhelpers._get_age_bracket(age, strings.CONTRIBUTION)
     rates = constants.rates_cont
@@ -45,16 +45,16 @@ def _get_monthly_contribution_amount(salary: float,
         logger.debug('Salary <=$50/month, total contribution is zero')
     elif salary <= constants.INCOME_BRACKET_2:
         cont = rates[age_bracket][1][entity] * amount_tw
-        logger.debug(f'Salary >$50 to <=$500/month, contribution from TW is {cont}')
+        logger.debug(f'Salary >$50 to <=$500/month, contribution from TW is {round(cont, 2)}')
     elif salary <= constants.INCOME_BRACKET_3:
         cont_from_tw = rates[age_bracket][2][entity] * amount_tw
         cont_misc = rates[age_bracket][2][strings.MISC] * (amount_tw - 500)
         cont = cont_from_tw + cont_misc
-        logger.debug(f'Salary >$500 to <=$749/month, contribution from OW is {cont}')
+        logger.debug(f'Salary >$500 to <=$749/month, contribution from OW is {round(cont, 2)}')
     else:
         amount_ow_eligible_for_cpf = min(salary, constants.CEILING_OW)
         cont_from_ow = rates[age_bracket][3][entity] * amount_ow_eligible_for_cpf
-        logger.debug(f'Salary >=$750/month, contribution from OW is {cont_from_ow}')
+        logger.debug(f'Salary >=$750/month, contribution from OW is {round(cont_from_ow, 2)}')
 
         cont_from_aw = 0
         if bonus > 0:
@@ -62,7 +62,7 @@ def _get_monthly_contribution_amount(salary: float,
             ceiling_aw = constants.CEILING_AW - (amount_ow_eligible_for_cpf * 12)
             amount_aw_eligible_for_cpf = min(bonus * salary, ceiling_aw)
             cont_from_aw = rates[age_bracket][3][entity] * amount_aw_eligible_for_cpf
-            logger.debug(f'Salary >=$750/month with bonus, contribution from AW is {cont_from_aw}')
+            logger.debug(f'Salary >=$750/month with bonus, contribution from AW is {round(cont_from_aw, 2)}')
 
         cont_total = cont_from_ow + cont_from_aw
         if entity == strings.COMBINED:
@@ -276,42 +276,51 @@ def calculate_annual_change(salary: float,
     """
 
     oa_accumulated, sa_accumulated, ma_accumulated = oa_curr, sa_curr, ma_curr
-    oa_interest_total, sa_interest_total, ma_interest_total = (0, 0, 0)
+    oa_interest_total, sa_interest_total, ma_interest_total = 0, 0, 0
+    # these will be updated in the for-loop iteration through the months in the year
+    age, age_bracket = -1, -1
+    # memoisation is required here as the person's age might change throughout the year
+    # then, the allocation amount might change if the age crosses into the next bracket
+    # hence memoisation prevents the allocation amount from being repeatedly calculated
+    allocations_memoised = {}
 
-    # get the monthly allocations for this year
-    allocations_with_bonus = main.calculate_cpf_allocation(salary, bonus, None, age=age)
-    allocations_wo_bonus = main.calculate_cpf_allocation(salary, 0, None, age=age)
-    
     # iterate through the months in the year
-    logger.debug(f'calculate_annual_change()')
     month_start = date_start.month if date_start is not None else 1
+    logger.info(f'calculate_annual_change - from "{month_start}/{date_start.year}" to "12/{date_start.year}"')
     for month in range(month_start, 13):
         if dob is not None:
             # wrap the date in a datetime object
             date_start_iter = dt.date(date_start.year, month, 1)
             age = genhelpers._get_age(dob, date_start_iter)
-            # print('Month: {}/{}, Age: {}'.format(date_start_iter.year, i, age))
-        # else:
-        #     # else-condition only applies for unit testing of class TestCpfCalculateAnnualChange1
-        #     bonus_annual = bonus if month == bonus_month else 0
-        
+            age_bracket = genhelpers._get_age_bracket(age, strings.ALLOCATION)
+
+            # if age bracket has changed, then get the new allocation amounts
+            if age_bracket not in allocations_memoised:
+                logger.debug(f'Individual\'s age bracket is set at "{age_bracket}"')
+                allocations_memoised[age_bracket] = {
+                    strings.WITH_BONUS: main.calculate_cpf_allocation(salary, bonus, None, age=age),
+                    strings.WITHOUT_BONUS: main.calculate_cpf_allocation(salary, 0, None, age=age),
+                }
+                
         # add the CPF allocation for this month
         # this is actually the contribution for the previous month's salary
         if month == bonus_month:
-            oa_accumulated += float(allocations_with_bonus[strings.VALUES][strings.OA]) / 12
-            sa_accumulated += float(allocations_with_bonus[strings.VALUES][strings.SA]) / 12
-            ma_accumulated += float(allocations_with_bonus[strings.VALUES][strings.MA]) / 12
+            oa_accumulated += float(allocations_memoised[age_bracket][strings.WITH_BONUS][strings.VALUES][strings.OA]) / 12
+            sa_accumulated += float(allocations_memoised[age_bracket][strings.WITH_BONUS][strings.VALUES][strings.SA]) / 12
+            ma_accumulated += float(allocations_memoised[age_bracket][strings.WITH_BONUS][strings.VALUES][strings.MA]) / 12
         else:
-            oa_accumulated += float(allocations_wo_bonus[strings.VALUES][strings.OA]) / 12
-            sa_accumulated += float(allocations_wo_bonus[strings.VALUES][strings.SA]) / 12
-            ma_accumulated += float(allocations_wo_bonus[strings.VALUES][strings.MA]) / 12
+            oa_accumulated += float(allocations_memoised[age_bracket][strings.WITHOUT_BONUS][strings.VALUES][strings.OA]) / 12
+            sa_accumulated += float(allocations_memoised[age_bracket][strings.WITHOUT_BONUS][strings.VALUES][strings.SA]) / 12
+            ma_accumulated += float(allocations_memoised[age_bracket][strings.WITHOUT_BONUS][strings.VALUES][strings.MA]) / 12
 
         # amend the accumulated values if there are any topups/withdrawals in this month
-        if account_deltas is not None and len(account_deltas.keys()) != 0:
-            (delta_oa, delta_sa, delta_ma) = genhelpers._get_account_deltas_month(account_deltas, month)
-            oa_accumulated += delta_oa
-            sa_accumulated += delta_sa
-            ma_accumulated += delta_ma
+        if any([month in account_deltas[key_month] for key_month in account_deltas]):
+            oa_delta, sa_delta, ma_delta = genhelpers._get_account_deltas_month(account_deltas, month)
+            logger.debug(f'Month = {month}; OA delta = {round(oa_delta, 2)}, SA delta = {round(sa_delta, 2)}, MA delta = {round(ma_delta, 2)}')
+            
+            oa_accumulated += oa_delta
+            sa_accumulated += sa_delta
+            ma_accumulated += ma_delta
 
         ###########################################################################################
         #                                   INTEREST CALCULATION                                  #
@@ -358,6 +367,10 @@ def calculate_annual_change(salary: float,
     ma_new = ma_accumulated + ma_interest_total
 
     return {
+        strings.AGE: age,
+        strings.PARAM_SALARY: str(round(salary, 2)),
+        strings.PARAM_BONUS: str(round(salary / 12 * bonus, 2)),
+        # strings.DELTAS: {k:v for k,v in account_deltas.items() if v},
         strings.OA: str(round(oa_new, 2)),
         strings.SA: str(round(sa_new, 2)),
         strings.MA: str(round(ma_new, 2)),
