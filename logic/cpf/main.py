@@ -140,13 +140,8 @@ def calculate_cpf_projection(salary: float,
                              base_cpf: dict,
                              bonus_month: int,
                              n_years: int,
-                             target_year: int, 
-                             oa_topups: dict,
-                             oa_withdrawals: dict,
-                             sa_topups: dict, 
-                             sa_withdrawals: dict,
-                             ma_topups: dict,
-                             ma_withdrawals: dict,
+                             target_year: int,
+                             account_deltas: list,
                              age: int=None,
                              proj_start_date: dt=None) -> dict: 
     """Calculates the projected account balance in the CPF accounts after `n_years` or in `target_year`.
@@ -165,25 +160,7 @@ def calculate_cpf_projection(salary: float,
         bonus_month (int): Month where bonus is received (1-12)
         n_years (int): Number of years into the future to project
         target_year (int): Target end year of projection
-        oa_topups (dict): Cash top-ups to the OA
-            - `{date}`: date of cash topup in YYYYMM format
-                - `amount`: Topup amount to OA
-        oa_withdrawals (dict): Withdrawals from the OA
-            - `{date}`: date of cash withdrawal in YYYYMM format
-                - `amount`: Withdrawal amount from OA
-        sa_topups (dict): Cash top-ups to the SA
-            - `{date}`: date of cash topup in YYYYMM format
-                - `amount`: Topup amount to SA
-                - `is_sa_topup_from_oa`: Whether the SA topup funds are coming from the OA
-        sa_withdrawals (dict): Withdrawals from the SA
-            - `{date}`: date of cash withdrawal in YYYYMM format
-                - `amount`: Withdrawal amount from SA
-        ma_topups (dict): Cash top-ups to the MA
-            - `{date}`: date of cash topup in YYYYMM format
-                - `amount`: Topup amount to MA
-        ma_withdrawals (dict): Withdrawals from the MA
-            - `{date}`: date of cash withdrawal in YYYYMM format
-                - `amount`: Withdrawal amount from MA
+        account_deltas (list): List of topups/withdrawals to be made to the accounts
         age (int): Age of employee (*only used for testing purposes*)
         proj_start_date (date): Starting date of projection (*only used for testing purposes*)
 
@@ -201,14 +178,6 @@ def calculate_cpf_projection(salary: float,
     oa, sa, ma = float(base_cpf[strings.OA]), float(base_cpf[strings.SA]), float(base_cpf[strings.MA])
     n_years = genhelpers._get_num_projection_years(target_year) if n_years is None else n_years
 
-    # convert topup/withdrawal dicts to zero-indexed years as keys
-    oa_topups = genhelpers._convert_year_to_zero_indexing(oa_topups)
-    oa_withdrawals = genhelpers._convert_year_to_zero_indexing(oa_withdrawals)
-    sa_topups = genhelpers._convert_year_to_zero_indexing(sa_topups)
-    sa_withdrawals = genhelpers._convert_year_to_zero_indexing(sa_withdrawals)
-    ma_topups = genhelpers._convert_year_to_zero_indexing(ma_topups)
-    ma_withdrawals = genhelpers._convert_year_to_zero_indexing(ma_withdrawals)
-
     for i in range(n_years):
         if i == 0:
             # it is the first year, so the starting month would be different
@@ -224,22 +193,8 @@ def calculate_cpf_projection(salary: float,
         # calculated projected salary for this year
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
 
-        # get OA/SA/MA topup/withdrawal details in this year
-        # package all into an `account_deltas` dict
-        account_deltas = {
-            strings.PARAM_OA_TOPUPS: genhelpers._get_account_deltas_year(oa_topups, i),
-            strings.PARAM_OA_WITHDRAWALS: genhelpers._get_account_deltas_year(oa_withdrawals, i),
-            strings.PARAM_SA_TOPUPS: genhelpers._get_account_deltas_year(sa_topups, i),
-            strings.PARAM_SA_WITHDRAWALS: genhelpers._get_account_deltas_year(sa_withdrawals, i),
-            strings.PARAM_MA_TOPUPS: genhelpers._get_account_deltas_year(ma_topups, i),
-            strings.PARAM_MA_WITHDRAWALS: genhelpers._get_account_deltas_year(ma_withdrawals, i)
-        }
-
-        # get SA topup/OA withdrawal details
-        # oa_withdrawal = oa_withdrawals.get(i, 0)
-        # sa_topup_details = sa_topups.get(i, [])
-        # sa_topup = sa_topup_details[0] if sa_topup_details != [] else 0
-        # sa_topup_from_oa = sa_topup_details[1] if sa_topup_details != [] else None
+        # get the account deltas applicable in this year
+        account_deltas_year = [e for e in account_deltas if int(e[strings.PERIOD][:4]) == date_start.year]
 
         logger.debug(f'Year {i + 1} projection')
         results_annual = cpfhelpers.calculate_annual_change(salary_proj,
@@ -247,7 +202,7 @@ def calculate_cpf_projection(salary: float,
                                                             oa,
                                                             sa,
                                                             ma,
-                                                            account_deltas,
+                                                            account_deltas_year,
                                                             bonus_month, 
                                                             date_start=date_start,
                                                             dob=dob)
@@ -257,7 +212,7 @@ def calculate_cpf_projection(salary: float,
         sa = float(results_annual[strings.SA])
         ma = float(results_annual[strings.MA])
 
-        # set key to `final` if it is the last year
+        # set key to "final" if it is the last year
         key = strings.FINAL if i == (n_years - 1) else str(i + 1)
         values[key] = results_annual
 

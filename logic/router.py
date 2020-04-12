@@ -34,12 +34,7 @@ def execute(endpoint: str, params: dict) -> dict:
             params[strings.PARAM_BONUS_MONTH],
             params[strings.PARAM_N_YEARS],
             params[strings.PARAM_TARGET_YEAR],
-            params[strings.PARAM_OA_TOPUPS],
-            params[strings.PARAM_OA_WITHDRAWALS],
-            params[strings.PARAM_SA_TOPUPS],
-            params[strings.PARAM_SA_WITHDRAWALS],
-            params[strings.PARAM_MA_TOPUPS],
-            params[strings.PARAM_MA_WITHDRAWALS],
+            params[strings.PARAM_ACCOUNT_DELTAS],
         )
 
     return results

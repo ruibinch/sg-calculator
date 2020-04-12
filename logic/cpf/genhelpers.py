@@ -68,107 +68,37 @@ def _get_num_projection_years(target_year: int) -> int:
 
     return target_year - dt.date.today().year + 1
 
-def _convert_year_to_zero_indexing(dict_orig: dict) -> dict:
-    """Converts the year values in the list from the actual year to zero indexing based on the current year.
+def _extract_account_deltas(account_deltas: list) \
+                            -> Tuple[float, float, float]:
+    """Extracts the account deltas and computes the final delta amounts for the 3 accounts.
 
     Args:
-        dict_orig (dict): Original dict of topups/withdrawals, where key is date in YYYYMM format
+        account_deltas (list): List of topups/withdrawals to be made to the accounts in the year
 
-    Returns a dict with the format:
-        {
-            <zero-indexed year>: { 
-                <month>: {
-                    'amount' : <amount>,
-                    'is_sa_topup_from_oa': <boolean>
-                }
-            }
-        }
+    Returns a tuple containing the deltas to the OA, SA and MA.
     """
 
-    dict_new = {}
+    oa_delta, sa_delta, ma_delta = 0, 0, 0
 
-    for key in dict_orig.keys():
-        date = key # in YYYY or YYYYMM format
-        amount = dict_orig[key][strings.AMOUNT]
+    for delta in account_deltas:
+        amount = float(delta[strings.AMOUNT])
 
-        # extract year and month (if applicable) from the date
-        year = int(date[0:4])
-        month = int(date[4:6]) if date[4:6] is not '' else 0
-
-        year_zero_index = int(year) - dt.date.today().year
-        if year_zero_index not in dict_new.keys():
-            # create an empty object if this year is not in the new dict yet
-            dict_new[year_zero_index] = {}
-
-        if strings.IS_SA_TOPUP_FROM_OA in dict_orig[key]:
-            # this will be used only if it is a SA topup
-            dict_new[year_zero_index][month] = {
-                strings.AMOUNT: amount,
-                strings.IS_SA_TOPUP_FROM_OA: dict_orig[key][strings.IS_SA_TOPUP_FROM_OA]
-            }
-        else:
-            dict_new[year_zero_index][month] = {
-                strings.AMOUNT: amount
-            }
-
-    return dict_new
-
-def _get_account_deltas_year(deltas: dict,
-                             year: int) -> dict:
-    """Returns the topup/withdrawal entries in the list that correspond to the current year. \\
-
-        Args:
-            deltas (dict): Topup/withdrawal entries
-            year (int): Zero-indexed year
-    """
-    
-    return deltas[year] if year in deltas.keys() else {}
-
-def _get_account_deltas_month(account_deltas: dict,
-                              month_curr: int) -> Tuple[int, int, int]:
-    """Returns the amount deltas in the respective OA, SA and MA accounts.
-
-        Args:
-            account_deltas (dict): List of keys:
-                [`oa_topups`, `oa_withdrawals`, `sa_topups`, `sa_withdrawals`, `ma_topups`, `ma_withdrawals`]
-            month_curr (int): Current month in numeric representation
-
-        Returns a tuple containing:
-            - Delta change in OA in this month
-            - Delta change in SA in this month
-            - Delta change in MA in this month
-    """
-
-    delta_oa, delta_sa, delta_ma = (0, 0, 0)
-    months_search = [month_curr]
-    if month_curr == 1:
-        # account topups/withdrawals with no specified month are defaulted to occur in Jan
-        months_search.append(0)
-
-    for delta_type in account_deltas.keys():
-        if delta_type == strings.PARAM_OA_TOPUPS:
-            for month in account_deltas[delta_type]:
-                delta_oa += float(account_deltas[delta_type][month][strings.AMOUNT]) if month in months_search else 0
-        elif delta_type == strings.PARAM_OA_WITHDRAWALS:
-            for month in account_deltas[delta_type]:
-                delta_oa -= float(account_deltas[delta_type][month][strings.AMOUNT]) if month in months_search else 0
-        elif delta_type == strings.PARAM_SA_TOPUPS:
-            for month in account_deltas[delta_type]:
-                if month in months_search:
-                    month_delta = account_deltas[delta_type][month]
-                    delta_sa += float(month_delta[strings.AMOUNT])
-                    delta_oa -= float(month_delta[strings.AMOUNT]) if month_delta[strings.IS_SA_TOPUP_FROM_OA] else 0
-        elif delta_type == strings.PARAM_SA_WITHDRAWALS:
-            for month in account_deltas[delta_type]:
-                delta_sa -= float(account_deltas[delta_type][month][strings.AMOUNT]) if month in months_search else 0
-        elif delta_type == strings.PARAM_MA_TOPUPS:
-            for month in account_deltas[delta_type]:
-                delta_ma += float(account_deltas[delta_type][month][strings.AMOUNT]) if month in months_search else 0
-        elif delta_type == strings.PARAM_MA_WITHDRAWALS:
-            for month in account_deltas[delta_type]:
-                delta_ma -= float(account_deltas[delta_type][month][strings.AMOUNT]) if month in months_search else 0
-
-    return (delta_oa, delta_sa, delta_ma)
+        if delta[strings.TYPE] == strings.OA_TOPUP:
+            oa_delta += amount
+        elif delta[strings.TYPE] == strings.OA_WITHDRAWAL:
+            oa_delta -= amount
+        if delta[strings.TYPE] == strings.SA_TOPUP:
+            sa_delta += amount
+            if delta[strings.IS_SA_TOPUP_FROM_OA]:
+                oa_delta -= amount
+        elif delta[strings.TYPE] == strings.SA_WITHDRAWAL:
+            sa_delta -= amount
+        elif delta[strings.TYPE] == strings.MA_TOPUP:
+            ma_delta += amount
+        elif delta[strings.TYPE] == strings.MA_WITHDRAWAL:
+            ma_delta -= amount
+        
+    return oa_delta, sa_delta, ma_delta
 
 ###############################################################################
 #                                  MATH METHODS                               #

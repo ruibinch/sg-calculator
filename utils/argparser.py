@@ -15,24 +15,24 @@ Handles parsing and conversion into the appropriate types of request arguments.
 #                                 HELPER METHODS                              #
 ###############################################################################
 
-def parse_into_json_format(str_raw: str) -> str:
-    """Parses the input string into a valid string for JSON serialisation.
+# def parse_into_json_format(str_raw: str) -> str:
+#     """Parses the input string into a JSON-serialisable format and returns it as a JSON object.
 
-    Args:
-        str_raw (str): Input raw string
-    """
+#     Args:
+#         str_raw (str): Input raw string
+#     """
 
-    s = str_raw
-    try:
-        s = s.replace('\'', '"')
-        s = s.replace('True', 'true')
-        s = s.replace('False', 'false')
-    except AttributeError:
-        # `str_raw` is not a string
-        pass
+#     s = str_raw
+#     try:
+#         s = s.replace('\'', '"')
+#         s = s.replace('True', 'true')
+#         s = s.replace('False', 'false')
+#     except AttributeError:
+#         # `str_raw` is not a string
+#         pass
 
-    logger.debug(f'Parsed {str_raw} into {s}')
-    return s
+#     logger.debug(f'Parsed {str_raw} into {s}')
+#     return json.loads(s)
 
 def extract_param(body: dict,
                   output: dict,
@@ -65,15 +65,19 @@ def extract_param(body: dict,
     """
 
     try:
-        if type(body[param]) is str and type(mould) is dict:
-            # special handling for str->dict conversions is required
-            # i.e. parse string into a JSON-appropriate format before converting to dict type
-            logger.debug(f'Mould is of dict type, param value "{body[param]}" is of {type(body[param])} type')
-            param_str = parse_into_json_format(body[param])
-            param_json = json.loads(param_str)
-            param_value = type(mould)(param_json)
-        else:
-            param_value = type(mould)(body[param])
+        # if type(mould) is list:
+        #     # special handling for str->list conversions is required
+        #     # all lists are assumed to be a list of dicts
+        #     param_value = []
+
+        # # elif type(mould) is dict:
+        # #     # special handling for str->dict conversions is required
+        # #     # i.e. parse string into a JSON-appropriate format before converting to dict type
+        # #     param_json = parse_into_json_format(body[param])
+        # #     logger.error(param_json)
+        # #     param_value = type(mould)(param_json)
+        # else:
+        param_value = type(mould)(body[param])
 
         # check if extracted param value is allowed
         is_param_value_ok = False
@@ -175,6 +179,7 @@ def parse_args(body: dict,
     MOULD_FLOAT = 0.0
     MOULD_STR = '0'
     MOULD_DICT = {'a': 1}
+    MOULD_LIST = [] # assumed to be a list of dicts
 
     logger.debug(f'Calling endpoint {path}')
     keys = [strings.PARAMS, strings.ERROR, strings.STATUSCODE]
@@ -193,7 +198,6 @@ def parse_args(body: dict,
         output = extract_param(body, output, strings.PARAM_DOB, MOULD_STR)
 
     elif path == endpoints.CPF_PROJECTION:
-        logger.debug(f'Calling endpoint {path}')
         output = extract_param(body, output, strings.PARAM_SALARY, MOULD_FLOAT)
         output = extract_param(body, output, strings.PARAM_BONUS, MOULD_FLOAT)
         output = extract_param(body, output, strings.PARAM_YOY_INCREASE_SALARY, MOULD_FLOAT)
@@ -206,18 +210,8 @@ def parse_args(body: dict,
                                required=False, default_value=None)
         output = extract_param(body, output, strings.PARAM_TARGET_YEAR, MOULD_INT,
                                required=False, default_value=None)
-        output = extract_param(body, output, strings.PARAM_OA_TOPUPS, MOULD_DICT,
-                               required=False, default_value={})
-        output = extract_param(body, output, strings.PARAM_OA_WITHDRAWALS, MOULD_DICT,
-                               required=False, default_value={})
-        output = extract_param(body, output, strings.PARAM_SA_TOPUPS, MOULD_DICT,
-                               required=False, default_value={})
-        output = extract_param(body, output, strings.PARAM_SA_WITHDRAWALS, MOULD_DICT,
-                               required=False, default_value={})
-        output = extract_param(body, output, strings.PARAM_MA_TOPUPS, MOULD_DICT,
-                               required=False, default_value={})
-        output = extract_param(body, output, strings.PARAM_MA_WITHDRAWALS, MOULD_DICT,
-                               required=False, default_value={})
+        output = extract_param(body, output, strings.PARAM_ACCOUNT_DELTAS, MOULD_LIST,
+                               required=False, default_value=[])
 
         output = check_conditional_params(body, 
                                           output, 

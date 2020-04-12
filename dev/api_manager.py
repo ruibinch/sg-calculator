@@ -17,15 +17,10 @@ def add_arguments():
     # Projection-specific
     parser.add_argument(strings.PARAM_BONUS_MONTH, help='Month where bonus is received')
     parser.add_argument(strings.PARAM_YOY_INCREASE_SALARY, help='Projected YoY increase of salary')
-    parser.add_argument(strings.PARAM_BASE_CPF, help='Base amount in CPF accounts')
+    parser.add_argument(strings.PARAM_BASE_CPF, type=dict, help='Base amount in CPF accounts')
     parser.add_argument(strings.PARAM_N_YEARS, help='Number of years into the future')
     parser.add_argument(strings.PARAM_TARGET_YEAR, help='Target year in the future to project for')
-    parser.add_argument(strings.PARAM_OA_TOPUPS, help='Top-ups to the OA')
-    parser.add_argument(strings.PARAM_OA_WITHDRAWALS, help='Withdrawals from the OA')
-    parser.add_argument(strings.PARAM_SA_TOPUPS, help='Top-ups to the SA')
-    parser.add_argument(strings.PARAM_SA_WITHDRAWALS, help='Withdrawals from the SA')
-    parser.add_argument(strings.PARAM_MA_TOPUPS, help='Top-ups to the MA')
-    parser.add_argument(strings.PARAM_MA_WITHDRAWALS, help='Withdrawals from the MA')
+    parser.add_argument(strings.PARAM_ACCOUNT_DELTAS, type=dict, action='append', help='List of topups/withdrawals to be made to the accounts')
     # For future authentication methods
     # parser.add_argument('Authentication', location='headers')
 

@@ -241,7 +241,7 @@ def calculate_annual_change(salary: float,
                             oa_curr: float,
                             sa_curr: float,
                             ma_curr: float,
-                            account_deltas: dict=None,
+                            account_deltas: list=None,
                             bonus_month: int=12,
                             date_start: dt=None,
                             dob: str=None) -> dict:
@@ -258,8 +258,7 @@ def calculate_annual_change(salary: float,
         oa_curr (float): Current amount in OA
         sa_curr (float): Current amount in SA
         ma_curr (float): Current amount in MA
-        account_deltas (dict): List of keys: 
-            [`oa_topups`, `oa_withdrawals`, `sa_topups`, `sa_withdrawals`, `ma_topups`, `ma_withdrawals`]
+        account_deltas (list): List of topups/withdrawals to be made to the accounts
         bonus_month (int): Month where bonus is received (1-12)
         date_start (date): Start date of the year to calculate from
         dob (str): Date of birth of employee in YYYYMM format
@@ -312,8 +311,9 @@ def calculate_annual_change(salary: float,
             ma_accumulated += float(allocations_memoised[age_bracket][strings.WITHOUT_BONUS][strings.VALUES][strings.MA]) / 12
 
         # amend the accumulated values if there are any topups/withdrawals in this month
-        if any([month in account_deltas[key_month] for key_month in account_deltas]):
-            oa_delta, sa_delta, ma_delta = genhelpers._get_account_deltas_month(account_deltas, month)
+        account_deltas_month = [e for e in account_deltas if int(e[strings.PERIOD][4:6]) == month]
+        if account_deltas_month:
+            oa_delta, sa_delta, ma_delta = genhelpers._extract_account_deltas(account_deltas_month)
             logger.debug(f'Month = {month}; OA delta = {round(oa_delta, 2)}, SA delta = {round(sa_delta, 2)}, MA delta = {round(ma_delta, 2)}')
             
             oa_accumulated += oa_delta
