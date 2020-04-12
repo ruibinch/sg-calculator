@@ -426,7 +426,8 @@ class TestCpfCalculateAnnualChange3(object):
     date_start = dt.date(2020, 1, 1)
     dob = '199501'
     # standardise the month where the topup/withdrawal occurs
-    delta_month = 5
+    delta_period = f'{date_start.year}05'
+    delta_month = int(delta_period[4:6])
     # standardise the topup/withdrawal amount too
     delta_amount = 1000
 
@@ -504,15 +505,13 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        oa_topups = { self.delta_month: { strings.AMOUNT: self.delta_amount } }
-        account_deltas = {
-            strings.PARAM_OA_TOPUPS: oa_topups,
-            strings.PARAM_OA_WITHDRAWALS: {},
-            strings.PARAM_SA_TOPUPS: {},
-            strings.PARAM_SA_WITHDRAWALS: {},
-            strings.PARAM_MA_TOPUPS: {},
-            strings.PARAM_MA_WITHDRAWALS: {}
-        }
+        account_deltas = [
+            {
+                strings.TYPE: strings.OA_TOPUP,
+                strings.PERIOD: self.delta_period,
+                strings.AMOUNT: self.delta_amount,
+            },
+        ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
     def test_scenario_2(self):
@@ -529,15 +528,13 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        oa_withdrawals = { self.delta_month: { strings.AMOUNT: self.delta_amount } }
-        account_deltas = {
-            strings.PARAM_OA_TOPUPS: {},
-            strings.PARAM_OA_WITHDRAWALS: oa_withdrawals,
-            strings.PARAM_SA_TOPUPS: {},
-            strings.PARAM_SA_WITHDRAWALS: {},
-            strings.PARAM_MA_TOPUPS: {},
-            strings.PARAM_MA_WITHDRAWALS: {}
-        }
+        account_deltas = [
+            {
+                strings.TYPE: strings.OA_WITHDRAWAL,
+                strings.PERIOD: self.delta_period,
+                strings.AMOUNT: self.delta_amount,
+            },
+        ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
     def test_scenario_3(self):
@@ -554,15 +551,14 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        sa_topups = { self.delta_month: { strings.AMOUNT: self.delta_amount, strings.IS_SA_TOPUP_FROM_OA: False } }
-        account_deltas = {
-            strings.PARAM_OA_TOPUPS: {},
-            strings.PARAM_OA_WITHDRAWALS: {},
-            strings.PARAM_SA_TOPUPS: sa_topups,
-            strings.PARAM_SA_WITHDRAWALS: {},
-            strings.PARAM_MA_TOPUPS: {},
-            strings.PARAM_MA_WITHDRAWALS: {}
-        }
+        account_deltas = [
+            {
+                strings.TYPE: strings.SA_TOPUP,
+                strings.PERIOD: self.delta_period,
+                strings.AMOUNT: self.delta_amount,
+                strings.IS_SA_TOPUP_FROM_OA: False,
+            },
+        ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
     def test_scenario_4(self):
@@ -579,16 +575,15 @@ class TestCpfCalculateAnnualChange3(object):
 
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
-        
-        sa_topups = { self.delta_month: { strings.AMOUNT: self.delta_amount, strings.IS_SA_TOPUP_FROM_OA: True } }
-        account_deltas = {
-            strings.PARAM_OA_TOPUPS: {},
-            strings.PARAM_OA_WITHDRAWALS: {},
-            strings.PARAM_SA_TOPUPS: sa_topups,
-            strings.PARAM_SA_WITHDRAWALS: {},
-            strings.PARAM_MA_TOPUPS: {},
-            strings.PARAM_MA_WITHDRAWALS: {}
-        }
+               
+        account_deltas = [
+            {
+                strings.TYPE: strings.SA_TOPUP,
+                strings.PERIOD: self.delta_period,
+                strings.AMOUNT: self.delta_amount,
+                strings.IS_SA_TOPUP_FROM_OA: True,
+            },
+        ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
     def test_scenario_5(self):
@@ -605,15 +600,13 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        sa_withdrawals = { self.delta_month: { strings.AMOUNT: self.delta_amount } }
-        account_deltas = {  
-            strings.PARAM_OA_TOPUPS: {},
-            strings.PARAM_OA_WITHDRAWALS: {},
-            strings.PARAM_SA_TOPUPS: {},
-            strings.PARAM_SA_WITHDRAWALS: sa_withdrawals,
-            strings.PARAM_MA_TOPUPS: {},
-            strings.PARAM_MA_WITHDRAWALS: {}
-        }
+        account_deltas = [
+            {
+                strings.TYPE: strings.SA_WITHDRAWAL,
+                strings.PERIOD: self.delta_period,
+                strings.AMOUNT: self.delta_amount,
+            },
+        ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
     def test_scenario_6(self):
@@ -630,15 +623,13 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        ma_topups = { self.delta_month: { strings.AMOUNT: self.delta_amount } }
-        account_deltas = {
-            strings.PARAM_OA_TOPUPS: {},
-            strings.PARAM_OA_WITHDRAWALS: {},
-            strings.PARAM_SA_TOPUPS: {},
-            strings.PARAM_SA_WITHDRAWALS: {},
-            strings.PARAM_MA_TOPUPS: ma_topups,
-            strings.PARAM_MA_WITHDRAWALS: {}
-        }
+        account_deltas = [
+            {
+                strings.TYPE: strings.MA_TOPUP,
+                strings.PERIOD: self.delta_period,
+                strings.AMOUNT: self.delta_amount,
+            },
+        ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
     def test_scenario_7(self):
@@ -655,13 +646,11 @@ class TestCpfCalculateAnnualChange3(object):
             # add interest in this month
             int_oa, int_sa, int_ma = self._add_monthly_interest(oa, sa, ma, int_oa, int_sa, int_ma)
         
-        ma_withdrawals = { self.delta_month: { strings.AMOUNT: self.delta_amount } }
-        account_deltas = {
-            strings.PARAM_OA_TOPUPS: {},
-            strings.PARAM_OA_WITHDRAWALS: {},
-            strings.PARAM_SA_TOPUPS: {},
-            strings.PARAM_SA_WITHDRAWALS: {},
-            strings.PARAM_MA_TOPUPS: {},
-            strings.PARAM_MA_WITHDRAWALS: ma_withdrawals
-        }
+        account_deltas = [
+            {
+                strings.TYPE: strings.MA_WITHDRAWAL,
+                strings.PERIOD: self.delta_period,
+                strings.AMOUNT: self.delta_amount,
+            },
+        ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
