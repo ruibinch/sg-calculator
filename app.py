@@ -6,6 +6,7 @@ from utils import config
 # dev purposes on the local machine.
 # Only the necessary files (i.e. /logic and /utils folders) are packaged to run
 # as a set of serverless functions on AWS Lambda in production.
+# To consider using the Serverless framework next time.
 
 app = Flask(__name__)
 api_manager.init(app)

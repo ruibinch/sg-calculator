@@ -38,6 +38,7 @@ def handle_api_request(endpoint: str) -> Tuple[dict, int, dict]:
     Returns a tuple:
         - `response` - only populated if there is an error in the params
         - `status_code` - HTTP status code representation
+        - `params` - only populated if there is no error
     """
     
     response, params = None, None
