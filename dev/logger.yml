@@ -49,3 +49,7 @@ loggers:
     level: DEBUG
     handlers: [console, file_debug, file_info, file_error]
     propagate: no
+  utils:
+    level: DEBUG
+    handlers: [console, file_debug, file_info, file_error]
+    propagate: no
