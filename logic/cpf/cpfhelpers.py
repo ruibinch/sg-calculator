@@ -244,7 +244,6 @@ def calculate_annual_change(salary: float,
                             account_deltas: dict=None,
                             bonus_month: int=12,
                             date_start: dt=None,
-                            age: int=None,
                             dob: str=None) -> dict:
     """Calculates the total contributions and interest earned for the current year.
 
@@ -263,7 +262,6 @@ def calculate_annual_change(salary: float,
             [`oa_topups`, `oa_withdrawals`, `sa_topups`, `sa_withdrawals`, `ma_topups`, `ma_withdrawals`]
         bonus_month (int): Month where bonus is received (1-12)
         date_start (date): Start date of the year to calculate from
-        age (int): Age of employee
         dob (str): Date of birth of employee in YYYYMM format
 
     Returns a dict:
