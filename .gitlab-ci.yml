@@ -34,7 +34,7 @@ update_lambda_function:
     # install external dependencies
     - pip install --target ./package -r requirements.txt
     - cd package
-    - zip -r9 ${OLDPWD}/calculator-bff.zip .
+    - zip -r9 ${OLDPWD}/calculator-bff.zip . -i .
     - cd $OLDPWD
     - zip -g calculator-bff.zip lambda_function.py -r logic utils -i '*.py'
   script:
