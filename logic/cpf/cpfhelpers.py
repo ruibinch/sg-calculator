@@ -365,7 +365,7 @@ def calculate_annual_change(salary: float,
     ma_new = ma_accumulated + ma_interest_total
 
     return {
-        strings.AGE: age,
+        strings.AGE: str(age),
         strings.PARAM_SALARY: str(round(salary, 2)),
         strings.PARAM_BONUS: str(round(salary / 12 * bonus, 2)),
         # strings.DELTAS: {k:v for k,v in account_deltas.items() if v},

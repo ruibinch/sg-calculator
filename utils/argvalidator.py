@@ -7,10 +7,6 @@ from . import endpoints, strings
 
 logger = logging.getLogger(__name__)
 
-"""
-Handles parsing and conversion into the appropriate types of request arguments.
-"""
-
 ###############################################################################
 #                                 HELPER METHODS                              #
 ###############################################################################
@@ -33,7 +29,7 @@ def extract_param(body: dict,
         body (dict): Contents of request body
         output (dict): Output to be returned
         param (str): Name of desired parameter
-        mould (*): Serves as a mould for typecasting
+        mould (*): Serves as a mould for typecasting numbers
         required (bool): Denote whether this parameter is required
         allowed_values (list): List of allowed values for this parameter
         default_value (*): Denotes the default value if the desired parameter is not found
@@ -52,18 +48,18 @@ def extract_param(body: dict,
             param_value = body[param]
 
         # check if extracted param value is allowed
-        is_param_value_ok = False
+        is_param_value_allowed = False
         if allowed_values is not None:
             if param_value in allowed_values:
-                is_param_value_ok = True
+                is_param_value_allowed = True
             else:
                 logger.error(f'"{param_value}" is an invalid value for parameter "{param}"')
                 output[strings.ERROR][param] = f'"{param_value}" is an invalid value'
                 output[strings.STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY
         else:
-            is_param_value_ok = True
+            is_param_value_allowed = True
 
-        if is_param_value_ok:
+        if is_param_value_allowed:
             logger.info(f'Setting "{param}" to {param_value}')
             output[strings.PARAMS][param] = param_value
 
@@ -80,11 +76,6 @@ def extract_param(body: dict,
         # param found but unable to do type conversion
         logger.error(f'"{param}" is \'{type(body[param]).__name__}\', unable to convert to \'{type(mould).__name__}\'', exc_info=True)
         output[strings.ERROR][param] = f'Unable to convert \'{type(body[param]).__name__}\' to \'{type(mould).__name__}\''
-        output[strings.STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY
-    except TypeError:
-        # mould is of dict type, but input is not of a JSON-appropriate format
-        logger.error(f'"{param}" should be of dict/object structure but it is not JSON-serialisable', exc_info=True)
-        output[strings.ERROR][param] = f'Should be of dict structure but it is not JSON-serialisable'
         output[strings.STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY
     except Exception:
         # catch all other general exceptions
@@ -109,10 +100,9 @@ def check_conditional_params(body: dict,
     Returns the output dict with modifications if an error is encountered.
     """
 
-    body_params = list(body.keys())
-    params_present = [param for param in params if param in body_params]
+    params_present = [param for param in params if param in body.keys()]
 
-    if len(params_present) == 0:
+    if not params_present:
         output[strings.STATUSCODE] = HTTPStatus.BAD_REQUEST
         params_str = ', '.join(params)
         logger.debug(f'None of ({params_str}) are present')
@@ -127,9 +117,8 @@ def check_conditional_params(body: dict,
 #                                   MAIN METHOD                               #
 ###############################################################################
 
-def parse_args(body: dict,
-               path: str) -> dict:  
-    """Extracts and parses the arguments passed in the request body to their appropriate types.
+def run(body: dict, path: str) -> dict:  
+    """Extracts and performs validation on the arguments passed in the request body.
 
     Args:
         body (dict): Contents of request body
@@ -146,6 +135,8 @@ def parse_args(body: dict,
             else it will be empty
     """
 
+    # filter out params where value is None
+    body = {k:v for k,v in body.items() if v is not None}
     # moulds for typecasting of numbers
     MOULD_INT = 0
     MOULD_FLOAT = 0.0

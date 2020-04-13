@@ -2,7 +2,7 @@ from http import HTTPStatus
 import json
 
 from logic import router
-from utils import argparser, endpoints, strings
+from utils import argvalidator, endpoints, strings
 
 def handler(event: dict, context: dict) -> dict:
     """Handler for AWS Lambda function calls.
@@ -17,9 +17,9 @@ def handler(event: dict, context: dict) -> dict:
     """
 
     body = json.loads(event[strings.BODY])
-    output = argparser.parse_args(body, event[strings.PATH])
+    output = argvalidator.run(body, event[strings.PATH])
 
-    if type(output[strings.STATUSCODE]) is int:
+    if output[strings.STATUSCODE]:
         # there is a status code denoting an error
         status_code = output[strings.STATUSCODE]
         response = {strings.ERROR: output[strings.ERROR]}
