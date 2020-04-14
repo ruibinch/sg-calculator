@@ -192,22 +192,22 @@ def calculate_cpf_projection(salary: float,
             # for the subsequent years, start the count from January
             date_start = dt.date(dt.date.today().year + i, 1, 1)
 
-        # calculated projected salary for this year
+        # calculate projected salary for this year
         salary_proj = salary * pow(1 + yoy_increase_salary, i)
-
         # get the account deltas applicable in this year
         account_deltas_year = [e for e in account_deltas if int(e[strings.PERIOD][:4]) == date_start.year]
 
         logger.debug(f'Year {i + 1} projection')
-        results_annual = cpfhelpers.calculate_annual_change(salary_proj,
-                                                            bonus,
-                                                            oa,
-                                                            sa,
-                                                            ma,
-                                                            account_deltas_year,
-                                                            bonus_month, 
-                                                            date_start=date_start,
-                                                            dob=dob)
+        results_annual = cpfhelpers.calculate_annual_change(
+                            salary_proj,
+                            bonus,
+                            dob,
+                            oa,
+                            sa,
+                            ma,
+                            account_deltas_year,
+                            bonus_month, 
+                            date_start=date_start)
 
         # update with the new CPF account balances
         oa = float(results_annual[strings.OA])

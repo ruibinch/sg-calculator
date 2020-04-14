@@ -163,12 +163,12 @@ def _get_allocation_rates(age: int) -> dict:
     rates = constants.rates_alloc[age_bracket]
 
     alloc_rates = {
-        'pct_of_salary': {
+        strings.PCT_OF_SALARY: {
             strings.OA: str(rates[strings.OA]),
             strings.SA: str(rates[strings.SA]),
             strings.MA: str(rates[strings.MA])
         },
-        'ratio': {
+        strings.RATIO: {
             strings.OA: str(rates[f'{strings.OA}_ratio']),
             strings.SA: str(rates[f'{strings.SA}_ratio']),
             strings.MA: str(rates[f'{strings.MA}_ratio'])
@@ -204,10 +204,8 @@ def _calculate_monthly_interest_sa(oa_accumulated: float,
         rem_amount_for_extra_int_sa_ma (float): Remaining amount in SA and MA that is applicable for 1% extra interest
     """
 
-    sa_interest = 0
-
     # first, add the extra 1% interest earned on OA 
-    sa_interest += min(oa_accumulated, constants.THRESHOLD_EXTRAINT_OA) * (constants.INT_EXTRA / 12)
+    sa_interest = min(oa_accumulated, constants.THRESHOLD_EXTRAINT_OA) * (constants.INT_EXTRA / 12)
 
     # then, add the interest earned on SA
     if sa_accumulated > rem_amount_for_extra_int_sa_ma:
@@ -238,13 +236,13 @@ def _calculate_monthly_interest_ma(ma_accumulated: float,
 
 def calculate_annual_change(salary: float,
                             bonus: float,
+                            dob: str,
                             oa_curr: float,
                             sa_curr: float,
                             ma_curr: float,
                             account_deltas: list=None,
                             bonus_month: int=12,
-                            date_start: dt=None,
-                            dob: str=None) -> dict:
+                            date_start: dt=None) -> dict:
     """Calculates the total contributions and interest earned for the current year.
 
     Adds the interest, along with the contributions in the year, to the CPF account balances. \\
@@ -255,13 +253,13 @@ def calculate_annual_change(salary: float,
     Args:
         salary (float): Annual salary of employee
         bonus (float): Bonus represented as a multiplier of monthly salary
+        dob (str): Date of birth of employee in YYYYMM format
         oa_curr (float): Current amount in OA
         sa_curr (float): Current amount in SA
         ma_curr (float): Current amount in MA
         account_deltas (list): List of topups/withdrawals to be made to the accounts
         bonus_month (int): Month where bonus is received (1-12)
         date_start (date): Start date of the year to calculate from
-        dob (str): Date of birth of employee in YYYYMM format
 
     Returns a dict:
         - `oa`: OA balance at the end of the year
@@ -279,10 +277,9 @@ def calculate_annual_change(salary: float,
     month_start = date_start.month if date_start is not None else 1
     logger.info(f'calculate_annual_change() - from "{month_start}/{date_start.year}" to "12/{date_start.year}"')
     for month in range(month_start, 13):
-        if dob is not None:
-            # wrap the date in a datetime object
-            date_start_iter = dt.date(date_start.year, month, 1)
-            age = genhelpers._get_age(dob, date_start_iter)
+        # wrap the date in a datetime object
+        date_start_iter = dt.date(date_start.year, month, 1)
+        age = genhelpers._get_age(dob, date_start_iter)
 
         # add allocated amounts in this month to the accounts
         bonus_in_month = bonus if month == bonus_month else 0

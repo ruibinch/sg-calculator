@@ -62,12 +62,12 @@ class TestCpfCalculateAnnualChange1(object):
         results_annual = cpfhelpers.calculate_annual_change(
                             self.salary * 12,
                             self.bonus,
+                            self.dob,
                             balance_orig[0],
                             balance_orig[1],
                             balance_orig[2],
                             account_deltas={},
-                            date_start=self.date_start,
-                            dob=self.dob)
+                            date_start=self.date_start)
 
         assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
         assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
@@ -307,12 +307,12 @@ class TestCpfCalculateAnnualChange2(object):
         results_annual = cpfhelpers.calculate_annual_change(
                             self.salary * 12,
                             self.bonus,
+                            dob,
                             balance_orig[0],
                             balance_orig[1],
                             balance_orig[2],
                             account_deltas={},
-                            date_start=self.date_start,
-                            dob=dob)
+                            date_start=self.date_start)
 
         assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
         assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
@@ -478,14 +478,14 @@ class TestCpfCalculateAnnualChange3(object):
         """
 
         results_annual = cpfhelpers.calculate_annual_change(
-                                        self.salary * 12,
-                                        self.bonus,
-                                        balance_orig[0],
-                                        balance_orig[1],
-                                        balance_orig[2],
-                                        account_deltas=account_deltas,
-                                        date_start=self.date_start,
-                                        dob=self.dob)
+                            self.salary * 12,
+                            self.bonus,
+                            self.dob,
+                            balance_orig[0],
+                            balance_orig[1],
+                            balance_orig[2],
+                            account_deltas=account_deltas,
+                            date_start=self.date_start)
 
         assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
         assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
