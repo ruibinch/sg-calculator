@@ -1,4 +1,4 @@
-image: python:3.7-stretch
+image: python:3.7-alpine
 
 stages:
   - test
@@ -29,8 +29,7 @@ update_lambda_function:
   only:
     - master
   before_script:
-    - apt-get update
-    - apt-get install -y zip
+    - apk update && apk add zip
     # install external dependencies
     - pip install --target ./package -r requirements.txt
     - cd package
