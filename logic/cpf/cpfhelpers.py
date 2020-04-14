@@ -274,43 +274,25 @@ def calculate_annual_change(salary: float,
 
     oa_accumulated, sa_accumulated, ma_accumulated = oa_curr, sa_curr, ma_curr
     oa_interest_total, sa_interest_total, ma_interest_total = 0, 0, 0
-    # these will be updated in the for-loop iteration through the months in the year
-    age, age_bracket = -1, -1
-    # memoisation is required here as the person's age might change throughout the year
-    # then, the allocation amount might change if the age crosses into the next bracket
-    # hence memoisation prevents the allocation amount from being repeatedly calculated
-    allocations_memoised = {}
 
     # iterate through the months in the year
     month_start = date_start.month if date_start is not None else 1
-    logger.info(f'calculate_annual_change - from "{month_start}/{date_start.year}" to "12/{date_start.year}"')
+    logger.info(f'calculate_annual_change() - from "{month_start}/{date_start.year}" to "12/{date_start.year}"')
     for month in range(month_start, 13):
         if dob is not None:
             # wrap the date in a datetime object
             date_start_iter = dt.date(date_start.year, month, 1)
             age = genhelpers._get_age(dob, date_start_iter)
-            age_bracket = genhelpers._get_age_bracket(age, strings.ALLOCATION)
 
-            # if age bracket has changed, then get the new allocation amounts
-            if age_bracket not in allocations_memoised:
-                logger.debug(f'Individual\'s age bracket is set at "{age_bracket}"')
-                allocations_memoised[age_bracket] = {
-                    strings.WITH_BONUS: main.calculate_cpf_allocation(salary, bonus, None, age=age),
-                    strings.WITHOUT_BONUS: main.calculate_cpf_allocation(salary, 0, None, age=age),
-                }
-                
-        # add the CPF allocation for this month
-        # this is actually the contribution for the previous month's salary
-        if month == bonus_month:
-            oa_accumulated += float(allocations_memoised[age_bracket][strings.WITH_BONUS][strings.VALUES][strings.OA]) / 12
-            sa_accumulated += float(allocations_memoised[age_bracket][strings.WITH_BONUS][strings.VALUES][strings.SA]) / 12
-            ma_accumulated += float(allocations_memoised[age_bracket][strings.WITH_BONUS][strings.VALUES][strings.MA]) / 12
-        else:
-            oa_accumulated += float(allocations_memoised[age_bracket][strings.WITHOUT_BONUS][strings.VALUES][strings.OA]) / 12
-            sa_accumulated += float(allocations_memoised[age_bracket][strings.WITHOUT_BONUS][strings.VALUES][strings.SA]) / 12
-            ma_accumulated += float(allocations_memoised[age_bracket][strings.WITHOUT_BONUS][strings.VALUES][strings.MA]) / 12
+        # add allocated amounts in this month to the accounts
+        bonus_in_month = bonus if month == bonus_month else 0
+        allocation = main.calculate_cpf_allocation(salary, bonus_in_month, None, age=age)
+            
+        oa_accumulated += float(allocation[strings.VALUES][strings.OA]) / 12
+        sa_accumulated += float(allocation[strings.VALUES][strings.SA]) / 12
+        ma_accumulated += float(allocation[strings.VALUES][strings.MA]) / 12
 
-        # amend the accumulated values if there are any topups/withdrawals in this month
+        # add any topups/withdrawals in this month, if applicable
         account_deltas_month = [e for e in account_deltas if int(e[strings.PERIOD][4:6]) == month]
         if account_deltas_month:
             oa_delta, sa_delta, ma_delta = genhelpers._extract_account_deltas(account_deltas_month)

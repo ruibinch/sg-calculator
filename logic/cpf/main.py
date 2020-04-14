@@ -1,4 +1,5 @@
 import datetime as dt
+import functools
 import logging
 
 from . import constants, cpfhelpers, genhelpers
@@ -76,6 +77,7 @@ def calculate_cpf_contribution(salary: float,
         strings.RATES: cont_rates,
     }
 
+@functools.lru_cache(maxsize=100)
 def calculate_cpf_allocation(salary: float,
                              bonus: float,
                              dob: str,
