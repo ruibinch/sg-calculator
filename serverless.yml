@@ -1,0 +1,29 @@
+service: calculator
+
+provider:
+  name: aws
+  runtime: python3.7
+  stage: ${opt:stage, 'dev'}
+  region: ap-southeast-1
+  memorySize: 128
+
+package:
+  exclude:
+    - ./**
+  include:
+    - handler.py
+    - logic/**/*.py
+    - utils/**/*.py
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 5100
+
+functions:
+  app:
+    handler: handler.main
+    events:
+      - http: POST /{proxy+}
