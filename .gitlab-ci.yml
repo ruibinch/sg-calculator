@@ -25,6 +25,7 @@ unit_test:
     - pytest
 
 deploy_staging:
+  image: node:13.1-alpine
   stage: deploy
   before_script:
     - npm config set prefix /usr/local
