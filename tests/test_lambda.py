@@ -1,6 +1,6 @@
 from http import HTTPStatus
 import json
-import requests
+# import requests
 
 from utils import config, endpoints
 
