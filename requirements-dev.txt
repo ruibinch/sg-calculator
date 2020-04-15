@@ -1,6 +1,2 @@
-pyyaml
-
-# only for testing on local machine
-flask
-flask-restful
 pytest
+pyyaml

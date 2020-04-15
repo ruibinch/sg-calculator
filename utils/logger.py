@@ -1,14 +1,16 @@
 import logging
-import logging.config
 import os
 
 def setup():
-    """Sets up the logging module with the config specified in `config/logger.yaml`."""
+    """Sets up the logging module.
+    
+    In development, logs will be written to files in /logs based on the config specified in `logger.yml`.
+    In production, logs will be printed to the console which will be stored in CloudWatch.
+    """
 
     try:
         with open(os.path.join(os.path.dirname(__file__), '..', 'dev', 'logger.yml'), 'r') as f:
             import yaml
-            
             logger_config = yaml.safe_load(f.read())
             logging.config.dictConfig(logger_config)
             print('Configuring logger via logger.yml file')

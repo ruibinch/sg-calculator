@@ -1,10 +1,7 @@
-__pycache__
 .pytest_cache
+.serverless
 .vscode
+__pycache__
 
 logs
-misc
-venv
-
-*.pyc
-*.zip
+node_modules
