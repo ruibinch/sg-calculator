@@ -23,7 +23,16 @@ custom:
     httpPort: 5100
 
 functions:
-  app:
+  cpfContribution:
     handler: handler.main
     events:
-      - http: POST /{proxy+}
+      - http: POST /cpf/contribution
+  cpfAllocation:
+    handler: handler.main
+    events:
+      - http: POST /cpf/allocation
+  cpfProjection:
+    handler: handler.main
+    events:
+      - http: POST /cpf/projection
+  
