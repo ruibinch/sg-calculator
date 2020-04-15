@@ -92,34 +92,34 @@ def _get_contribution_rates(salary: float,
     if salary <= constants.INCOME_BRACKET_1:
         cont_rates = {
             strings.CONT_EMPLOYEE: {},
-            strings.CONT_EMPLOYER: {}
+            strings.CONT_EMPLOYER: {},
         }
     elif salary <= constants.INCOME_BRACKET_2:
         cont_rates = {
             strings.CONT_EMPLOYEE: {},
             strings.CONT_EMPLOYER: {
-                'TW': str(rates[1][strings.COMBINED])
-            }
+                'TW': str(rates[1][strings.COMBINED]),
+            },
         }
     elif salary <= constants.INCOME_BRACKET_3:
         cont_rates = {
             strings.CONT_EMPLOYEE: {
-                'TW - $500': str(rates[2][strings.MISC])
+                'TW - $500': str(rates[2][strings.MISC]),
             },
             strings.CONT_EMPLOYER: {
-                'TW': str(rates[2][strings.COMBINED])
-            } 
+                'TW': str(rates[2][strings.COMBINED]),
+            },
         }
     else:
         cont_employer_rate = round(rates[3][strings.COMBINED] - rates[3][strings.EMPLOYEE], 2)
         cont_rates = {
             strings.CONT_EMPLOYEE: {
                 'OW': str(rates[3][strings.EMPLOYEE]),
-                'AW': str(rates[3][strings.EMPLOYEE])
+                'AW': str(rates[3][strings.EMPLOYEE]),
             },
             strings.CONT_EMPLOYER: {
                 'OW': str(cont_employer_rate),
-                'AW': str(cont_employer_rate)
+                'AW': str(cont_employer_rate),
             },
         }
 
@@ -145,7 +145,7 @@ def _get_allocation_amount(age: int,
     """
 
     age_bracket = genhelpers._get_age_bracket(age, strings.ALLOCATION)
-    alloc = genhelpers._truncate(constants.rates_alloc[age_bracket][f'{account}_ratio'] * cont)
+    alloc = genhelpers._truncate(constants.rates_alloc[age_bracket][f'{account}_{strings.RATIO}'] * cont)
     return alloc
 
 def _get_allocation_rates(age: int) -> dict:
@@ -166,13 +166,13 @@ def _get_allocation_rates(age: int) -> dict:
         strings.PCT_OF_SALARY: {
             strings.OA: str(rates[strings.OA]),
             strings.SA: str(rates[strings.SA]),
-            strings.MA: str(rates[strings.MA])
+            strings.MA: str(rates[strings.MA]),
         },
         strings.RATIO: {
-            strings.OA: str(rates[f'{strings.OA}_ratio']),
-            strings.SA: str(rates[f'{strings.SA}_ratio']),
-            strings.MA: str(rates[f'{strings.MA}_ratio'])
-        }
+            strings.OA: str(rates[f'{strings.OA}_{strings.RATIO}']),
+            strings.SA: str(rates[f'{strings.SA}_{strings.RATIO}']),
+            strings.MA: str(rates[f'{strings.MA}_{strings.RATIO}']),
+        },
     }
 
     return alloc_rates
@@ -240,15 +240,16 @@ def calculate_annual_change(salary: float,
                             oa_curr: float,
                             sa_curr: float,
                             ma_curr: float,
-                            account_deltas: list=None,
-                            bonus_month: int=12,
-                            date_start: dt=None) -> dict:
+                            account_deltas: list = None,
+                            bonus_month: int = 12,
+                            date_start: dt = None) -> dict:
     """Calculates the total contributions and interest earned for the current year.
 
     Adds the interest, along with the contributions in the year, to the CPF account balances. \\
     Returns the projected amount in the CPF accounts at the end of the year.
 
-    Age variable is updated every month.
+    Age variable is updated every month. \\
+    Result of `calculate_cpf_allocation` function call is cached to avoid repeated calculations.
 
     Args:
         salary (float): Annual salary of employee
@@ -316,18 +317,21 @@ def calculate_annual_change(salary: float,
         oa_interest_total += oa_interest
 
         # remaining amount available for extra interest to be received in SA/MA has a minimum of $40k
-        rem_amount_for_extra_int_sa_ma = constants.THRESHOLD_EXTRAINT_TOTAL - \
-                                            min(oa_accumulated, constants.THRESHOLD_EXTRAINT_OA)
+        rem_amount_for_extra_int_sa_ma = (constants.THRESHOLD_EXTRAINT_TOTAL -
+                                            min(oa_accumulated, constants.THRESHOLD_EXTRAINT_OA))
         # second priority is SA
-        sa_interest = _calculate_monthly_interest_sa(oa_accumulated,
-                                                     sa_accumulated, 
-                                                     rem_amount_for_extra_int_sa_ma)
+        sa_interest = _calculate_monthly_interest_sa(
+            oa_accumulated,
+            sa_accumulated, 
+            rem_amount_for_extra_int_sa_ma)
         sa_interest_total += sa_interest
 
         # remaining amount available for extra interest to be received in MA depends on the amount in SA 
         rem_amount_for_extra_int_ma = max(rem_amount_for_extra_int_sa_ma - sa_accumulated, 0)
         # last priority is MA
-        ma_interest = _calculate_monthly_interest_ma(ma_accumulated, rem_amount_for_extra_int_ma)
+        ma_interest = _calculate_monthly_interest_ma(
+            ma_accumulated,
+            rem_amount_for_extra_int_ma)
         ma_interest_total += ma_interest
 
         if month == bonus_month:

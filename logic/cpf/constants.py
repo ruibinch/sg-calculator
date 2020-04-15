@@ -23,25 +23,25 @@ rates_cont = {
         {},
         { 'combined': 0.17, 'employee': 0.0 },
         { 'combined': 0.17, 'employee': 0.0, 'misc': 0.6 },
-        { 'combined': 0.37, 'employee': 0.2 }
+        { 'combined': 0.37, 'employee': 0.2 },
     ],
     '60': [
         {},
         { 'combined': 0.13, 'employee': 0.0 },
         { 'combined': 0.13, 'employee': 0.0, 'misc': 0.39 },
-        { 'combined': 0.26, 'employee': 0.13 }
+        { 'combined': 0.26, 'employee': 0.13 },
     ],
     '65': [
         {},
         { 'combined': 0.09, 'employee': 0.0 },
         { 'combined': 0.09, 'employee': 0.0, 'misc': 0.225 },
-        { 'combined': 0.165, 'employee': 0.075 }
+        { 'combined': 0.165, 'employee': 0.075 },
     ],
     '150': [
         {},
         { 'combined': 0.075, 'employee': 0.0 },
         { 'combined': 0.075, 'employee': 0.0, 'misc': 0.15 },
-        { 'combined': 0.125, 'employee': 0.05 }
+        { 'combined': 0.125, 'employee': 0.05 },
     ],
 }
 
@@ -53,7 +53,7 @@ rates_alloc = {
         'ma': 0.08,
         'oa_ratio': 0.6217,
         'sa_ratio': 0.1621,
-        'ma_ratio': 0.2162
+        'ma_ratio': 0.2162,
     },
     '45': {
         'oa': 0.21,
@@ -61,7 +61,7 @@ rates_alloc = {
         'ma': 0.09,
         'oa_ratio': 0.5677,
         'sa_ratio': 0.1891,
-        'ma_ratio': 0.2432
+        'ma_ratio': 0.2432,
     },
     '50': {
         'oa': 0.19,
@@ -69,7 +69,7 @@ rates_alloc = {
         'ma': 0.1,
         'oa_ratio': 0.5136,
         'sa_ratio': 0.2162,
-        'ma_ratio': 0.2702
+        'ma_ratio': 0.2702,
     },
     '55': {
         'oa': 0.15,
@@ -77,7 +77,7 @@ rates_alloc = {
         'ma': 0.105,
         'oa_ratio': 0.4055,
         'sa_ratio': 0.3108,
-        'ma_ratio': 0.2837
+        'ma_ratio': 0.2837,
     },
     '60': {
         'oa': 0.12,
@@ -85,7 +85,7 @@ rates_alloc = {
         'ma': 0.105,
         'oa_ratio': 0.4616,
         'sa_ratio': 0.1346,
-        'ma_ratio': 0.4038
+        'ma_ratio': 0.4038,
     },
     '65': {
         'oa': 0.035,
@@ -93,7 +93,7 @@ rates_alloc = {
         'ma': 0.105,
         'oa_ratio': 0.2122,
         'sa_ratio': 0.1515,
-        'ma_ratio': 0.6363
+        'ma_ratio': 0.6363,
     },
     '150': {
         'oa': 0.01,
@@ -101,6 +101,6 @@ rates_alloc = {
         'ma': 0.105,
         'oa_ratio': 0.08,
         'sa_ratio': 0.08,
-        'ma_ratio': 0.84
-    }
+        'ma_ratio': 0.84,
+    },
 }

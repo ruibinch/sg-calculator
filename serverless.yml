@@ -35,4 +35,3 @@ functions:
     handler: handler.main
     events:
       - http: POST /cpf/projection
-  

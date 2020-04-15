@@ -13,7 +13,7 @@ Stores all generic helper methods for the CPF module.
 """
 
 def _get_age(dob: str,
-             date_curr: dt=None) -> int:
+             date_curr: dt = None) -> int:
     """Returns the user's age given the user's date of birth.
 
     If a date is explicitly specified, calculate the user's age from the specified date. 
@@ -31,11 +31,11 @@ def _get_age(dob: str,
 
     birth_year, birth_month = int(dob[0:4]), int(dob[4:6])
     if date_curr is not None:
-        curr_year, curr_month = (date_curr.year, date_curr.month)
+        curr_year, curr_month = date_curr.year, date_curr.month
     else:
-        curr_year, curr_month = (dt.date.today().year, dt.date.today().month)
+        curr_year, curr_month = dt.date.today().year, dt.date.today().month
 
-    year_diff, month_diff = (curr_year - birth_year, curr_month - birth_month)
+    year_diff, month_diff = curr_year - birth_year, curr_month - birth_month
     age = year_diff if month_diff <= 0 else year_diff + 1
     return age
 
@@ -53,11 +53,12 @@ def _get_age_bracket(age: int,
     elif purpose == strings.ALLOCATION:
         keys = constants.rates_alloc.keys()
 
+    # keys are sorted in ascending order
     for key in keys:
         if age <= int(key):
             return key
     
-    return '150' # return max by default
+    return max(keys) # return max by default
 
 def _get_num_projection_years(target_year: int) -> int:
     """Returns the number of years between this year and the target year (inclusive).
@@ -105,7 +106,7 @@ def _extract_account_deltas(account_deltas: list) \
 ###############################################################################
 
 def _round_half_up(n: float,
-                   decimals: int=0) -> int:
+                   decimals: int = 0) -> int:
     """Rounds the given monetary amount to the nearest dollar.
     
     An amount of 50 cents will be regarded as an additional dollar.
@@ -118,7 +119,7 @@ def _round_half_up(n: float,
     return math.floor(n*multiplier + 0.5) / multiplier
 
 def _truncate(n: float,
-              decimals: int=2) -> float:
+              decimals: int = 2) -> float:
     """Truncates the given monetary amount to the specified number of decimal places.
 
     Args:

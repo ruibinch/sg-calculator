@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 def extract_param(body: dict,
                   output: dict,
                   param: str,
-                  mould: Any=None,
-                  required: bool=True,
-                  allowed_values: list=None,
-                  default_value: Any=None) -> dict:
+                  mould: Any = None,
+                  required: bool = True,
+                  allowed_values: list = None,
+                  default_value: Any = None) -> dict:
     """Extracts parameters from the request body and converts it to the appropriate type.
        
     Checks for 2 potential errors:
@@ -75,7 +75,9 @@ def extract_param(body: dict,
     except ValueError:
         # param found but unable to do type conversion
         logger.error(f'"{param}" is \'{type(body[param]).__name__}\', unable to convert to \'{type(mould).__name__}\'', exc_info=True)
-        output[strings.ERROR][param] = f'Unable to convert \'{type(body[param]).__name__}\' to \'{type(mould).__name__}\''
+        output[strings.ERROR][param] = (f'Unable to convert '
+                                        f'\'{type(body[param]).__name__}\''
+                                        ' to \'{type(mould).__name__}\'')
         output[strings.STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY
     except Exception:
         # catch all other general exceptions
@@ -109,7 +111,8 @@ def check_conditional_params(body: dict,
 
         # add an error message for each of the params
         for param in params:
-            output[strings.ERROR][param] = f'At least one of ({params_str}) must be present'
+            output[strings.ERROR][param] = (f'At least one of ({params_str})'
+                                            'must be present')
 
     return output
 
@@ -146,43 +149,65 @@ def run(body: dict, path: str) -> dict:
     output = {key: {} for key in keys}
 
     if path == endpoints.CPF_CONTRIBUTION:
-        output = extract_param(body, output, strings.PARAM_SALARY, mould=MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_BONUS, mould=MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_DOB)
-        output = extract_param(body, output, strings.PARAM_PERIOD,
-                               allowed_values=[strings.YEAR, strings.MONTH])
+        output = extract_param(
+            body, output, strings.PARAM_SALARY,
+            mould=MOULD_FLOAT)
+        output = extract_param(
+            body, output, strings.PARAM_BONUS,
+            mould=MOULD_FLOAT)
+        output = extract_param(
+            body, output, strings.PARAM_DOB)
+        output = extract_param(
+            body, output, strings.PARAM_PERIOD,
+            allowed_values=[strings.YEAR, strings.MONTH])
 
     elif path == endpoints.CPF_ALLOCATION:
-        output = extract_param(body, output, strings.PARAM_SALARY, mould=MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_BONUS, mould=MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_DOB)
+        output = extract_param(
+            body, output, strings.PARAM_SALARY,
+            mould=MOULD_FLOAT)
+        output = extract_param(
+            body, output, strings.PARAM_BONUS,
+            mould=MOULD_FLOAT)
+        output = extract_param(
+            body, output, strings.PARAM_DOB)
 
     elif path == endpoints.CPF_PROJECTION:
-        output = extract_param(body, output, strings.PARAM_SALARY, mould=MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_BONUS, mould=MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_YOY_INCREASE_SALARY, mould=MOULD_FLOAT)
-        output = extract_param(body, output, strings.PARAM_DOB)
-        output = extract_param(body, output, strings.PARAM_BASE_CPF)
-        output = extract_param(body, output, strings.PARAM_BONUS_MONTH,
-                               mould=MOULD_INT,
-                               required=False,
-                               default_value=12,
-                               allowed_values=range(1, 13))
-        output = extract_param(body, output, strings.PARAM_N_YEARS,
-                               mould=MOULD_INT,
-                               required=False,
-                               default_value=None)
-        output = extract_param(body, output, strings.PARAM_TARGET_YEAR,
-                               mould=MOULD_INT,
-                               required=False,
-                               default_value=None)
-        output = extract_param(body, output, strings.PARAM_ACCOUNT_DELTAS,
-                               required=False,
-                               default_value=[])
+        output = extract_param(
+            body, output, strings.PARAM_SALARY,
+            mould=MOULD_FLOAT)
+        output = extract_param(
+            body, output, strings.PARAM_BONUS,
+            mould=MOULD_FLOAT)
+        output = extract_param(
+            body, output, strings.PARAM_YOY_INCREASE_SALARY,
+            mould=MOULD_FLOAT)
+        output = extract_param(
+            body, output, strings.PARAM_DOB)
+        output = extract_param(
+            body, output, strings.PARAM_BASE_CPF)
+        output = extract_param(
+            body, output, strings.PARAM_BONUS_MONTH,
+            mould=MOULD_INT,
+            required=False,
+            default_value=12,
+            allowed_values=range(1, 13))
+        output = extract_param(
+            body, output, strings.PARAM_N_YEARS,
+            mould=MOULD_INT,
+            required=False,
+            default_value=None)
+        output = extract_param(
+            body, output, strings.PARAM_TARGET_YEAR,
+            mould=MOULD_INT,
+            required=False,
+            default_value=None)
+        output = extract_param(
+            body, output, strings.PARAM_ACCOUNT_DELTAS,
+            required=False,
+            default_value=[])
 
-        output = check_conditional_params(body, 
-                                          output, 
-                                          [strings.PARAM_N_YEARS, strings.PARAM_TARGET_YEAR]
-                                         )
+        output = check_conditional_params(
+            body, output, 
+            [strings.PARAM_N_YEARS, strings.PARAM_TARGET_YEAR])
 
     return output
