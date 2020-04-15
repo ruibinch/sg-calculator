@@ -30,5 +30,6 @@ deploy_staging:
   before_script:
     - npm config set prefix /usr/local
     - npm install -g serverless
+    - npm install --save-dev serverless-offline
   script:
     - sls deploy --stage staging --verbose
