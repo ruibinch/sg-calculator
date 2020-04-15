@@ -7,14 +7,13 @@ stages:
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
-cache:
-  paths:
-    - .cache/pip
-    - venv/
-
 unit_test:
   stage: test
   allow_failure: false
+  cache:
+    paths:
+      - .cache/pip
+      - venv/
   before_script:
     - pip install virtualenv
     - virtualenv venv
@@ -27,9 +26,34 @@ unit_test:
 deploy_staging:
   image: node:13.1-alpine
   stage: deploy
+  only:
+    - master
+  environment:
+    name: staging
+  cache:
+    paths:
+      - node_modules/
   before_script:
     - npm config set prefix /usr/local
     - npm install -g serverless
     - npm install --save-dev serverless-offline
   script:
     - sls deploy --stage staging --verbose
+
+deploy_prod:
+  image: node:13.1-alpine
+  stage: deploy
+  when: manual
+  only:
+    - master
+  environment:
+    name: production
+  cache:
+    paths:
+      - node_modules/
+  before_script:
+    - npm config set prefix /usr/local
+    - npm install -g serverless
+    - npm install --save-dev serverless-offline
+  script:
+    - sls deploy --stage alpha --verbose
