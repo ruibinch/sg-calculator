@@ -1,4 +1,5 @@
 import datetime as dt
+from dateutil.relativedelta import relativedelta
 import logging
 import math
 from typing import Tuple
@@ -69,6 +70,42 @@ def _get_num_projection_years(target_year: int) -> int:
 
     return target_year - dt.date.today().year + 1
 
+###############################################################################
+#                         ACCOUNT DELTAS HANDLING METHODS                     #
+###############################################################################
+
+def _decompress_account_deltas(account_deltas: list) -> list:
+    """Decompresses recurring deltas into its individual delta entry.
+    
+    Args:
+        account_deltas (list): List of topups/withdrawals to be made to the accounts
+    """
+
+    account_deltas_new = []
+
+    for delta in account_deltas:
+        recurrence = delta.get(strings.RECURRENCE, None)
+        if not recurrence:
+            account_deltas_new.append(delta)
+        else:
+            del delta[strings.RECURRENCE]   # remove `recurrence` key
+            start_period = delta[strings.PERIOD]
+                
+            for i in range(0, int(recurrence[strings.DURATION])):
+                if recurrence[strings.FREQUENCY] == strings.MONTHLY:
+                    curr_period = _increment_period(
+                        start_period, add_months=i)
+                elif recurrence[strings.FREQUENCY] == strings.ANNUALLY:
+                    curr_period = _increment_period(
+                        start_period, add_years=i)
+                
+                account_deltas_new.append({
+                    **delta,
+                    **{strings.PERIOD: curr_period} # replace `period` key
+                })
+
+    return account_deltas_new
+
 def _extract_account_deltas(account_deltas: list) \
                             -> Tuple[float, float, float]:
     """Extracts the account deltas and computes the final delta amounts for the 3 accounts.
@@ -102,8 +139,24 @@ def _extract_account_deltas(account_deltas: list) \
     return oa_delta, sa_delta, ma_delta
 
 ###############################################################################
-#                                  MATH METHODS                               #
+#                                  MISC METHODS                               #
 ###############################################################################
+
+def _increment_period(period: str,
+                      add_years: int = 0,
+                      add_months: int = 0) -> str:
+    """Reads in a time period in YYYYMM format, increments it by the input
+        number of years/months, and returns it in the same format.
+    
+    Args:
+        period (str): Time period in YYYYMM format
+        add_years (int): Number of years to increment
+        add_months (int): Number of months to increment
+    """
+
+    date = dt.date(int(period[:4]), int(period[4:6]), 1)
+    new_date = date + relativedelta(years=add_years, months=add_months)
+    return str(new_date.year) + str(new_date.month).zfill(2)
 
 def _round_half_up(n: float,
                    decimals: int = 0) -> int:

@@ -180,9 +180,12 @@ def calculate_cpf_projection(salary: float,
     
     values = {}
     
-    # getting base amounts in OA, SA, MA and number of years to project for
+    # get base amounts in OA, SA, MA
     oa, sa, ma = float(base_cpf[strings.OA]), float(base_cpf[strings.SA]), float(base_cpf[strings.MA])
+    # get number of years to project for
     n_years = genhelpers._get_num_projection_years(target_year) if n_years is None else n_years
+    # decompress recurring deltas
+    account_deltas = genhelpers._decompress_account_deltas(account_deltas)
 
     for i in range(n_years):
         if i == 0:
