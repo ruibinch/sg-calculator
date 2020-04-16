@@ -74,8 +74,10 @@ def extract_param(body: dict,
             output[strings.PARAMS][param] = default_value
     except ValueError:
         # param found but unable to do type conversion
-        logger.error(f'"{param}" is \'{type(body[param]).__name__}\', unable to convert to \'{type(mould).__name__}\'', exc_info=True)
-        output[strings.ERROR][param] = (f'Unable to convert '
+        logger.error(f'"{param}" is \'{type(body[param]).__name__}\', '
+                     f'unable to convert to \'{type(mould).__name__}\'',
+                     exc_info=True)
+        output[strings.ERROR][param] = ('Unable to convert '
                                         f'\'{type(body[param]).__name__}\''
                                         ' to \'{type(mould).__name__}\'')
         output[strings.STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY

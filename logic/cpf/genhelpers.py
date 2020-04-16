@@ -169,7 +169,7 @@ def _round_half_up(n: float,
     """
 
     multiplier = 10 ** decimals
-    return math.floor(n*multiplier + 0.5) / multiplier
+    return math.floor(n * multiplier + 0.5) / multiplier
 
 def _truncate(n: float,
               decimals: int = 2) -> float:

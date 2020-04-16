@@ -1,4 +1,5 @@
 import logging
+import logging.config
 import os
 
 def setup():
@@ -9,7 +10,7 @@ def setup():
     """
 
     try:
-        with open(os.path.join(os.path.dirname(__file__), '..', 'dev', 'logger.yml'), 'r') as f:
+        with open(os.path.join(os.path.dirname(__file__), 'logger.yml'), 'r') as f:
             import yaml
             logger_config = yaml.safe_load(f.read())
             logging.config.dictConfig(logger_config)
