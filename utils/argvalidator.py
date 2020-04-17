@@ -212,4 +212,31 @@ def run(body: dict, path: str) -> dict:
             body, output, 
             [strings.PARAM_N_YEARS, strings.PARAM_TARGET_YEAR])
 
+    elif path == endpoints.HOUSING_MAX_MORTGAGE:
+        output = extract_param(
+            body, output, strings.PARAM_PROPERTY_TYPE)
+        output = extract_param(
+            body, output, strings.PARAM_FIXED_INCOME,
+            mould=MOULD_FLOAT)
+        output = extract_param(
+            body, output, strings.PARAM_VARIABLE_INCOME,
+            mould=MOULD_FLOAT,
+            required=False,
+            default_value=0)
+        output = extract_param(
+            body, output, strings.PARAM_PROPERTY_LOANS,
+            mould=MOULD_FLOAT,
+            required=False,
+            default_value=0)
+        output = extract_param(
+            body, output, strings.PARAM_PROPERTY_LOANS_GUARANTOR,
+            mould=MOULD_FLOAT,
+            required=False,
+            default_value=0)
+        output = extract_param(
+            body, output, strings.PARAM_OTHER_LOANS,
+            mould=MOULD_FLOAT,
+            required=False,
+            default_value=0)
+
     return output
