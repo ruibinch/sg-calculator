@@ -1,12 +1,12 @@
 import datetime as dt
 from typing import Tuple
 
-from logic.cpf.main import calculate_cpf_projection
+from logic.cpf.main import calc_cpf_projection
 from logic.cpf import constants, cpfhelpers, genhelpers
 from utils import strings
 
 class TestCpfCalculateAnnualChange1(object):
-    """Tests the `calculate_annual_change()` method in cpf.py.
+    """Tests the `calc_annual_change()` method in cpf.py.
 
     Focuses on interest calculation across different CPF account thresholds.
     Variable here is the original CPF account balances, age is kept fixed.
@@ -59,21 +59,21 @@ class TestCpfCalculateAnnualChange1(object):
             balance_exp (list): Expected balance in CPF accounts [OA, SA, MA]
         """
 
-        results_annual = cpfhelpers.calculate_annual_change(
-                            self.salary * 12,
-                            self.bonus,
-                            self.dob,
-                            balance_orig[0],
-                            balance_orig[1],
-                            balance_orig[2],
-                            account_deltas={},
-                            date_start=self.date_start)
+        results_annual = cpfhelpers.calc_annual_change(
+            self.salary * 12,
+            self.bonus,
+            self.dob,
+            balance_orig[0],
+            balance_orig[1],
+            balance_orig[2],
+            account_deltas={},
+            date_start=self.date_start)
 
         assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
         assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
         assert str(round(balance_exp[2], 2)) == results_annual[strings.MA]
 
-    def test_scenario_1(self):
+    def test_calc_annual_change_1(self):
         print('Test scenario 1: OA < $20k, OA+SA+MA < $60k')
         oa, sa, ma = (6000, 2000, 3000)
         int_oa, int_sa, int_ma = (0, 0, 0)
@@ -91,7 +91,7 @@ class TestCpfCalculateAnnualChange1(object):
         
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma])
 
-    def test_scenario_2(self):
+    def test_calc_annual_change_2(self):
         print('Test scenario 2: OA > $20k, $20k+SA+MA < $60k')
         oa, sa, ma = (35000, 2000, 3000)
         int_oa, int_sa, int_ma = (0, 0, 0)
@@ -109,7 +109,7 @@ class TestCpfCalculateAnnualChange1(object):
         
         self._perform_assertion([35000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma])
 
-    def test_scenario_3(self):
+    def test_calc_annual_change_3(self):
         print('Test scenario 3: OA < $20k, OA+SA < $60k, OA+SA+MA > $60k')
         oa, sa, ma = (6000, 30000, 30000)
         int_oa, int_sa, int_ma = (0, 0, 0)
@@ -129,7 +129,7 @@ class TestCpfCalculateAnnualChange1(object):
   
         self._perform_assertion([6000, 30000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
 
-    def test_scenario_4(self):
+    def test_calc_annual_change_4(self):
         print('Test scenario 4: OA < $20k, OA+SA > $60k after a few months')
         oa, sa, ma = (6000, 40000, 30000)
         int_oa, int_sa, int_ma = (0, 0, 0)
@@ -157,7 +157,7 @@ class TestCpfCalculateAnnualChange1(object):
         self._perform_assertion([6000, 40000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
 
 
-    def test_scenario_5(self):
+    def test_calc_annual_change_5(self):
         print('Test scenario 5: OA > $20k, $20k+SA > $60k, $20k+SA+MA > $60k')
         oa, sa, ma = (25000, 45000, 30000)
         int_oa, int_sa, int_ma = (0, 0, 0)
@@ -177,7 +177,7 @@ class TestCpfCalculateAnnualChange1(object):
 
         self._perform_assertion([25000, 45000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
 
-    def test_scenario_6(self):
+    def test_calc_annual_change_6(self):
         print('Test scenario 6: OA > $20k, $20k+SA < $60k, $20k+SA+MA > $60k')
         oa, sa, ma = (25000, 30000, 30000)
         int_oa, int_sa, int_ma = (0, 0, 0)
@@ -197,7 +197,7 @@ class TestCpfCalculateAnnualChange1(object):
         
         self._perform_assertion([25000, 30000, 30000], [oa + int_oa, sa + int_sa, ma + int_ma])      
 
-    def test_scenario_7(self):
+    def test_calc_annual_change_7(self):
         print('Test scenario 7: OA > $20k after a few years, OA+SA+MA < $60k')
         oa, sa, ma = (15000, 5000, 5000)
         int_oa, int_sa, int_ma = (0, 0, 0)
@@ -215,7 +215,7 @@ class TestCpfCalculateAnnualChange1(object):
         
         self._perform_assertion([15000, 5000, 5000], [oa + int_oa, sa + int_sa, ma + int_ma])      
 
-    def test_scenario_8(self):
+    def test_calc_annual_change_8(self):
         print('Test scenario 8: OA > $20k after a few years, OA+SA+MA > $60k after a few years')
         oa, sa, ma = (18000, 39000, 5000)
         int_oa, int_sa, int_ma = (0, 0, 0)
@@ -249,7 +249,7 @@ class TestCpfCalculateAnnualChange1(object):
 
 
 class TestCpfCalculateAnnualChange2(object):
-    """Tests the `calculate_annual_change()` method in cpf.py.
+    """Tests the `calc_annual_change()` method in cpf.py.
 
     Focuses on cases where the age bracket changes during the year.
     Original CPF account balances are fixed here, corresponding to test scenario 1 in 
@@ -304,27 +304,27 @@ class TestCpfCalculateAnnualChange2(object):
             balance_exp (list): Expected balance in CPF accounts [OA, SA, MA]
         """
 
-        results_annual = cpfhelpers.calculate_annual_change(
-                            self.salary * 12,
-                            self.bonus,
-                            dob,
-                            balance_orig[0],
-                            balance_orig[1],
-                            balance_orig[2],
-                            account_deltas={},
-                            date_start=self.date_start)
+        results_annual = cpfhelpers.calc_annual_change(
+            self.salary * 12,
+            self.bonus,
+            dob,
+            balance_orig[0],
+            balance_orig[1],
+            balance_orig[2],
+            account_deltas={},
+            date_start=self.date_start)
 
         assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
         assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
         assert str(round(balance_exp[2], 2)) == results_annual[strings.MA]
 
-    def test_scenario_1(self):
+    def test_calc_annual_change_1(self):
         print('Test scenario 1: Age 35 -> 36')
 
         oa, sa, ma = (6000, 2000, 3000)
         cont_oa_under35, cont_sa_under35, cont_ma_under35 = (920.13, 239.9, 319.97)
         cont_oa_over35, cont_sa_over35, cont_ma_over35 = (840.21, 279.86, 359.93)
-        # calculated based on age=36
+        # calcd based on age=36
         cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (2940.7, 979.53, 1259.77)
 
         dob = str(dt.date.today().year - 35) + '06' # default month to June
@@ -346,13 +346,13 @@ class TestCpfCalculateAnnualChange2(object):
         
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], dob)
     
-    def test_scenario_2(self):
+    def test_calc_annual_change_2(self):
         print('Test scenario 2: Age 45 -> 46')
 
         oa, sa, ma = (6000, 2000, 3000)
         cont_oa_under45, cont_sa_under45, cont_ma_under45 = (840.21, 279.86, 359.93)
         cont_oa_over45, cont_sa_over45, cont_ma_over45 = (760.14, 319.97, 399.89)
-        # calculated based on age=46
+        # calcd based on age=46
         cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (2660.46, 1119.91, 1399.63)
 
         dob = str(dt.date.today().year - 45) + '06' # default month to June
@@ -374,13 +374,13 @@ class TestCpfCalculateAnnualChange2(object):
         
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], dob)
     
-    def test_scenario_3(self):
+    def test_calc_annual_change_3(self):
         print('Test scenario 3: Age 50 -> 51')
 
         oa, sa, ma = (6000, 2000, 3000)
         cont_oa_under50, cont_sa_under50, cont_ma_under50 = (760.14, 319.97, 399.89)
         cont_oa_over50, cont_sa_over50, cont_ma_over50 = (600.15, 459.98, 419.87)
-        # calculated based on age=51
+        # calcd based on age=51
         cont_oa_bonus, cont_sa_bonus, cont_ma_bonus = (2100.5, 1609.94, 1469.56)
 
         dob = str(dt.date.today().year - 50) + '06' # default month to June
@@ -404,7 +404,7 @@ class TestCpfCalculateAnnualChange2(object):
 
 
 class TestCpfCalculateAnnualChange3(object):
-    """Tests the `calculate_annual_change()` method in cpf.py.
+    """Tests the `calc_annual_change()` method in cpf.py.
 
     Focuses on cases where there are changes in withdrawals/topups from the OA/SA respectively
     in the year.
@@ -477,21 +477,21 @@ class TestCpfCalculateAnnualChange3(object):
             balance_exp (array): Expected balance in CPF accounts [OA, SA, MA]
         """
 
-        results_annual = cpfhelpers.calculate_annual_change(
-                            self.salary * 12,
-                            self.bonus,
-                            self.dob,
-                            balance_orig[0],
-                            balance_orig[1],
-                            balance_orig[2],
-                            account_deltas=account_deltas,
-                            date_start=self.date_start)
+        results_annual = cpfhelpers.calc_annual_change(
+            self.salary * 12,
+            self.bonus,
+            self.dob,
+            balance_orig[0],
+            balance_orig[1],
+            balance_orig[2],
+            account_deltas=account_deltas,
+            date_start=self.date_start)
 
         assert str(round(balance_exp[0], 2)) == results_annual[strings.OA]
         assert str(round(balance_exp[1], 2)) == results_annual[strings.SA]
         assert str(round(balance_exp[2], 2)) == results_annual[strings.MA]
 
-    def test_scenario_1(self):
+    def test_calc_annual_change_1(self):
         print('Test scenario 1: Topup OA')
         
         oa, sa, ma = (6000, 2000, 3000)
@@ -514,7 +514,7 @@ class TestCpfCalculateAnnualChange3(object):
         ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
-    def test_scenario_2(self):
+    def test_calc_annual_change_2(self):
         print('Test scenario 2: Withdraw from OA')
         
         oa, sa, ma = (6000, 2000, 3000)
@@ -537,7 +537,7 @@ class TestCpfCalculateAnnualChange3(object):
         ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
-    def test_scenario_3(self):
+    def test_calc_annual_change_3(self):
         print('Test scenario 3: Topup SA via cash')
         
         oa, sa, ma = (6000, 2000, 3000)
@@ -561,7 +561,7 @@ class TestCpfCalculateAnnualChange3(object):
         ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
-    def test_scenario_4(self):
+    def test_calc_annual_change_4(self):
         print('Test scenario 4: Topup SA via OA')
         
         oa, sa, ma = (6000, 2000, 3000)
@@ -586,7 +586,7 @@ class TestCpfCalculateAnnualChange3(object):
         ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
-    def test_scenario_5(self):
+    def test_calc_annual_change_5(self):
         print('Test scenario 5: Withdraw from SA')
         
         oa, sa, ma = (6000, 2000, 3000)
@@ -609,7 +609,7 @@ class TestCpfCalculateAnnualChange3(object):
         ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
-    def test_scenario_6(self):
+    def test_calc_annual_change_6(self):
         print('Test scenario 6: Topup MA')
         
         oa, sa, ma = (6000, 2000, 3000)
@@ -632,7 +632,7 @@ class TestCpfCalculateAnnualChange3(object):
         ]
         self._perform_assertion([6000, 2000, 3000], [oa + int_oa, sa + int_sa, ma + int_ma], account_deltas)
 
-    def test_scenario_7(self):
+    def test_calc_annual_change_7(self):
         print('Test scenario 7: Withdraw from MA')
         
         oa, sa, ma = (6000, 2000, 3000)

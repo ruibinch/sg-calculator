@@ -31,5 +31,5 @@ def main(event: dict, context: dict) -> dict:
 
     return {
         strings.STATUSCODE: status_code,
-        strings.BODY: json.dumps(response)
+        strings.BODY: json.dumps(response),
     }

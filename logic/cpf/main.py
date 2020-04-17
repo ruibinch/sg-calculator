@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 Main file serving as the entry point to the CPF module.
 """
 
-def calculate_cpf_contribution(salary: float,
-                               bonus: float,
-                               dob: str,
-                               period: str,
-                               age: int = None) -> dict:
+def calc_cpf_contribution(salary: float,
+                          bonus: float,
+                          dob: str,
+                          period: str,
+                          age: int = None) -> dict:
     """Calculates the CPF contribution for the year/month.
     
     Takes into account the Ordinary Wage (OW) Ceiling and Additional Wage (AW) Ceiling.
@@ -81,10 +81,10 @@ def calculate_cpf_contribution(salary: float,
     }
 
 @functools.lru_cache(maxsize=100)
-def calculate_cpf_allocation(salary: float,
-                             bonus: float,
-                             dob: str,
-                             age: int = None) -> dict:
+def calc_cpf_allocation(salary: float,
+                        bonus: float,
+                        dob: str,
+                        age: int = None) -> dict:
     """Calculates the annual allocation into the 3 CPF accounts.
 
     Reference <https://www.cpf.gov.sg/Assets/employers/Documents/Table%2011_Pte%20and%20Npen_CPF%20Allocation%20Rates%20Jan%202016.pdf/>`
@@ -140,17 +140,17 @@ def calculate_cpf_allocation(salary: float,
         strings.RATES: alloc_rates,
     }
 
-def calculate_cpf_projection(salary: float,
-                             bonus: float,
-                             yoy_increase_salary: float,
-                             dob: str,
-                             base_cpf: dict,
-                             bonus_month: int,
-                             n_years: int,
-                             target_year: int,
-                             account_deltas: list,
-                             age: int = None,
-                             proj_start_date: dt = None) -> dict: 
+def calc_cpf_projection(salary: float,
+                        bonus: float,
+                        yoy_increase_salary: float,
+                        dob: str,
+                        base_cpf: dict,
+                        bonus_month: int,
+                        n_years: int,
+                        target_year: int,
+                        account_deltas: list,
+                        age: int = None,
+                        proj_start_date: dt = None) -> dict: 
     """Calculates the projected account balance in the CPF accounts after `n_years` or in `target_year`.
 
     Reference <https://www.cpf.gov.sg/Assets/common/Documents/InterestRate.pdf/>
@@ -205,7 +205,7 @@ def calculate_cpf_projection(salary: float,
         account_deltas_year = [e for e in account_deltas if int(e[strings.PERIOD][:4]) == date_start.year]
 
         logger.debug(f'Year {i + 1} projection')
-        results_annual = cpfhelpers.calculate_annual_change(
+        results_annual = cpfhelpers.calc_annual_change(
             salary_proj,
             bonus,
             dob,

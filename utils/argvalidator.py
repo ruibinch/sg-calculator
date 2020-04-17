@@ -22,8 +22,7 @@ def extract_param(body: dict,
        
     Checks for 2 potential errors:
         1. KeyError - parameter does not exist
-        2. ValueError - parameter is of invalid type preventing the type conversion
-        3. TypeError - if parameter is to be of dict type but the input cannot be JSON-serialised
+        2. ValueError - parameter is of invalid type thus preventing the type conversion
 
     Args:
         body (dict): Contents of request body
@@ -32,8 +31,8 @@ def extract_param(body: dict,
         mould (*): Serves as a mould for typecasting numbers
         required (bool): Denote whether this parameter is required
         allowed_values (list): List of allowed values for this parameter
-        default_value (*): Denotes the default value if the desired parameter is not found
-            in the body; mandatory if `required` is set to False
+        default_value (*): Denotes the default value if the desired parameter is not found in the body;
+            mandatory if `required` is set to False
 
     Returns an output dict with an additional entry, either in output[strings.PARAMS][param] or
     output[strings.ERROR][param].
@@ -42,24 +41,19 @@ def extract_param(body: dict,
     """
 
     try:
+        # extract param value and typecast it if applicable
         if mould is not None and (type(mould) is int or type(mould) is float):
             param_value = type(mould)(body[param])
         else:
             param_value = body[param]
 
-        # check if extracted param value is allowed
-        is_param_value_allowed = False
-        if allowed_values is not None:
-            if param_value in allowed_values:
-                is_param_value_allowed = True
-            else:
-                logger.error(f'"{param_value}" is an invalid value for parameter "{param}"')
-                output[strings.ERROR][param] = f'"{param_value}" is an invalid value'
-                output[strings.STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY
+        if allowed_values is not None and param_value not in allowed_values:
+            # param value is not allowed
+            logger.error(f'"{param_value}" is an invalid value for parameter "{param}"')
+            output[strings.ERROR][param] = f'"{param_value}" is an invalid value'
+            output[strings.STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY
         else:
-            is_param_value_allowed = True
-
-        if is_param_value_allowed:
+            # param value is allowed
             logger.info(f'Setting "{param}" to {param_value}')
             output[strings.PARAMS][param] = param_value
 
@@ -79,19 +73,19 @@ def extract_param(body: dict,
                      exc_info=True)
         output[strings.ERROR][param] = ('Unable to convert '
                                         f'\'{type(body[param]).__name__}\''
-                                        ' to \'{type(mould).__name__}\'')
+                                        f' to \'{type(mould).__name__}\'')
         output[strings.STATUSCODE] = HTTPStatus.UNPROCESSABLE_ENTITY
     except Exception:
         # catch all other general exceptions
         logger.exception('No idea what happened here, gotta take a look at the stack trace')
-        output[strings.ERROR][param] = 'No idea what happened here'
+        output[strings.ERROR][param] = 'Some unforeseen exception happened here'
         output[strings.STATUSCODE] = HTTPStatus.INTERNAL_SERVER_ERROR
 
     return output
 
 def check_conditional_params(body: dict,
                              output: dict,
-                             params: list) -> dict:
+                             params_req: list) -> dict:
     """Checks that at least one of the specified parameters is present in the request body. 
         
     If none of them are present, then throw an error.
@@ -99,20 +93,20 @@ def check_conditional_params(body: dict,
     Args:
         body (dict): Contents of request body
         output (dict): Output to be returned
-        params (list): List of parameter names, whereby at least one must be present
+        params_req (list): List of parameter names, whereby at least one must be present
 
     Returns the output dict with modifications if an error is encountered.
     """
 
-    params_present = [param for param in params if param in body.keys()]
+    params_req_present = [param for param in params_req if param in body.keys()]
 
-    if not params_present:
+    if not params_req_present:
         output[strings.STATUSCODE] = HTTPStatus.BAD_REQUEST
-        params_str = ', '.join(params)
+        params_str = ', '.join(params_req)
         logger.debug(f'None of ({params_str}) are present')
 
         # add an error message for each of the params
-        for param in params:
+        for param in params_req:
             output[strings.ERROR][param] = (f'At least one of ({params_str})'
                                             'must be present')
 

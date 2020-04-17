@@ -127,7 +127,7 @@ def _extract_account_deltas(account_deltas: list) \
             oa_delta -= amount
         if delta[strings.TYPE] == strings.SA_TOPUP:
             sa_delta += amount
-            if delta[strings.IS_SA_TOPUP_FROM_OA]:
+            if delta[strings.IS_SA_TOPUP_FROM_OA] is True:
                 oa_delta -= amount
         elif delta[strings.TYPE] == strings.SA_WITHDRAWAL:
             sa_delta -= amount

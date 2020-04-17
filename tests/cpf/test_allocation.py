@@ -1,13 +1,13 @@
 from typing import Tuple
 
-from logic.cpf.main import calculate_cpf_allocation
+from logic.cpf.main import calc_cpf_allocation
 from logic.cpf import cpfhelpers, genhelpers
 from utils import strings
 
-class TestCalculateCpfAllocation(object):
-    """Tests the `calculate_cpf_allocation()` method in cpf.py.
+class TestCalcCpfAllocation(object):
+    """Tests the `calc_cpf_allocation()` method in cpf.py.
    
-    Assumption: `calculate_cpf_contribution()` method is correct.
+    Assumption: `calc_cpf_contribution()` method is correct.
 
     Age is the only variable here. \\
     Each test scenario contains 2 assertions - one with bonus and one without bonus. \\
@@ -58,18 +58,18 @@ class TestCalculateCpfAllocation(object):
         """
         
         # with bonus
-        allocations = calculate_cpf_allocation(self.salary * 12, self.bonus, None, age=age)
+        allocations = calc_cpf_allocation(self.salary * 12, self.bonus, None, age=age)
         assert alloc_with_bonus_exp[0] == float(allocations[strings.VALUES][strings.OA])
         assert alloc_with_bonus_exp[1] == float(allocations[strings.VALUES][strings.SA])
         assert alloc_with_bonus_exp[2] == float(allocations[strings.VALUES][strings.MA])
 
         # without bonus
-        allocations = calculate_cpf_allocation(self.salary * 12, 0, None, age=age)
+        allocations = calc_cpf_allocation(self.salary * 12, 0, None, age=age)
         assert alloc_wo_bonus_exp[0] == float(allocations[strings.VALUES][strings.OA])
         assert alloc_wo_bonus_exp[1] == float(allocations[strings.VALUES][strings.SA])
         assert alloc_wo_bonus_exp[2] == float(allocations[strings.VALUES][strings.MA])
 
-    def test_scenario_1(self):
+    def test_calc_cpf_allocation_1(self):
         age = 35
         cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1621, 0.2162)
@@ -80,7 +80,7 @@ class TestCalculateCpfAllocation(object):
                                  [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
                                 )
     
-    def test_scenario_2(self):
+    def test_calc_cpf_allocation_2(self):
         age = 45
         cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1891, 0.2432)
@@ -91,7 +91,7 @@ class TestCalculateCpfAllocation(object):
                                  [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
                                 )
 
-    def test_scenario_3(self):
+    def test_calc_cpf_allocation_3(self):
         age = 50
         cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.2162, 0.2702)
@@ -102,7 +102,7 @@ class TestCalculateCpfAllocation(object):
                                  [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
                                 )
 
-    def test_scenario_4(self):
+    def test_calc_cpf_allocation_4(self):
         age = 55
         cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.3108, 0.2837)
@@ -113,7 +113,7 @@ class TestCalculateCpfAllocation(object):
                                  [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
                                 )
     
-    def test_scenario_5(self):
+    def test_calc_cpf_allocation_5(self):
         age = 60
         cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1346, 0.4038)
@@ -124,7 +124,7 @@ class TestCalculateCpfAllocation(object):
                                  [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
                                 )
 
-    def test_scenario_6(self):
+    def test_calc_cpf_allocation_6(self):
         age = 65
         cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.1515, 0.6363)
@@ -135,7 +135,7 @@ class TestCalculateCpfAllocation(object):
                                  [oa_alloc_wo_bonus, sa_alloc_wo_bonus, ma_alloc_wo_bonus]
                                 )
 
-    def test_scenario_7(self):
+    def test_calc_cpf_allocation_7(self):
         age = 80
         cont_with_bonus, cont_wo_bonus = self._get_contribution_amount_by_age(age)
         oa_alloc_with_bonus, sa_alloc_with_bonus, ma_alloc_with_bonus = self._get_alloc_amount(cont_with_bonus, 0.08, 0.84)

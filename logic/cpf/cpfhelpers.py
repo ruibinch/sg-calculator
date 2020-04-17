@@ -181,7 +181,7 @@ def _get_allocation_rates(age: int) -> dict:
 #                                 CPF INTEREST                                #
 ###############################################################################
 
-def _calculate_monthly_interest_oa(oa_accumulated: float) -> float:
+def _calc_monthly_interest_oa(oa_accumulated: float) -> float:
     """Calculates the interest to be added to the OA in a month period.
 
     Args:
@@ -191,7 +191,7 @@ def _calculate_monthly_interest_oa(oa_accumulated: float) -> float:
     oa_interest = oa_accumulated * (constants.INT_RATE_OA / 12)
     return oa_interest
 
-def _calculate_monthly_interest_sa(oa_accumulated: float,
+def _calc_monthly_interest_sa(oa_accumulated: float,
                                    sa_accumulated: float,
                                    rem_amount_for_extra_int_sa_ma: float) -> float:
     """Calculates the interest to be added to the SA in a month period.
@@ -216,7 +216,7 @@ def _calculate_monthly_interest_sa(oa_accumulated: float,
 
     return sa_interest
 
-def _calculate_monthly_interest_ma(ma_accumulated: float,
+def _calc_monthly_interest_ma(ma_accumulated: float,
                                    rem_amount_for_extra_int_ma: float) -> float:
     """Calculates the interest to be added to the MA in a month period.
 
@@ -234,22 +234,22 @@ def _calculate_monthly_interest_ma(ma_accumulated: float,
     
     return ma_interest
 
-def calculate_annual_change(salary: float,
-                            bonus: float,
-                            dob: str,
-                            oa_curr: float,
-                            sa_curr: float,
-                            ma_curr: float,
-                            account_deltas: list = None,
-                            bonus_month: int = 12,
-                            date_start: dt = None) -> dict:
+def calc_annual_change(salary: float,
+                       bonus: float,
+                       dob: str,
+                       oa_curr: float,
+                       sa_curr: float,
+                       ma_curr: float,
+                       account_deltas: list = None,
+                       bonus_month: int = 12,
+                       date_start: dt = None) -> dict:
     """Calculates the total contributions and interest earned for the current year.
 
     Adds the interest, along with the contributions in the year, to the CPF account balances. \\
     Returns the projected amount in the CPF accounts at the end of the year.
 
     Age variable is updated every month. \\
-    Result of `calculate_cpf_allocation` function call is cached to avoid repeated calculations.
+    Result of `calc_cpf_allocation` function call is cached to avoid repeated calculations.
 
     Args:
         salary (float): Annual salary of employee
@@ -276,7 +276,7 @@ def calculate_annual_change(salary: float,
 
     # iterate through the months in the year
     month_start = date_start.month if date_start is not None else 1
-    logger.info(f'calculate_annual_change() - from "{month_start}/{date_start.year}" to "12/{date_start.year}"')
+    logger.info(f'calc_annual_change() - from "{month_start}/{date_start.year}" to "12/{date_start.year}"')
     for month in range(month_start, 13):
         # wrap the date in a datetime object
         date_start_iter = dt.date(date_start.year, month, 1)
@@ -284,7 +284,7 @@ def calculate_annual_change(salary: float,
 
         # add allocated amounts in this month to the accounts
         bonus_in_month = bonus if month == bonus_month else 0
-        allocation = main.calculate_cpf_allocation(salary, bonus_in_month, None, age=age)
+        allocation = main.calc_cpf_allocation(salary, bonus_in_month, None, age=age)
             
         oa_accumulated += float(allocation[strings.VALUES][strings.OA]) / 12
         sa_accumulated += float(allocation[strings.VALUES][strings.SA]) / 12
@@ -313,14 +313,14 @@ def calculate_annual_change(salary: float,
         ###########################################################################################
 
         # first priority is OA
-        oa_interest = _calculate_monthly_interest_oa(oa_accumulated)
+        oa_interest = _calc_monthly_interest_oa(oa_accumulated)
         oa_interest_total += oa_interest
 
         # remaining amount available for extra interest to be received in SA/MA has a minimum of $40k
         rem_amount_for_extra_int_sa_ma = (constants.THRESHOLD_EXTRAINT_TOTAL -
                                             min(oa_accumulated, constants.THRESHOLD_EXTRAINT_OA))
         # second priority is SA
-        sa_interest = _calculate_monthly_interest_sa(
+        sa_interest = _calc_monthly_interest_sa(
             oa_accumulated,
             sa_accumulated, 
             rem_amount_for_extra_int_sa_ma)
@@ -329,7 +329,7 @@ def calculate_annual_change(salary: float,
         # remaining amount available for extra interest to be received in MA depends on the amount in SA 
         rem_amount_for_extra_int_ma = max(rem_amount_for_extra_int_sa_ma - sa_accumulated, 0)
         # last priority is MA
-        ma_interest = _calculate_monthly_interest_ma(
+        ma_interest = _calc_monthly_interest_ma(
             ma_accumulated,
             rem_amount_for_extra_int_ma)
         ma_interest_total += ma_interest
