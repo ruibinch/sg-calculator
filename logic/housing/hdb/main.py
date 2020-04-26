@@ -9,9 +9,9 @@ def find_grant_schemes(application_period: str,
                        flat_type: str,
                        profile: str,
                        income: float,
-                       estate: str,
-                       flat_size: str,
-                       near_parents: str) -> dict:
+                       estate: str = None,
+                       flat_size: str = None,
+                       near_parents: str = None) -> dict:
     """Finds the applicable CPF Housing grant schemes.
     
     Args:
