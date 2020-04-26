@@ -1,5 +1,6 @@
 from logic.cpf import main as cpf_main
 from logic.housing import main as housing_main
+from logic.housing.hdb import main as housing_hdb_main
 from utils import endpoints, strings
 
 def execute(endpoint: str, params: dict) -> dict:
@@ -45,5 +46,16 @@ def execute(endpoint: str, params: dict) -> dict:
             params[strings.PARAM_PROPERTY_LOANS],
             params[strings.PARAM_PROPERTY_LOANS_GUARANTOR],
             params[strings.PARAM_OTHER_LOANS])
+
+    elif endpoint == endpoints.HOUSING_HDB_CPF_GRANTS:
+        results = housing_hdb_main.find_grant_schemes(
+            params[strings.PARAM_APPL_PERIOD],
+            params[strings.PARAM_FLAT_TYPE],
+            params[strings.PARAM_PROFILE],
+            params[strings.PARAM_INCOME],
+            params[strings.PARAM_ESTATE],
+            params[strings.PARAM_FLAT_SIZE],
+            params[strings.PARAM_NEAR_PARENTS]
+        )
 
     return results

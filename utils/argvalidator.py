@@ -4,6 +4,8 @@ import logging
 from typing import Any
 
 from . import endpoints, strings
+from logic.housing import constants as hsg_constants
+from logic.housing.hdb import constants as hdb_constants
 
 logger = logging.getLogger(__name__)
 
@@ -208,7 +210,8 @@ def run(body: dict, path: str) -> dict:
 
     elif path == endpoints.HOUSING_MAX_MORTGAGE:
         output = extract_param(
-            body, output, strings.PARAM_PROPERTY_TYPE)
+            body, output, strings.PARAM_PROPERTY_TYPE,
+            allowed_values=[hsg_constants.PROPERTY_EC, hsg_constants.PROPERTY_HDB, hsg_constants.PROPERTY_PRIVATE])
         output = extract_param(
             body, output, strings.PARAM_FIXED_INCOME,
             mould=MOULD_FLOAT)
@@ -233,4 +236,43 @@ def run(body: dict, path: str) -> dict:
             required=False,
             default_value=0)
 
+    elif path == endpoints.HOUSING_HDB_CPF_GRANTS:
+        output = extract_param(
+            body, output, strings.PARAM_APPL_PERIOD,
+            allowed_values=[strings.BEFORE_SEP_2019, strings.SEP_2019_ONWARDS])
+        output = extract_param(
+            body, output, strings.PARAM_FLAT_TYPE,
+            allowed_values=[strings.BTO, strings.RESALE])
+        output = extract_param(
+            body, output, strings.PARAM_PROFILE,
+            allowed_values=[
+                hdb_constants.PROFILE_BOTH_FT,
+                hdb_constants.PROFILE_BOTH_ST,
+                hdb_constants.PROFILE_FT_ST,
+                hdb_constants.PROFILE_NONSC_SPOUSE,
+                hdb_constants.PROFILE_SC_SPR,
+                hdb_constants.PROFILE_SG_SINGLE,
+                hdb_constants.PROFILE_SG_SINGLE_ORPHAN,
+            ])
+        output = extract_param(
+            body, output, strings.PARAM_INCOME,
+            mould=MOULD_FLOAT,
+            default_value=0)
+        output = extract_param(
+            body, output, strings.PARAM_ESTATE,
+            allowed_values=[strings.MATURE, strings.NONMATURE])
+        output = extract_param(
+            body, output, strings.PARAM_FLAT_SIZE,
+            allowed_values=[
+                hdb_constants.SIZE_2RM,
+                hdb_constants.SIZE_3RM,
+                hdb_constants.SIZE_4RM,
+                hdb_constants.SIZE_5RM,
+                hdb_constants.SIZE_3GEN,
+                hdb_constants.SIZE_EXEC,
+            ])
+        output = extract_param(
+            body, output, strings.PARAM_NEAR_PARENTS,
+            required=False)
+        
     return output
