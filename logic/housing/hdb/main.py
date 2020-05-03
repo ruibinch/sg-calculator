@@ -1,6 +1,6 @@
 import logging
 
-from . import hdbhelpers, constants
+from . import hdb_grant_eligibility, hdb_grant_amounts, constants
 from utils import strings
 
 logger = logging.getLogger(__name__)
@@ -24,21 +24,24 @@ def find_grant_schemes(application_period: str,
         near_parents (str): Either yes or no
     """
 
+    # First, find the eligible grant schemes
     if application_period == strings.BEFORE_SEP_2019:
         if flat_type == strings.BTO:
-            schemes = hdbhelpers.find_grant_schemes_prev_bto(
+            schemes = hdb_grant_eligibility.find_grant_schemes_prev_bto(
                 profile, income, estate, flat_size
             )
         elif flat_type == strings.RESALE:
-            schemes = hdbhelpers.find_grant_schemes_prev_resale()
+            schemes = hdb_grant_eligibility.find_grant_schemes_prev_resale()
     elif application_period == strings.SEP_2019_ONWARDS:
         if flat_type == strings.BTO:
-            schemes = hdbhelpers.find_grant_schemes_curr_bto(
+            schemes = hdb_grant_eligibility.find_grant_schemes_curr_bto(
                 profile, income
             )
         elif flat_type == strings.RESALE:
-            schemes = hdbhelpers.find_grant_schemes_curr_resale()
+            schemes = hdb_grant_eligibility.find_grant_schemes_curr_resale()
 
+    # Then, calculate the value that can be gotten from each grant scheme
+    schemes = hdb_grant_amounts.calc_grant_values(schemes, income)
 
     return {
         strings.SCHEMES: schemes,
