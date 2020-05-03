@@ -16,7 +16,7 @@ def main(event: dict, context: dict) -> dict:
         - `body` - Response body
     """
 
-    body = json.loads(event[strings.BODY])
+    body = json.loads(event[strings.BODY]) if event[strings.BODY] is not None else {}
     output = argvalidator.run(body, event[strings.PATH])
 
     if output[strings.STATUSCODE]:
