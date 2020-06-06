@@ -14,20 +14,20 @@ def execute(endpoint: str, params: dict) -> dict:
     """
 
     if endpoint == endpoints.CPF_CONTRIBUTION:
-        results = cpf_main.calculate_cpf_contribution(
+        results = cpf_main.calc_cpf_contribution(
             params[strings.PARAM_SALARY],
             params[strings.PARAM_BONUS],
             params[strings.PARAM_DOB],
             params[strings.PARAM_PERIOD])
 
     elif endpoint == endpoints.CPF_ALLOCATION:
-        results = cpf_main.calculate_cpf_allocation(
+        results = cpf_main.calc_cpf_allocation(
             params[strings.PARAM_SALARY],
             params[strings.PARAM_BONUS],
             params[strings.PARAM_DOB])
 
     elif endpoint == endpoints.CPF_PROJECTION:
-        results = cpf_main.calculate_cpf_projection(
+        results = cpf_main.calc_cpf_projection(
             params[strings.PARAM_SALARY],
             params[strings.PARAM_BONUS],
             params[strings.PARAM_YOY_INCREASE_SALARY],

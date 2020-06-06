@@ -250,9 +250,10 @@ def run(body: dict, path: str) -> dict:
                 hdb_constants.PROFILE_BOTH_ST,
                 hdb_constants.PROFILE_FT_ST,
                 hdb_constants.PROFILE_NONSC_SPOUSE,
-                hdb_constants.PROFILE_SC_SPR,
                 hdb_constants.PROFILE_SG_SINGLE,
-                hdb_constants.PROFILE_SG_SINGLE_ORPHAN,
+                hdb_constants.PROFILE_SG_JSS,
+                hdb_constants.PROFILE_SG_ORPHAN,
+                hdb_constants.PROFILE_SC_SPR,
             ])
         output = extract_param(
             body, output, strings.PARAM_INCOME,
